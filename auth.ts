@@ -15,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async signIn({ user, account }) {
       // Validar dominios permitidos para todos los proveedores
-      const allowedDomains = ["factoryai.io", "factoryim.co"];
+      const allowedDomains = ["factoryai.io", "factoryim.co","cofrem.com.co"];
       
       if (user.email) {
         const emailDomain = user.email.split("@")[1];
