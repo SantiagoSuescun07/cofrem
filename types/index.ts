@@ -29,6 +29,7 @@ export interface SidebarItem {
   id: string;
   label: string;
   icon: string;
+  url: string
 }
 
 export interface Event {

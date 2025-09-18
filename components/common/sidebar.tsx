@@ -1,9 +1,12 @@
-import React from "react";
+"use client";
+
+import React, { use } from "react";
 import { X } from "lucide-react";
 import * as Icons from "lucide-react";
 import { UserProfile } from "@/components/common/user-profile";
 import { User, SidebarItem, ModuleType } from "@/types";
 import { SignOutButton } from "./sign-out-button";
+import { usePathname, useRouter } from "next/navigation";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,8 +27,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onModuleChange,
   onGoogleLogin,
 }) => {
-  const handleModuleClick = (moduleId: string): void => {
-    onModuleChange(moduleId as ModuleType);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleModuleClick = (id: ModuleType, route: string): void => {
+    router.push(route);
+    onModuleChange(id);
     onClose();
   };
 
@@ -70,9 +77,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           return (
             <button
               key={item.id}
-              onClick={() => handleModuleClick(item.id)}
-              className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                activeModule === item.id
+              onClick={() => handleModuleClick(item.id as ModuleType, item.url)}
+              className={`cursor-pointer w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
+                pathname === item.url || pathname.startsWith(item.url + "/")
                   ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}

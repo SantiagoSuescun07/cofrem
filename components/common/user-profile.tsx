@@ -7,11 +7,11 @@ export function UserProfile() {
 
   return (
     <div className="flex items-center space-x-3">
-      <img
+      {/* <img
         src={user?.image ?? ""}
         alt={user?.name ?? "user profile image"}
         className="w-10 h-10 rounded-full"
-      />
+      /> */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">
           {user?.name}

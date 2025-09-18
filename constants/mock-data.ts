@@ -46,14 +46,3 @@ export const quickAccessData: QuickAccessItem[] = [
   { name: 'Sercliente Web', icon: 'Globe', category: 'sistemas' },
   { name: 'Presupuesto en Línea', icon: 'Briefcase', category: 'documentos' }
 ];
-
-export const sidebarItems: SidebarItem[] = [
-  { id: 'dashboard', label: 'Inicio', icon: 'Home' },
-  { id: 'news', label: 'Noticias', icon: 'Bell' },
-  { id: 'directory', label: 'Directorio', icon: 'Users' },
-  { id: 'documents', label: 'Documentos', icon: 'FileText' },
-  { id: 'calendar', label: 'Calendario', icon: 'Calendar' },
-  { id: 'employee', label: 'Portal Empleado', icon: 'User' },
-  { id: 'games', label: 'Entretenimiento', icon: 'Gamepad2' },
-  { id: 'settings', label: 'Configuración', icon: 'Settings' }
-];

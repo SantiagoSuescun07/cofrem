@@ -1,0 +1,1 @@
+export const apiBaseUrl = "https://backoffice.cofrem.com.co/"
