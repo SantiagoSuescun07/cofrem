@@ -6,12 +6,12 @@ import { RightSidebar } from "@/components/common/right-sidebar";
 import { useCurrentTime } from "@/hooks/use-current-time";
 import React, { useState } from "react";
 import { QuickAccessGrid } from "@/components/common/quick-access-grid";
-import { newsData, quickAccessData } from "@/constants/mock-data";
+import { quickAccessData } from "@/constants/mock-data";
 import { useRouter } from "next/navigation";
+import { PublicationsSection } from "@/components/common/publications-section";
 
 export default function HomePage() {
   const router = useRouter();
-  const [activeModule, setActiveModule] = useState("dashboard");
   const currentTime = useCurrentTime();
 
   const [currentUser] = useState({
@@ -30,10 +30,8 @@ export default function HomePage() {
           <HeroSection currentUser={currentUser} currentTime={currentTime} />
           <QuickAccessGrid quickAccessData={quickAccessData} />
 
-          <NewsSection
-            newsData={newsData}
-            onViewAll={() => router.push("/news")}
-          />
+          <NewsSection />
+          <PublicationsSection />
         </div>
         <RightSidebar onPlayGames={() => router.push("/games")} />
       </div>

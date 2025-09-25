@@ -3,17 +3,14 @@ import { NewsCardSkeleton } from "@/components/skeletons/news/news-card-skeleton
 
 export function NewsPageSkeleton() {
   return (
-    <div className="relative">
-      <div className="container mx-auto pt-6">
-        {/* Title skeleton */}
-        <Skeleton className="h-9 w-64 mb-8" />
+    <div className="container mx-auto pt-6">
+      <Skeleton className="h-6 w-40 mb-6" /> {/* Breadcrumb */}
+      <Skeleton className="h-8 w-64 mb-8" /> {/* Título */}
 
-        {/* News grid skeleton */}
-        <div className="flex flex-col items-center gap-6 sm:grid sm:grid-cols-2 2xl:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <NewsCardSkeleton key={index} />
-          ))}
-        </div>
+      <div className="space-y-6">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <NewsCardSkeleton key={index} />
+        ))}
       </div>
     </div>
   );

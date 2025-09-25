@@ -43,7 +43,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
     >
       {/* Header del sidebar */}
-      <div className="flex items-center justify-between h-16 px-6 border-b border-gray-100">
+      <div className="flex items-center justify-between h-[74.3px] px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">C</span>
@@ -60,9 +60,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Perfil del usuario */}
-      <div className="p-6 border-b border-gray-100">
+      <button onClick={() => router.push("/profile")} className="p-6 border-b border-gray-100 cursor-pointer hover:bg-muted w-full">
         <UserProfile />
-      </div>
+      </button>
 
       {/* Navegación */}
       <nav className="p-4 space-y-1">

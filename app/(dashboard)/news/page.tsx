@@ -6,6 +6,8 @@ import { NewsCard } from "@/components/news/news-card";
 import { NewsPageSkeleton } from "@/components/skeletons/news/news-page-skeleton";
 import { Pagination } from "@/components/common/pagination";
 import { motion, AnimatePresence, Variants, cubicBezier } from "framer-motion";
+import { NewsBreadcrumb } from "@/components/news/news-breadcrumb";
+import { containerVariants, itemVariants } from "@/constants/animation.-variants";
 
 export default function NewsPage() {
   const [page, setPage] = useState(1);
@@ -20,50 +22,21 @@ export default function NewsPage() {
   const paginatedItems =
     news?.items.slice((page - 1) * limit, page * limit) || [];
 
-  // Variantes de animación
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: cubicBezier(0.25, 0.1, 0.25, 1),
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: -20,
-      transition: { duration: 0.2 },
-    },
-  };
   return (
     <div className="relative">
       <div className="container mx-auto pt-6">
-        {/* Título con animación */}
+        <NewsBreadcrumb />
+
         <h2 className="text-3xl font-bold text-[#151515] mb-8">
           Portal de Noticias
         </h2>
 
-        {/* Lista de noticias animada */}
         <motion.div
-          key={page} // clave cambia cuando se cambia de página => anima la transición
+          key={page}
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="flex flex-col items-center gap-6 sm:grid sm:grid-cols-2 2xl:grid-cols-3"
         >
           <AnimatePresence mode="popLayout">
             {paginatedItems.map((item) => (

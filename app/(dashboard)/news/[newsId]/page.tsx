@@ -1,44 +1,17 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useSingleNews } from "@/queries/news";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Calendar, MessageCircle, User, Eye } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { ArticleHeader } from "./_components/article-header";
 import { useRouter } from "next/navigation";
 import { SingleNewsPageSkeleton } from "@/components/skeletons/news/single-news-page-skeleton";
-import { ArticleMainImage } from "./_components/article-main-image";
+import Image from "next/image";
+import { formatDate } from "@/utils/format-date";
 import { ArticleFile } from "./_components/article-file";
-import { ArticleGallery } from "./_components/article-gallery";
 import { ArticleComments } from "./_components/article-comments";
-import { cubicBezier, motion } from "framer-motion";
-
-// Variantes de animación
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.3,
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: cubicBezier(0.25, 0.1, 0.25, 1), // ✔️ TS lo acepta
-    },
-  },
-};
+import { ArticleCarousel } from "./_components/article-carousel";
 
 export default function SingleNewsPage({
   params,
@@ -46,25 +19,18 @@ export default function SingleNewsPage({
   params: Promise<{ newsId: string }>;
 }) {
   const router = useRouter();
-
   const { newsId: id } = use(params);
   const { data: news, isLoading, isError, error } = useSingleNews(id as string);
 
   if (isLoading) return <SingleNewsPageSkeleton />;
   if (isError) return <div>Error: {error?.message}</div>;
-  if ((!isLoading && !news) || (!isLoading && !news?.id))
-    return router.push("/news");
+  if (!news?.id) return router.push("/news");
 
   return (
-    <motion.div
-      className="min-h-screen bg-background rounded-xl"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-muted/30 md:pb-10 md:px-4">
+      <article className="container mx-auto bg-white rounded-2xl shadow-md p-6 md:p-10">
         {/* Back button */}
-        <motion.div className="mb-6" variants={itemVariants}>
+        <div className="mb-6">
           <Link href="/news">
             <Button
               variant="ghost"
@@ -74,52 +40,65 @@ export default function SingleNewsPage({
               Volver a noticias
             </Button>
           </Link>
-        </motion.div>
+        </div>
 
-        {/* Main image */}
-        <motion.div variants={itemVariants}>
-          <ArticleMainImage news={news!} />
-        </motion.div>
+        {/* Title */}
+        <h1 className="text-2xl md:text-4xl font-extrabold text-gray-900 mb-4">
+          {news.title}
+        </h1>
 
-        {/* Article header */}
-        <motion.div variants={itemVariants}>
-          <ArticleHeader news={news!} />
-        </motion.div>
+        {/* Metadata */}
+        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-4 w-4" />
+            <span>{formatDate(news.created)}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <MessageCircle className="h-4 w-4" />
+            <span>{news.comments.comment_count} comentarios</span>
+          </div>
+          {news.comments.last_comment_name && (
+            <div className="flex items-center gap-1">
+              <User className="h-4 w-4" />
+              <span>Último comentario: {news.comments.last_comment_name}</span>
+            </div>
+          )}
+        </div>
 
-        <motion.div variants={itemVariants}>
-          <Separator className="mb-8" />
-        </motion.div>
+        {/* Body with main image floated */}
+        <div className="prose prose-lg max-w-none mb-10 leading-relaxed">
+          {news.field_main_image && (
+            <Image
+              src={news.field_main_image.url || "/placeholder.svg"}
+              alt={news.field_main_image.alt || news.title}
+              width={400}
+              height={300}
+              className="w-full mb-6 rounded-lg shadow-md object-cover md:float-right md:ml-6 md:mb-4 md:max-w-[50%]"
+            />
+          )}
+          <div dangerouslySetInnerHTML={{ __html: news.body }} />
+        </div>
 
-        {/* Main content */}
-        <motion.div
-          className="prose prose-lg max-w-none mb-8"
-          variants={itemVariants}
-        >
-          <div
-            className="prose"
-            dangerouslySetInnerHTML={{ __html: news?.body! }}
-          />
-        </motion.div>
+        {/* Gallery as carousel */}
+        {news.field_gallery.length > 0 && (
+          <div className="mb-12 md:mt-20">
+            <h3 className="text-2xl font-semibold mb-4">Galería</h3>
+            <ArticleCarousel
+              images={news.field_gallery.map((img) => ({
+                id: img.id,
+                url: img.url,
+                alt: img.alt,
+              }))}
+            />
+          </div>
+        )}
 
         {/* File */}
-        {news?.field_file_new && news?.field_file_new.display && (
-          <motion.div variants={itemVariants}>
-            <ArticleFile news={news!} />
-          </motion.div>
-        )}
+        {news.field_file_new?.display && <ArticleFile news={news} />}
 
-        {/* Gallery */}
-        {news!.field_gallery.length > 0 && (
-          <motion.div variants={itemVariants}>
-            <ArticleGallery news={news!} />
-          </motion.div>
-        )}
-
-        {/* Comments section */}
-        <motion.div variants={itemVariants}>
-          <ArticleComments news={news!} newsId={id!} />
-        </motion.div>
-      </div>
-    </motion.div>
+        {/* Comments */}
+        <ArticleComments news={news} newsId={id!} />
+      </article>
+    </div>
   );
 }

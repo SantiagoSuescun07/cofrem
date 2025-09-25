@@ -14,9 +14,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
+      console.log("Google SignIn user:", user);
+      console.log("Google SignIn account:", account);
+
       // Validar dominios permitidos para todos los proveedores
-      const allowedDomains = ["factoryai.io", "factoryim.co","cofrem.com.co"];
-      
+      const allowedDomains = ["factoryai.io", "factoryim.co", "cofrem.com.co"];
+
       if (user.email) {
         const emailDomain = user.email.split("@")[1];
         if (!allowedDomains.includes(emailDomain)) {
@@ -35,6 +38,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async session({ token, session }) {
+      console.log("Session before return:", session);
+
       if (token.sub && session.user) {
         session.user.id = token.sub;
       }
@@ -54,7 +59,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return session;
     },
-    async jwt({ token }) {
+    async jwt({ token, user, account }) {
+      console.log("JWT callback:", { token, user, account });
+
       if (!token.sub) return token;
 
       const existingUser = await getUserById(token.sub);
@@ -69,8 +76,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async redirect({ url, baseUrl }) {
-      return baseUrl
-    }
+      return baseUrl;
+    },
   },
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },

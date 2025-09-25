@@ -47,8 +47,8 @@ export function ArticleComments({ newsId, news }: ArticleCommentsProps) {
   };
 
   return (
-    <Card>
-      <CardContent className="p-6 py-0">
+    <Card className="max-md:border-0 max-md:px-0 max-md:shadow-none">
+      <CardContent className="md:p-6 p-0 py-0">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold">Comentarios</h3>
           <Badge variant="outline">
