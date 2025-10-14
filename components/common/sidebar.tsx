@@ -92,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       {/* Google Integration */}
-      <div className=" bottom-4 left-4 right-4 px-4">
+      {/* <div className=" bottom-4 left-4 right-4 px-4">
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center space-x-2 mb-2">
             <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
@@ -107,9 +107,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Configurar SSO
           </button>
         </div>
-      </div>
+      </div> */}
 
-      <div className="mt-2 px-4">
+      <div className="absolute bottom-4 w-full mt-2 px-4">
         <SignOutButton className="w-full bg-red-50 text-red-400 hover:text-red-500 hover:bg-red-300/20 border border-red-200" />
       </div>
     </div>

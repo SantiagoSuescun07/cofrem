@@ -97,11 +97,12 @@ import { News } from "@/types/news/news";
 export const fetchSingleNews = async (id: string): Promise<News> => {
   const response = await api.get(`/jsonapi/node/news/${id}`, {
     params: {
-      include: 'field_file_new,field_gallery,field_main_image,field_segmentation,field_publication_statuses',
+      include: "field_file_new,field_gallery,field_main_image,field_segmentation",
     },
   });
 
   const item = response.data.data;
+
   const includedById = new Map<string, any>();
   if (response.data.included) {
     response.data.included.forEach((included: any) => {
@@ -109,6 +110,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
     });
   }
 
+  // field_file_new
   const fileNewData = item.relationships.field_file_new?.data;
   const fileNewIncluded = fileNewData ? includedById.get(fileNewData.id) : null;
   const fieldFileNew = fileNewIncluded
@@ -120,6 +122,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
       }
     : null;
 
+  // field_gallery
   const galleryData = item.relationships.field_gallery?.data || [];
   const fieldGallery = galleryData.map((galItem: any) => {
     const galIncluded = includedById.get(galItem.id);
@@ -133,6 +136,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
     };
   });
 
+  // field_main_image
   const mainImageData = item.relationships.field_main_image?.data;
   const mainImageIncluded = mainImageData ? includedById.get(mainImageData.id) : null;
   const fieldMainImage = mainImageIncluded
@@ -146,6 +150,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
       }
     : null;
 
+  // field_segmentation
   const segmentationData = item.relationships.field_segmentation?.data || [];
   const fieldSegmentation = segmentationData.map((segItem: any) => {
     const segIncluded = includedById.get(segItem.id);
@@ -156,18 +161,9 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
     };
   });
 
-  const pubStatusData = item.relationships.field_publication_statuses?.data;
-  const pubStatusIncluded = pubStatusData ? includedById.get(pubStatusData.id) : null;
-  const fieldPublicationStatuses = pubStatusIncluded
-    ? {
-        id: pubStatusIncluded.id,
-        name: pubStatusIncluded.attributes.name,
-      }
-    : null;
-
   return {
     id: item.id,
-    drupal_internal__nid: item.attributes.drupal_internal__nid, // Added field
+    drupal_internal__nid: item.attributes.drupal_internal__nid,
     title: item.attributes.title,
     body: item.attributes.body.value,
     created: item.attributes.created,
@@ -176,6 +172,5 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
     field_gallery: fieldGallery,
     field_main_image: fieldMainImage,
     field_segmentation: fieldSegmentation,
-    field_publication_statuses: fieldPublicationStatuses,
   };
 };

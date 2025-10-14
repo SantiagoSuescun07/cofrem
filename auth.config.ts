@@ -19,7 +19,7 @@ export default {
         if (result.success) {
           const { email, password } = result.data;
 
-          const allowedDomains = ["factoryai.io", "factoryim.co","cofrem.com.co"];
+          const allowedDomains = ["gmail.com", "factoryai.io", "factoryim.co","cofrem.com.co"];
           const emailDomain = email.split("@")[1];
           if (!allowedDomains.includes(emailDomain)) {
             return null;

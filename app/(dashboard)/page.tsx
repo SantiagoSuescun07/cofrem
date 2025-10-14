@@ -14,6 +14,7 @@ export default function HomePage() {
   const router = useRouter();
   const currentTime = useCurrentTime();
 
+
   const [currentUser] = useState({
     name: "María González",
     email: "maria.gonzalez@cofrem.gov.co",
