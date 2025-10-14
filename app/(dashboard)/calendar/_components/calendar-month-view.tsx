@@ -49,6 +49,7 @@ export function CalendarMonthView({
         </h2>
         <div className="flex gap-2">
           <Button
+            className="hover:bg-[#e4fef1]"
             variant="outline"
             size="icon"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -56,6 +57,7 @@ export function CalendarMonthView({
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button
+            className="hover:bg-[#e4fef1]"
             variant="outline"
             size="sm"
             onClick={() => setCurrentMonth(new Date())}
@@ -63,6 +65,7 @@ export function CalendarMonthView({
             Hoy
           </Button>
           <Button
+            className="hover:bg-[#e4fef1]"
             variant="outline"
             size="icon"
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}

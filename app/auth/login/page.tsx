@@ -190,7 +190,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               type="button"
-              className="w-full"
+              className="w-full hover:bg-gray-100"
               onClick={handleGoogleSignIn}
               disabled={isGoogleLoading || isPending}
             >

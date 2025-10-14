@@ -111,7 +111,7 @@ export default function MagazinesPage() {
   const magazines = data ?? [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -138,11 +138,11 @@ export default function MagazinesPage() {
         )}
 
         {/* Loading */}
-        {isLoading && (
+        {/* {isLoading && (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
           </div>
-        )}
+        )} */}
 
         {/* Grid de revistas */}
         {!isLoading && magazines.length > 0 && (
@@ -177,11 +177,7 @@ export default function MagazinesPage() {
                       Edición #{magazine.attributes.field_edition_number} —{" "}
                       {magazine.attributes.field_publish_date}
                     </p>
-                    {magazine.image.filename && (
-                      <p className="text-xs text-muted-foreground italic mb-4">
-                        Archivo: {magazine.image.filename}
-                      </p>
-                    )}
+                   
                     <Button
                       variant="ghost"
                       className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal group"
