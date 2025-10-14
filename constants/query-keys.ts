@@ -5,3 +5,4 @@ export const REPORTS_QUERY_KEY = "reports";
 export const SINGLE_REPORT_KEY = "single-newsletter"
 export const PUBLICATIONS_QUERY_KEY = "publications";
 export const SINGLE_PUBLICATION_KEY = "single-publication";
+export const PQRS_QUERY_KEY = "pqrs";

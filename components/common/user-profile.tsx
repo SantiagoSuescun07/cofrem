@@ -18,7 +18,7 @@ export function UserProfile() {
       {/* Avatar */}
       {user?.image ? (
         <img
-          src={user.image}
+          src={user.image!}
           alt={user.name ?? "user profile image"}
           className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200"
         />

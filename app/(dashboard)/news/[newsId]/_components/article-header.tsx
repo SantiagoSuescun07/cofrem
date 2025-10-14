@@ -17,12 +17,12 @@ export function ArticleHeader({ news }: ArticleHeaderProps) {
             {segment.name}
           </Badge>
         ))}
-        {news?.field_publication_statuses && (
+        {/* {news?.field_publication_statuses && (
           <Badge variant="outline" className="gap-1">
             <Eye className="h-3 w-3" />
             {news.field_publication_statuses.name}
           </Badge>
-        )}
+        )} */}
       </div>
 
       {/* Title */}

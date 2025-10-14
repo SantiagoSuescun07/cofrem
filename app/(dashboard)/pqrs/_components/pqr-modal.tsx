@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -35,15 +33,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  useDependencies,
+  usePqrsTypes,
+  useUrgencyLevels,
+} from "@/queries/pqrs";
+import { createPqrs, uploadFile } from "@/services/pqrs/create-pqrs";
+import { useQueryClient } from "@tanstack/react-query";
+import { PQRS_QUERY_KEY } from "@/constants/query-keys";
+
 const formSchema = z.object({
   tipo: z.string().min(1, "Selecciona el tipo de PQR"),
+  dependencia: z.string().min(1, "Selecciona la dependencia"),
+  urgencia: z.string().min(1, "Selecciona el nivel de urgencia"),
   asunto: z.string().min(5, "El asunto debe tener al menos 5 caracteres"),
   descripcion: z
     .string()
     .min(20, "La descripción debe tener al menos 20 caracteres"),
-  estado: z.string().min(1, "Selecciona el estado"),
-  respuesta: z.string().optional(),
-  observacionesInternas: z.string().optional(),
   evidencia: z.any().optional(),
 });
 
@@ -53,44 +59,77 @@ interface PQRModalProps {
 }
 
 export function PQRModal({ isOpen, onClose }: PQRModalProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const queryClient = useQueryClient();
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const { data: tipos } = usePqrsTypes();
+  const { data: dependencias } = useDependencies();
+  const { data: urgencias } = useUrgencyLevels();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       tipo: "",
+      dependencia: "",
+      urgencia: "",
       asunto: "",
       descripcion: "",
-      estado: "",
-      respuesta: "",
-      observacionesInternas: "",
     },
   });
 
+  // Maneja múltiples archivos
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(Array.from(files));
     }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
-    const fileInput = document.getElementById("evidencia") as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = "";
-    }
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast.success("PQR creada exitosamente", {
-      description: "Tu solicitud ha sido registrada y será procesada pronto.",
-    });
-    form.reset();
-    setSelectedFile(null);
-    onClose();
-  }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      setUploading(true);
+      const fileIds: number[] = [];
+
+      // 🔁 Subir cada archivo binario
+      for (const file of selectedFiles) {
+        const response = await uploadFile(file);
+        const fid = response?.fid?.[0]?.value;
+        if (fid) fileIds.push(fid);
+      }
+
+      // 📦 Crear payload con todos los FIDs
+      const payload = {
+        field_pqrs_type: Number(values.tipo),
+        field_subject: values.asunto,
+        field_description: values.descripcion,
+        field_dependencies: Number(values.dependencia),
+        field_urgency_level: Number(values.urgencia),
+        field_file_new: fileIds, // ✅ [33, 34, ...]
+      };
+
+      await createPqrs(payload);
+      await queryClient.invalidateQueries({ queryKey: [PQRS_QUERY_KEY] });
+
+      toast.success("PQR creada exitosamente", {
+        description: "Tu solicitud ha sido registrada correctamente.",
+      });
+
+      form.reset();
+      setSelectedFiles([]);
+      onClose();
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al crear la PQR");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,28 +144,29 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 gap-4">
+            {/* Tipo, dependencia, urgencia */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="tipo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground font-medium">
-                      Tipo de PQR
-                    </FormLabel>
+                    <FormLabel>Tipo de PQR</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="w-full border-input focus:ring-primary">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Selecciona el tipo" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="peticion">Petición</SelectItem>
-                        <SelectItem value="queja">Queja</SelectItem>
-                        <SelectItem value="reclamo">Reclamo</SelectItem>
+                        {tipos?.map((t: any) => (
+                          <SelectItem key={t.id} value={String(t.id)}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -136,40 +176,62 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
 
               <FormField
                 control={form.control}
-                name="estado"
+                name="dependencia"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-foreground font-medium">
-                      Cambiar Estado *
-                    </FormLabel>
+                    <FormLabel>Dependencia</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="w-full border-input focus:ring-primary">
-                          <SelectValue placeholder="Selecciona el estado" />
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecciona una dependencia" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="radicado">Radicado</SelectItem>
-                        <SelectItem value="en-revision">En revisión</SelectItem>
-                        <SelectItem value="en-gestion">En gestión</SelectItem>
-                        <SelectItem value="resuelto">Resuelto</SelectItem>
-                        <SelectItem value="reabierto">Reabierto</SelectItem>
+                        {dependencias?.map((d: any) => (
+                          <SelectItem key={d.id} value={String(d.id)}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <FormDescription className="text-muted-foreground">
-                      Opciones: Radicado, En revisión, En gestión, Resuelto,
-                      Reabierto. Campo para escribir la respuesta que será
-                      visible para el empleado.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="urgencia"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nivel de urgencia</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecciona el nivel" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {urgencias?.map((u: any) => (
+                        <SelectItem key={u.id} value={String(u.id)}>
+                          {u.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Asunto */}
             <FormField
               control={form.control}
               name="asunto"
@@ -187,6 +249,7 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
               )}
             />
 
+            {/* Descripción */}
             <FormField
               control={form.control}
               name="descripcion"
@@ -205,58 +268,11 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="respuesta"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground font-medium">
-                    Respuesta (Parcial/Final) - Opcional
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Campo para escribir la respuesta que será visible para el empleado"
-                      className="min-h-[100px] border-input focus:ring-primary"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-muted-foreground">
-                    Campo para escribir la respuesta que será visible para el
-                    empleado.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="observacionesInternas"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground font-medium">
-                    Observaciones Internas - Opcional
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Campo para notas del gestor que no serán visibles para el empleado"
-                      className="min-h-[80px] border-input focus:ring-primary"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription className="text-muted-foreground">
-                    Campo para notas del gestor que no serán visibles para el
-                    empleado.
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
+            {/* Adjuntar archivos */}
             <FormField
               control={form.control}
               name="evidencia"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormLabel className="text-foreground font-medium">
                     Adjuntar Evidencia - Opcional
@@ -285,44 +301,51 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
                             type="file"
                             className="hidden"
                             accept=".png,.jpg,.jpeg,.pdf"
+                            multiple
                             onChange={handleFileChange}
                           />
                         </label>
                       </div>
-                      {selectedFile && (
-                        <div className="flex items-center justify-between p-3 bg-accent rounded-lg border border-accent-foreground/20">
-                          <div className="flex items-center space-x-2">
-                            <div className="text-sm">
-                              <p className="font-medium text-accent-foreground">
-                                {selectedFile.name}
-                              </p>
-                              <p className="text-muted-foreground">
-                                {(selectedFile.size / 1024 / 1024).toFixed(2)}{" "}
-                                MB
-                              </p>
+
+                      {selectedFiles.length > 0 && (
+                        <div className="space-y-2">
+                          {selectedFiles.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-3 bg-accent rounded-lg border border-accent-foreground/20"
+                            >
+                              <div className="text-sm">
+                                <p className="font-medium text-accent-foreground">
+                                  {file.name}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeFile(index)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={removeFile}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          ))}
                         </div>
                       )}
                     </div>
                   </FormControl>
                   <FormDescription className="text-muted-foreground">
-                    Permite subir un archivo como evidencia de la gestión o
-                    respuesta.
+                    Puedes subir varios archivos; cada uno se cargará
+                    automáticamente al enviar.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
+            {/* Botones */}
             <div className="flex justify-end space-x-2 pt-4">
               <Button
                 type="button"
@@ -332,8 +355,12 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
               >
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90">
-                Crear PQR
+              <Button
+                type="submit"
+                className="bg-primary hover:bg-primary/90"
+                disabled={uploading}
+              >
+                {uploading ? "Subiendo..." : "Crear PQR"}
               </Button>
             </div>
           </form>

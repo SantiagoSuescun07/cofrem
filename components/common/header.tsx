@@ -70,8 +70,8 @@ export const Header: React.FC<HeaderProps> = ({
               Boletín Interno
             </Link>
             <a
-              href="#"
-              className="text-sm text-gray-600 hover:text-primary transition-colors"
+              href="/revista"
+              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               Revista Enlace
             </a>

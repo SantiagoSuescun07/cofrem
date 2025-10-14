@@ -25,7 +25,7 @@ export default function HomePage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           <HeroSection currentUser={currentUser} currentTime={currentTime} />

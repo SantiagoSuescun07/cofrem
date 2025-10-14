@@ -67,7 +67,7 @@ export default function DashboardLayout({
           notifications={notifications}
         />
 
-        <main className="flex-1 overflow-x-hidden overflow-y-auto px-4 md:px-10 py-5">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto ">
           {children}
         </main>
       </div>
