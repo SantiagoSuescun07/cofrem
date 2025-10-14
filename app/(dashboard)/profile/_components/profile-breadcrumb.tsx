@@ -1,3 +1,4 @@
+import { ProgressBar } from "@/components/common/progress-bar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,7 +17,7 @@ export function ProfileBreadcrumb() {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage className="font-medium">Mi Perfil</BreadcrumbPage>
+          <BreadcrumbPage className="flex items-center gap-3">Mi Perfil <ProgressBar /></BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

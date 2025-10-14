@@ -1,12 +1,13 @@
 "use client";
 
-import React, { use } from "react";
+import React from "react";
 import { X } from "lucide-react";
 import * as Icons from "lucide-react";
 import { UserProfile } from "@/components/common/user-profile";
 import { User, SidebarItem, ModuleType } from "@/types";
 import { SignOutButton } from "./sign-out-button";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,11 +22,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onClose,
-  currentUser,
   sidebarItems,
-  activeModule,
   onModuleChange,
-  onGoogleLogin,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,25 +40,32 @@ export const Sidebar: React.FC<SidebarProps> = ({
         isOpen ? "translate-x-0" : "-translate-x-full"
       } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
     >
-      {/* Header del sidebar */}
-      <div className="flex items-center justify-between h-[74.3px] px-6 border-b border-gray-100">
+      {/* Header Cofrem */}
+      <div className="flex items-center justify-between h-[74px] px-6 border-b border-gray-100">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">C</span>
-          </div>
-          <span className="text-xl font-bold text-gray-900">COFREM</span>
+          <Image
+            src="/icons/logo_cofrem.svg"
+            alt=""
+            width={100}
+            height={30}
+            priority
+            className="h-[40px] w-auto"
+          />
         </div>
         <button
           onClick={onClose}
-          className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+          className="lg:hidden p-2 rounded-lg hover:bg-[#2deb7915]"
           aria-label="Cerrar menú"
         >
-          <X size={20} />
+          <X size={20} className="text-[#306393]" />
         </button>
       </div>
 
-      {/* Perfil del usuario */}
-      <button onClick={() => router.push("/profile")} className="p-6 border-b border-gray-100 cursor-pointer hover:bg-muted w-full">
+      {/* Perfil */}
+      <button
+        onClick={() => router.push("/profile")}
+        className="p-6 border-b border-gray-100 cursor-pointer hover:bg-[#2deb7915] w-full transition-colors"
+      >
         <UserProfile />
       </button>
 
@@ -74,43 +79,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className?: string;
           }>;
 
+          const isActive =
+            pathname === item.url || pathname.startsWith(item.url + "/");
+
           return (
             <button
               key={item.id}
               onClick={() => handleModuleClick(item.id as ModuleType, item.url)}
-              className={`cursor-pointer w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
-                pathname === item.url || pathname.startsWith(item.url + "/")
-                  ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              className={`cursor-pointer w-full flex items-center px-4 py-3 text-left rounded-lg font-medium transition-all duration-200 ${
+                isActive
+                  ? "bg-[#e4fef1] border-l-4 border-[#11c99d]"
+                  : "text-gray-600 hover:bg-[#e4fef1]"
               }`}
             >
-              <IconComponent size={20} className="mr-3" />
-              <span className="font-medium">{item.label}</span>
+              <Image 
+                src={item.icon}
+                alt={item.label}
+                width={20}
+                height={20}
+                priority
+                className="size-[20px] mr-3"
+              />
+              <span>{item.label}</span>
             </button>
           );
         })}
       </nav>
 
-      {/* Google Integration */}
-      {/* <div className=" bottom-4 left-4 right-4 px-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
-            <span className="text-sm font-medium text-blue-900">
-              Google Workspace
-            </span>
-          </div>
-          <button
-            onClick={onGoogleLogin}
-            className="w-full text-xs bg-white text-blue-600 px-3 py-2 rounded-md hover:bg-blue-50 border border-blue-200 transition-colors"
-          >
-            Configurar SSO
-          </button>
-        </div>
-      </div> */}
-
-      <div className="absolute bottom-4 w-full mt-2 px-4">
-        <SignOutButton className="w-full bg-red-50 text-red-400 hover:text-red-500 hover:bg-red-300/20 border border-red-200" />
+      {/* Botón Cerrar sesión */}
+      <div className="w-full mt-2 px-4">
+        <SignOutButton className="w-full bg-[#d6edfb] text-[#2f8cbd] border border-[#2da2eb40] hover:bg-[#2da2eb25] hover:text-[#2da2eb] transition-colors" />
       </div>
     </div>
   );

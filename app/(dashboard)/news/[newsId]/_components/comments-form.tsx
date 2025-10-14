@@ -18,6 +18,7 @@ import { useCreateComment } from "@/mutation/news"; // Adjust path as needed
 import { toast } from "sonner";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { COMMENTS_QUERY_KEY, NEWS_QUERY_KEY } from "@/constants/query-keys";
+import { useCurrentUser } from "@/hooks/user-current-user";
 
 const commentSchema = z.object({
   text: z
@@ -34,6 +35,15 @@ interface CommentFormProps {
 
 export function CommentForm({ nid }: CommentFormProps) {
   const queryClient = useQueryClient();
+  const user = useCurrentUser();
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+    : "U";
 
   const form = useForm<CommentFormData>({
     resolver: zodResolver(commentSchema),
@@ -79,10 +89,18 @@ export function CommentForm({ nid }: CommentFormProps) {
       <CardContent className="p-0">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-5 w-5 text-primary" />
-          </div>
-          <h4 className="font-semibold text-lg">Agregar comentario</h4>
+          {user?.image ? (
+            <img
+              src={user.image}
+              alt={user.name ?? "user profile image"}
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-gray-200"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold ring-2 ring-gray-200 shadow-sm">
+              {initials}
+            </div>
+          )}
+          <h4 className="text-lg">Agregar comentario</h4>
         </div>
 
         <Form {...form}>

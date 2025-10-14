@@ -10,12 +10,6 @@ export function PublicationsSection() {
 
   return (
     <div className="lg:col-span-2">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Publicaciones recientes
-        </h2>
-      </div>
-
       <div className="space-y-6">
         {isLoading
           ? Array.from({ length: 3 }).map((_, i) => (

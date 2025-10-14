@@ -11,6 +11,7 @@ import {
 } from "@/constants/animation.-variants";
 import { Pagination } from "./pagination";
 import { NewsCard } from "../news/news-card";
+import { HomeNewsCard } from "../news/home-news-card";
 
 export function NewsSection() {
   const [page, setPage] = useState(1);
@@ -34,14 +35,11 @@ export function NewsSection() {
     news?.items.slice((page - 1) * limit, page * limit) || [];
 
   return (
-    <div className="lg:col-span-2">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900">
-          Últimas Noticias
-        </h2>
+    <div className="lg:col-span-2 mt-14">
+      <div className="flex items-center justify-end mb-6">
         <Link
           href="/news"
-          className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors"
+          className="text-muted-foreground transition-colors hover:underline"
         >
           Ver todas
         </Link>
@@ -62,7 +60,11 @@ export function NewsSection() {
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
             >
-              <NewsCard news={item} />
+              {/* <NewsCard news={item} /> */}
+              <HomeNewsCard 
+                news={item}
+
+              />
             </motion.div>
           ))}
         </AnimatePresence>

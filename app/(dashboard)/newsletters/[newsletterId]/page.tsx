@@ -41,9 +41,9 @@ export default function NewsletterPage({
               priority
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             <div className="absolute bottom-6 left-6 text-white">
-              <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">
+              <h1 className="text-3xl md:text-4xl mb-2 drop-shadow-lg">
                 {newsletter.title}
               </h1>
               <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -96,7 +96,7 @@ export default function NewsletterPage({
           {/* PDF destacado */}
           {newsletter.field_report_pdf && (
             <div className="mb-12">
-              <h3 className="text-xl font-semibold mb-5 flex items-center gap-2">
+              <h3 className="text-xl mb-5 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-red-600" />
                 Documento principal del boletín
               </h3>
@@ -108,7 +108,7 @@ export default function NewsletterPage({
                     PDF
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-gray-800">
+                    <p className="text-base text-gray-800">
                       Boletín en formato PDF
                     </p>
                     <p className="text-sm text-gray-600">
@@ -135,7 +135,7 @@ export default function NewsletterPage({
           {/* Adjuntos */}
           {newsletter.field_attachments.length > 0 && (
             <div className="mb-10">
-              <h3 className="text-xl font-semibold mb-5 flex items-center gap-2">
+              <h3 className="text-xl mb-5 flex items-center gap-2">
                 <Paperclip className="w-5 h-5 text-blue-600" />
                 Archivos adjuntos
               </h3>

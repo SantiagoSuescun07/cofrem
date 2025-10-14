@@ -15,11 +15,6 @@ export default function ProfilePage() {
             <ProfileInfo />
             <AchievementCards />
           </div>
-
-          {/* Columna lateral - Insignias */}
-          <div className="lg:col-span-1">
-            {/* <ProfileBadges /> */}
-          </div>
         </div>
       </div>
     </div>

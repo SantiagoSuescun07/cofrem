@@ -1,57 +1,75 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { ThumbsUp, User, Star } from "lucide-react"
+import { ProgressBar } from "@/components/common/progress-bar";
+import { Card, CardContent } from "@/components/ui/card";
+import { ThumbsUp, User, Star } from "lucide-react";
+import Image from "next/image";
 
 export function AchievementCards() {
   const achievements = [
     {
-      icon: ThumbsUp,
+      icon: "/icons/blue-welcome.png",
       title: "Bienvenida",
       description: "Completaste tu registro exitosamente",
-      color: "bg-success text-success-foreground",
-      bgColor: "bg-success/10",
+      color: "bg-[#d2eeff]",
+      bgColor: "bg-white",
     },
     {
-      icon: User,
+      icon: "/icons/perfil-icon.png",
       title: "Perfil",
       description: "Configuraste tu perfil completo",
-      color: "bg-primary text-primary-foreground",
-      bgColor: "bg-primary/10",
+      color: "bg-[#d4ffe8]",
+      bgColor: "bg-white",
     },
     {
-      icon: Star,
+      icon: "/icons/start-icon.png",
       title: "Usuario Estrella",
       description: "Alcanzaste 500+ puntos de experiencia",
-      color: "bg-gold text-gold-foreground",
-      bgColor: "bg-gold/10",
+      color: "bg-[#d5fef6]",
+      bgColor: "bg-white",
     },
-  ]
+  ];
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-        <Star className="h-5 w-5 text-gold" />
-        Logros Destacados
+    <div className="mt-20">
+      <h2 className="text-xl mb-6 flex items-center gap-2">
+        <Image
+          src="/icons/blue-insigneas.png"
+          alt="Insignias icon"
+          width={40}
+          height={40}
+          priority
+          className="size-[23px] mr-2"
+        />
+        Mis insignias
+        <ProgressBar />
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {achievements.map((achievement, index) => {
-          const IconComponent = achievement.icon
+          const IconComponent = achievement.icon;
           return (
             <Card
               key={index}
-              className={`${achievement.bgColor} border-2 hover:scale-105 transition-transform duration-200 cursor-pointer`}
+              className={`${achievement.bgColor} border border-muted hover:scale-105 transition-transform duration-200 cursor-pointer`}
             >
               <CardContent className="p-6 text-center">
-                <div className={`inline-flex p-4 rounded-full ${achievement.color} mb-4`}>
-                  <IconComponent className="h-8 w-8" />
+                <div
+                  className={`inline-flex p-4 rounded-xl ${achievement.color} mb-4`}
+                >
+                  <Image
+                    src={achievement.icon}
+                    alt="Icon"
+                    width={40}
+                    height={40}
+                    priority
+                    className="size-[40px] object-cover"
+                  />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">{achievement.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{achievement.description}</p>
+                <h3 className="text-2xl mb-2">{achievement.title}</h3>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

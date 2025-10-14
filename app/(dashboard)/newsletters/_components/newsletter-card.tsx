@@ -48,7 +48,7 @@ export function NewsletterCard({ report }: Props) {
         </div>
 
         {/* Título */}
-        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 line-clamp-2">
+        <h3 className="text-lg group-hover:text-blue-600 line-clamp-2">
           {title}
         </h3>
 

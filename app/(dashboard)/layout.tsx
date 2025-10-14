@@ -23,36 +23,24 @@ export default function DashboardLayout({
   const [notifications] = useState(3);
 
   const sidebarItems = [
-    { id: "dashboard", label: "Inicio", icon: "Home", url: "/" },
-    { id: "news", label: "Noticias", icon: "Bell", url: "/news" },
-    // { id: "newsletters", label: "Boletines", icon: "Newspaper", url: "/newsletters" },
-    { id: "directory", label: "Directorio", icon: "Users", url: "/directory" },
-    // {
-    //   id: "documents",
-    //   label: "Documentos",
-    //   icon: "FileText",
-    //   url: "/documents",
-    // },
-    { id: "calendar", label: "Calendario", icon: "Calendar", url: "/calendar" },
-    // {
-    //   id: "employee",
-    //   label: "Portal Empleado",
-    //   icon: "User",
-    //   url: "/employee",
-    // },
-    { id: "games", label: "Entretenimiento", icon: "Gamepad2", url: "/games" },
-    // {
-    //   id: "settings",
-    //   label: "Configuración",
-    //   icon: "Settings",
-    //   url: "/settings",
-    // },
+    { id: "dashboard", label: "Inicio", icon: "/icons/home.png", url: "/" },
+    { id: "news", label: "Noticias", icon: "/icons/news.png", url: "/news" },
+    { id: "directory", label: "Directorio", icon: "/icons/directory.png", url: "/directory" },
     {
-      id: "pqrs",
-      label: "PQRS",
-      icon: "HelpCircle",
-      url: "/pqrs",
+      id: "management-system",
+      label: "Sistema de Gestión de calidad",
+      icon: "/icons/management-system.png",
+      url: "management-system",
     },
+    { id: "about", label: "Nosotros", icon: "/icons/about-us.png", url: "/about-us" },
+    { id: "games", label: "Gamificación", icon: "/icons/gamification.png", url: "/games" },
+    { id: "calendar", label: "Calendario", icon: "/icons/calendar.png", url: "/calendar" },
+    // {
+    //   id: "pqrs",
+    //   label: "PQRS",
+    //   icon: "/icons/",
+    //   url: "/pqrs",
+    // },
   ];
 
   const handleGoogleLogin = () => {

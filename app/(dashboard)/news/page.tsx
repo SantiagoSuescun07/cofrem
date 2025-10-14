@@ -27,7 +27,7 @@ export default function NewsPage() {
       <div className="container mx-auto pt-6">
         <NewsBreadcrumb />
 
-        <h2 className="text-3xl font-bold text-[#151515] mb-8">
+        <h2 className="text-3xl mb-8">
           Portal de Noticias
         </h2>
 

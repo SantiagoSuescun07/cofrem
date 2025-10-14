@@ -18,7 +18,7 @@ export function PublicationCard({ publication }: Props) {
   const extraCount = images.length > 5 ? images.length - 5 : 0;
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition">
+    <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition mt-14">
       {/* Título */}
       <Link href={`/publications/${publication.id}`} className="text-lg font-semibold text-gray-900 hover:underline hover:text-primary">
         {title}

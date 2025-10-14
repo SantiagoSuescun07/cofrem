@@ -2,12 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  Clock,
-  Calendar,
-  MapPin,
   ChevronLeft,
   ChevronRight,
-  Star,
   TrendingUp,
   Bell,
   Play,
@@ -39,14 +35,7 @@ interface Slide {
   icon: React.ReactNode;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({
-  currentUser = {
-    name: "Maria García",
-    role: "Gerente",
-    area: "Recursos Humanos",
-  },
-  currentTime = new Date(),
-}) => {
+export const HeroSection: React.FC<HeroSectionProps> = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const autoPlayDuration = 5000; // 5 segundos por slide
@@ -67,31 +56,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   };
 
   const slides: Slide[] = [
-    // {
-    //   id: 1,
-    //   type: "welcome",
-    //   title: `Bienvenida, ${currentUser.name}`,
-    //   subtitle: `${currentUser.role} - ${currentUser.area}`,
-    //   gradient: "from-blue-50 to-indigo-50 border-blue-100",
-    //   icon: <Clock className="w-6 h-6 text-blue-600" />,
-    //   image: "/images/banner2.jpg",
-    //   content: (
-    //     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-    //       <div className="flex items-center">
-    //         <Clock size={16} className="mr-1" />
-    //         <span>{formatTime(currentTime)}</span>
-    //       </div>
-    //       <div className="flex items-center">
-    //         <Calendar size={16} className="mr-1" />
-    //         <span>{formatDate(currentTime)}</span>
-    //       </div>
-    //       <div className="flex items-center">
-    //         <MapPin size={16} className="mr-1" />
-    //         <span>Pico y placa: 7 y 8</span>
-    //       </div>
-    //     </div>
-    //   ),
-    // },
     {
       id: 2,
       type: "stats",
@@ -270,7 +234,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Progress Dots */}
-      <div className="flex justify-center mt-6 space-x-2">
+      {/* <div className="flex justify-center mt-6 space-x-2">
         {slides.map((_, index) => (
           <div key={index} className="relative">
             <motion.button
@@ -281,7 +245,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 index === currentSlide ? "bg-blue-400" : "bg-gray-200"
               }`}
             >
-              {/* Progress Fill for Current Slide */}
               {index === currentSlide && isAutoPlaying && (
                 <motion.div
                   initial={{ width: "0%" }}
@@ -296,7 +259,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </motion.button>
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Auto-play Control */}
       <motion.button

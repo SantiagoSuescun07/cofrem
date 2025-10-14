@@ -24,19 +24,16 @@ export function UserProfile() {
         />
       ) : (
         <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold ring-2 ring-gray-200 shadow-sm">
-          {/* {initials} */}
-          MG
+          {initials}
         </div>
       )}
 
       <div className="flex-1 text-start min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">
-          {/* {user?.name} */}
-          María González Rodríguez
+          {user?.name}
         </p>
         <p className="text-xs text-gray-500 truncate">Analista de RRHH</p>
       </div>
-      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
     </div>
   );
 }

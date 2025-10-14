@@ -50,7 +50,7 @@ export function ArticleComments({ newsId, news }: ArticleCommentsProps) {
     <Card className="max-md:border-0 max-md:px-0 max-md:shadow-none">
       <CardContent className="md:p-6 p-0 py-0">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">Comentarios</h3>
+          <h3 className="text-xl">Comentarios</h3>
           <Badge variant="outline">
             {news?.comments.comment_count} comentarios
           </Badge>
@@ -88,6 +88,7 @@ export function ArticleComments({ newsId, news }: ArticleCommentsProps) {
                     <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-primary" />
                     </div>
+
                     <div>
                       <p className="font-medium text-sm">
                         {comment.user?.name}
@@ -117,7 +118,7 @@ export function ArticleComments({ newsId, news }: ArticleCommentsProps) {
             onValueChange={handleLimitChange}
             defaultValue={limit.toString()}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-white">
               <SelectValue placeholder="Comentarios por página" />
             </SelectTrigger>
             <SelectContent>

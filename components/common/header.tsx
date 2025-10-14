@@ -71,31 +71,20 @@ export const Header: React.FC<HeaderProps> = ({
             </Link>
             <a
               href="#"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm text-gray-600 hover:text-primary transition-colors"
             >
               Revista Enlace
-            </a>
-            <a
-              href="#"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Redes Sociales
             </a>
           </nav>
 
           <button
             onClick={handleNotificationClick}
-            className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="relative p-2 text-gray-600 transition-colors"
             aria-label={`Notificaciones${
               notifications > 0 ? ` (${notifications})` : ""
             }`}
           >
             <Bell size={20} />
-            {notifications > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {notifications > 99 ? "99+" : notifications}
-              </span>
-            )}
           </button>
         </div>
       </div>

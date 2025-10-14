@@ -4,14 +4,12 @@ import { useState } from "react";
 import { Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProfileBreadcrumb } from "./profile-breadcrumb";
-// import { EditProfileModal } from "./edit-profile-modal"
 
 export function ProfileHeader() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const handleSaveProfile = (data: any) => {
     console.log("Perfil actualizado:", data);
-    // Aquí puedes agregar la lógica para guardar los datos
   };
 
   return (
@@ -23,7 +21,7 @@ export function ProfileHeader() {
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 bg-transparent"
+          className="gap-2 bg-transparent hover:bg-muted"
           onClick={() => setIsEditModalOpen(true)}
         >
           <Edit className="h-4 w-4" />
