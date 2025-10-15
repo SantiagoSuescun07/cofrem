@@ -6,3 +6,4 @@ export const SINGLE_REPORT_KEY = "single-newsletter"
 export const PUBLICATIONS_QUERY_KEY = "publications";
 export const SINGLE_PUBLICATION_KEY = "single-publication";
 export const BANNER_QUERY_KEY = "banner_inicio";
+export const PQRS_QUERY_KEY = "pqrs";

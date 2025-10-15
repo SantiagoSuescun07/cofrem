@@ -34,7 +34,7 @@ export default function SingleNewsPage({
   const formattedDate = new Date(news.created).toISOString().split("T")[0];
 
   return (
-    <div className="md:pb-10 md:px-4 space-y-6">
+    <div className="md:pb-10 px-6 md:px-10 pt-6 space-y-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

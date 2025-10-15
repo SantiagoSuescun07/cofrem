@@ -12,24 +12,24 @@ export interface NewsItem {
   title: string;
   summary: string;
   date: string;
-  category: 'RRHH' | 'Bienestar' | 'Formación';
+  category: "RRHH" | "Bienestar" | "Formación";
   author: string;
   reactions: number;
   comments: number;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
 }
 
 export interface QuickAccessItem {
   name: string;
   icon: string;
-  category: 'personal' | 'sistemas' | 'documentos' | 'comunicacion';
+  category: "personal" | "sistemas" | "documentos" | "comunicacion";
 }
 
 export interface SidebarItem {
   id: string;
   label: string;
   icon: string;
-  url: string
+  url: string;
 }
 
 export interface Event {
@@ -37,7 +37,7 @@ export interface Event {
   title: string;
   date: string;
   time: string;
-  type: 'meeting' | 'training' | 'event';
+  type: "meeting" | "training" | "event";
 }
 
 export interface Birthday {
@@ -47,4 +47,62 @@ export interface Birthday {
   date: string;
 }
 
-export type ModuleType = 'dashboard' | 'news' | 'directory' | 'documents' | 'calendar' | 'employee' | 'games' | 'settings';
+export type ModuleType =
+  | "dashboard"
+  | "news"
+  | "directory"
+  | "documents"
+  | "calendar"
+  | "employee"
+  | "games"
+  | "settings";
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  place: string;
+  mapLink: {
+    uri: string;
+    title: string;
+  };
+  infoButton: {
+    uri: string;
+    title: string;
+  };
+  isNotificationsEnabled: boolean;
+  eventType: {
+    id: string;
+    name: string;
+  };
+  dependencies: {
+    id: string;
+    name: string;
+  };
+  image: {
+    url: string;
+    alt: string;
+  };
+}
+
+export interface GoogleCalendarEvent {
+  id: string;
+  summary: string;
+  start: {
+    dateTime: string;
+    date?: string;
+  };
+  end: {
+    dateTime: string;
+    date?: string;
+  };
+  isPersonal: boolean;
+}
+
+export type CalendarView = "month" | "week" | "list";
+
+export interface PicoYPlacaInfo {
+  date: string;
+  numbers: number[];
+}

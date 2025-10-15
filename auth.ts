@@ -164,9 +164,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
           // ✅ Guardamos el token y expiración en localStorage (solo si estamos en cliente)
           // if (typeof window !== "undefined" && data.access_token) {
-          //   localStorage.setItem("parking.access_token", data.access_token);
+          //   localStorage.setItem("cofrem.access_token", data.access_token);
           //   localStorage.setItem(
-          //     "parking.expires_at",
+          //     "cofrem.expires_at",
           //     String(Date.now() + (data.expires_in || 3600) * 1000)
           //   );
           // }

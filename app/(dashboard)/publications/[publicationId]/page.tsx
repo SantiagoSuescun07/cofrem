@@ -35,20 +35,7 @@ export default function SinglePublicationPage({
   if (!publication?.id) return router.push("/publications");
 
   return (
-    <div className="min-h-screen py-6">
-      {/* Botón volver */}
-      <div className="max-w-7xl mx-auto px-4 mb-4">
-        <Link href="/">
-          <Button
-            variant="ghost"
-            className="gap-2 hover:translate-x-[-4px] transition-transform"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver
-          </Button>
-        </Link>
-      </div>
-
+    <div className="min-h-screen pb-6 px-6 md:px-10 pt-6">
       {/* Post ocupa todo el ancho disponible */}
       <article className="bg-white shadow rounded-2xl max-w-7xl mx-auto px-6 py-8">
         {/* Header */}

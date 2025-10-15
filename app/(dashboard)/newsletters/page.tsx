@@ -13,7 +13,7 @@ export default function NewslettersPage() {
 
   return (
     <div className="relative">
-      <div className="container mx-auto pt-6">
+      <div className="container mx-auto px-6 md:px-10 pt-6">
         <NewslettersBreadcrumb />
 
         <h2 className="text-3xl mb-8">
