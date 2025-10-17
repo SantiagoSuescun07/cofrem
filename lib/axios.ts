@@ -1,4 +1,4 @@
-import { apiBaseUrl } from "@/constants";
+import { ACCESS_TOKEN, apiBaseUrl } from "@/constants";
 import axios from "axios";
 import { toast } from "sonner";
 import { getAccessToken, isExpired, clearToken } from "@/lib/token-manager";
@@ -11,16 +11,37 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const token = getAccessToken();
-      if (token && !isExpired()) {
-        config.headers = config.headers ?? {};
-        config.headers["Authorization"] = `Bearer ${token}`;
+      const accessToken =
+        getAccessToken() || localStorage.getItem(ACCESS_TOKEN);
+
+      config.headers = config.headers ?? {};
+
+      if (accessToken && !isExpired()) {
+        config.headers["Authorization"] = `Bearer ${accessToken}`;
       }
     }
+
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error("❌ Error en request interceptor:", error);
+    return Promise.reject(error);
+  }
 );
+
+// api.interceptors.request.use(
+//   (config) => {
+//     if (typeof window !== "undefined") {
+//       const token = getAccessToken();
+//       if (token && !isExpired()) {
+//         config.headers = config.headers ?? {};
+//         config.headers["Authorization"] = `Bearer ${token}`;
+//       }
+//     }
+//     return config;
+//   },
+//   (error) => Promise.reject(error)
+// );
 
 // Interceptor de respuesta
 api.interceptors.response.use(

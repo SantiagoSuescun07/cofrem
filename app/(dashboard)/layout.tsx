@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Header } from "@/components/common/header";
 import { Sidebar } from "@/components/common/sidebar";
+import { useSession } from "next-auth/react";
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,8 @@ export default function DashboardLayout({
     sede: "Sede Principal",
   });
 
+  const { data: session } = useSession();
+
   const [activeModule, setActiveModule] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifications] = useState(3);
@@ -25,16 +28,36 @@ export default function DashboardLayout({
   const sidebarItems = [
     { id: "dashboard", label: "Inicio", icon: "/icons/home.png", url: "/" },
     { id: "news", label: "Noticias", icon: "/icons/news.png", url: "/news" },
-    { id: "directory", label: "Directorio", icon: "/icons/directory.png", url: "/directory" },
+    {
+      id: "directory",
+      label: "Directorio",
+      icon: "/icons/directory.png",
+      url: "/directory",
+    },
     {
       id: "management-system",
       label: "Sistema de Gestión de calidad",
       icon: "/icons/management-system.png",
       url: "management-system",
     },
-    { id: "about", label: "Nosotros", icon: "/icons/about-us.png", url: "/about-us" },
-    { id: "games", label: "Gamificación", icon: "/icons/gamification.png", url: "/games" },
-    { id: "calendar", label: "Calendario", icon: "/icons/calendar.png", url: "/calendar" },
+    {
+      id: "about",
+      label: "Nosotros",
+      icon: "/icons/about-us.png",
+      url: "/about-us",
+    },
+    {
+      id: "games",
+      label: "Gamificación",
+      icon: "/icons/gamification.png",
+      url: "/games",
+    },
+    {
+      id: "calendar",
+      label: "Calendario",
+      icon: "/icons/calendar.png",
+      url: "/calendar",
+    },
     // {
     //   id: "pqrs",
     //   label: "PQRS",
@@ -48,6 +71,17 @@ export default function DashboardLayout({
       "🔐 Autenticación con Google Workspace\n\nIntegración SSO configurada para:\n• Gmail corporativo\n• Google Drive\n• Google Calendar\n• Google Directory"
     );
   };
+
+  useEffect(() => {
+    if (
+      session?.drupal?.accessToken &&
+      !localStorage.getItem("cofrem.access_token")
+    ) {
+      console.log("Se ejecuta el useEffect");
+      localStorage.setItem("cofrem.access_token", session.drupal.accessToken);
+      localStorage.setItem("cofrem.user", JSON.stringify(session.drupal.user));
+    }
+  }, [session?.drupal?.accessToken]);
 
   return (
     <div className="flex h-screen bg-gray-50">

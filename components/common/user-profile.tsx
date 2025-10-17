@@ -1,6 +1,6 @@
 import React from "react";
-import { currentUser } from "@/lib/auth-user";
 import { useCurrentUser } from "@/hooks/user-current-user";
+import Image from "next/image";
 
 export function UserProfile() {
   const user = useCurrentUser();
@@ -17,9 +17,12 @@ export function UserProfile() {
     <div className="flex items-center space-x-3 w-full">
       {/* Avatar */}
       {user?.image ? (
-        <img
+        <Image
           src={user.image!}
           alt={user.name ?? "user profile image"}
+          width={40}
+          height={40}
+          priority
           className="w-10 h-10 rounded-full object-cover ring-2 ring-gray-200"
         />
       ) : (

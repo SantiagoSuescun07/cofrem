@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
         hostname: "backoffice.cofrem.com.co",
         pathname: "/**", // permite cualquier ruta
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
     ],
   },
   experimental: {
