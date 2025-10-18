@@ -55,9 +55,6 @@ export interface MagazineWithImage extends MagazineData {
   };
 }
 
-// --------------------
-// 🔹 Servicio de fetch
-// --------------------
 async function fetchMagazines(): Promise<MagazineWithImage[]> {
   const response = await api.get<MagazineResponse>(
     "/jsonapi/node/magazine_link",
@@ -173,11 +170,7 @@ export default function MagazinesPage() {
                     <h3 className="text-xl font-semibold mb-1">
                       {magazine.attributes.title}
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Edición #{magazine.attributes.field_edition_number} —{" "}
-                      {magazine.attributes.field_publish_date}
-                    </p>
-                   
+
                     <Button
                       variant="ghost"
                       className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal group"

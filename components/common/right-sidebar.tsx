@@ -30,8 +30,19 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         <h3 className="font-semibold text-gray-900 mb-4">Próximos Eventos</h3>
 
         {isLoading && (
-          <div className="flex justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex items-center space-x-3 p-2 rounded-lg"
+              >
+                <div className="w-10 h-10 rounded-lg bg-gray-200 animate-pulse" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-200 rounded w-3/4 animate-pulse" />
+                  <div className="h-2 bg-gray-200 rounded w-1/2 animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
