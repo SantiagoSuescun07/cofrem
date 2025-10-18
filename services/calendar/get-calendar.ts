@@ -3,13 +3,10 @@ import { CalendarEvent } from "@/types";
 
 const API_BASE_URL = "https://backoffice.cofrem.com.co"
 
-/**
- * 🔹 Obtiene todos los eventos del calendario desde Drupal JSON:API
- */
 export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
   try {
     const response = await api.get(
-      "/jsonapi/node/calendar?include=field_event_type,field_dependencies,field_image",
+      "/jsonapi/node/calendar?include=field_image",
       {
         headers: {
           "Content-Type": "application/json",
