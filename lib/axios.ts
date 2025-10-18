@@ -11,12 +11,11 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const accessToken =
-        getAccessToken() || localStorage.getItem(ACCESS_TOKEN);
+      const accessToken = localStorage.getItem(ACCESS_TOKEN); // o "access_token" directamente
 
       config.headers = config.headers ?? {};
 
-      if (accessToken && !isExpired()) {
+      if (accessToken) {
         config.headers["Authorization"] = `Bearer ${accessToken}`;
       }
     }
@@ -28,6 +27,7 @@ api.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
 
 // api.interceptors.request.use(
 //   (config) => {
@@ -44,20 +44,20 @@ api.interceptors.request.use(
 // );
 
 // Interceptor de respuesta
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      try {
-        clearToken();
-        toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
-        window.location.href = "/auth/login";
-      } catch {
-        toast.error("Error al limpiar la sesión.");
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.response.use(
+//   (response) => response,
+//   async (error) => {
+//     if (error.response?.status === 401) {
+//       try {
+//         clearToken();
+//         toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
+//         window.location.href = "/auth/login";
+//       } catch {
+//         toast.error("Error al limpiar la sesión.");
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;

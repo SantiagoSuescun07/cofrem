@@ -16,7 +16,6 @@ interface SidebarProps {
   sidebarItems: SidebarItem[];
   activeModule: string;
   onModuleChange: (module: ModuleType) => void;
-  onGoogleLogin: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({

@@ -7,6 +7,7 @@ import {
   SINGLE_NEWS_KEY,
 } from "@/constants/query-keys";
 import { fetchComments } from "@/services/news/get-comments";
+import { getReactions } from "@/services/news/reactions";
 
 export const useNews = (page: number = 1) => {
   return useQuery({
@@ -36,5 +37,12 @@ export const useComments = (newsId: string, page: number = 1) => {
     staleTime: 5 * 60 * 1000,
     retry: 2,
     enabled: !!newsId,
+  });
+};
+
+export const getNewsReactions = (id: string) => {
+  return useQuery({
+    queryKey: ["reactions", id],
+    queryFn: () => getReactions(id),
   });
 };

@@ -1,12 +1,15 @@
 "use client";
 
 import Image from "next/image";
-import { Heart, MessageCircle } from "lucide-react";
-import { News } from "@/types/news/news";
-import { formatDate } from "@/utils/format-date";
+import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { News } from "@/types/news/news";
+import {  useMutation, useQueryClient } from "@tanstack/react-query";
+import { createReaction } from "@/services/news/reactions";
+import { toast } from "sonner";
+import { getNewsReactions } from "@/queries/news";
 
 interface NewsCardProps {
   news: News;
@@ -14,32 +17,45 @@ interface NewsCardProps {
 
 export function NewsCard({ news }: NewsCardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const stripHtml = (html: string) => {
-    return html.replace(/<[^>]*>/g, "").substring(0, 200) + "...";
-  };
+  const { data } = getNewsReactions(news.drupal_internal__nid.toString())
 
-  const formattedDate = new Date(news.created).toISOString().split("T")[0];
+  const mutation = useMutation({
+    mutationFn: (reactionType: string) =>
+      createReaction(news.drupal_internal__nid.toString(), "field_reaction", reactionType),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reactions", news.drupal_internal__nid.toString()] });
+    },
+    onError: () => toast.error("No se pudo registrar tu reacción"),
+  });
+
+  const stripHtml = (html: string) =>
+    html.replace(/<[^>]*>/g, "").substring(0, 200) + "...";
+
+  const fieldReaction = data?.fields.find(
+    (f) => f.field_name === "field_reaction"
+  );
 
   return (
     <div
       onClick={() => router.push(`/news/${news.id}`)}
       className="relative w-full border rounded-2xl p-4 shadow-sm hover:shadow-md transition cursor-pointer bg-white"
     >
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        {/* Category badge */}
         {news.field_segmentation.length > 0 && (
           <Badge className="bg-[#daebff] text-[#335d79] rounded-full px-3 py-1.5 text-xs font-medium">
             {news.field_segmentation[0].name}
           </Badge>
         )}
-
-        {/* Fecha arriba a la derecha */}
-        <div className="text-right text-sm text-gray-500">{formattedDate}</div>
+        <div className="text-right text-sm text-gray-500">
+          {new Date(news.created).toISOString().split("T")[0]}
+        </div>
       </div>
 
+      {/* Main */}
       <div className="flex flex-col sm:flex-row gap-4">
-        {/* Image with badge */}
         <div className="relative w-full sm:w-40 h-40 shrink-0 rounded-xl overflow-hidden">
           {news.field_main_image && (
             <Image
@@ -51,28 +67,50 @@ export function NewsCard({ news }: NewsCardProps) {
           )}
         </div>
 
-        {/* Main content */}
         <div className="flex flex-col flex-1">
-          {/* Title */}
           <h3 className="text-lg mb-2">{news.title}</h3>
-
-          {/* Resume */}
           <p className="text-gray-600 text-sm flex-1">{stripHtml(news.body)}</p>
         </div>
       </div>
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 text-sm">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-1">
-            <Heart className="size-5 stroke-2 text-[#8fd0e2]" />
-            <span>0</span>
-          </div>
+        <div className="flex items-center gap-4">
+          {/* 🔹 Renderizar las reacciones */}
+          {fieldReaction?.reactions.map((reaction) => {
+            const isActive = fieldReaction.user_reaction === reaction.id;
+            return (
+              <button
+                key={reaction.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  mutation.mutate(reaction.id);
+                }}
+                className={`flex items-center gap-1 transition ${
+                  isActive
+                    ? "opacity-100 scale-105"
+                    : "opacity-70 hover:opacity-100"
+                }`}
+              >
+                <Image
+                  src={reaction.icon_url}
+                  alt={reaction.label}
+                  width={22}
+                  height={22}
+                  className="rounded-full"
+                />
+                <span>{reaction.count}</span>
+              </button>
+            );
+          })}
+
+          {/* Comentarios */}
           <div className="flex items-center gap-1">
             <MessageCircle className="size-5 stroke-2 text-[#8fd0e2]" />
             <span>{news.comments.comment_count || 0}</span>
           </div>
         </div>
+
         <Link
           href={`/news/${news.id}`}
           className="text-[#24b0d6] font-semibold hover:underline"

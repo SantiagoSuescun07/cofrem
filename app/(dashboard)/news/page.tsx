@@ -5,7 +5,7 @@ import { useNews } from "@/queries/news";
 import { NewsCard } from "@/components/news/news-card";
 import { NewsPageSkeleton } from "@/components/skeletons/news/news-page-skeleton";
 import { Pagination } from "@/components/common/pagination";
-import { motion, AnimatePresence, Variants, cubicBezier } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { NewsBreadcrumb } from "@/components/news/news-breadcrumb";
 import { containerVariants, itemVariants } from "@/constants/animation.-variants";
 

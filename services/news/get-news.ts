@@ -13,8 +13,6 @@ export const fetchNews = async (): Promise<{
     },
   });
 
-  console.log("API Response (all news):", response.data); // Debug log
-
   const data = response.data;
 
   const includedById = new Map<string, any>();

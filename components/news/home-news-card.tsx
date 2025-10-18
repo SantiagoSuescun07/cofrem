@@ -1,30 +1,51 @@
+"use client";
+
 import { News } from "@/types/news/news";
-import { Heart, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { ProgressBar } from "../common/progress-bar";
 import Image from "next/image";
 import Link from "next/link";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createReaction } from "@/services/news/reactions";
+import { toast } from "sonner";
+import { getNewsReactions } from "@/queries/news";
 
 interface HomeNewsCardProps {
   news: News;
-  onLike?: () => void;
-  onViewMore?: () => void;
-  likesCount?: number;
-  isLiked?: boolean;
 }
 
-export function HomeNewsCard({
-  news,
-  onLike,
-  onViewMore,
-  likesCount = 0,
-  isLiked = false,
-}: HomeNewsCardProps) {
+export function HomeNewsCard({ news }: HomeNewsCardProps) {
+  const queryClient = useQueryClient();
+
+  // Obtener reacciones de la noticia
+  const { data } = getNewsReactions(news.drupal_internal__nid.toString());
+
+  // Mutación para registrar una reacción
+  const mutation = useMutation({
+    mutationFn: (reactionType: string) =>
+      createReaction(
+        news.drupal_internal__nid.toString(),
+        "field_reaction",
+        reactionType
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["reactions", news.drupal_internal__nid.toString()],
+      });
+    },
+    onError: () => toast.error("No se pudo registrar tu reacción"),
+  });
+
   const mainImage = news.field_main_image?.url || "";
   const commentsCount = news.comments.comment_count;
+  const fieldReaction = data?.fields.find(
+    (f) => f.field_name === "field_reaction"
+  );
 
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden transition-shadow hover:shadow-lg">
       <div className="p-5">
+        {/* Header */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex items-center gap-2">
             <Image
@@ -40,10 +61,12 @@ export function HomeNewsCard({
           <ProgressBar />
         </div>
 
+        {/* Título */}
         <h2 className="text-gray-700 text-sm leading-relaxed mb-4">
           {news.title}
         </h2>
 
+        {/* Imagen principal */}
         {mainImage && (
           <div className="rounded-xl overflow-hidden mb-4">
             <Image
@@ -57,6 +80,7 @@ export function HomeNewsCard({
           </div>
         )}
 
+        {/* Footer */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             {news.field_segmentation.length > 0 && (
@@ -67,29 +91,44 @@ export function HomeNewsCard({
 
             <Link
               href={`/news/${news.id}`}
-              onClick={onViewMore}
               className="bg-[#00a2f1] hover:bg-[#0085c8] text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors"
             >
               Ver más
             </Link>
           </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={onLike}
-              className="flex items-center gap-1.5 text-gray-600 hover:text-cyan-500 transition-colors"
-            >
-              <Heart
-                className={`w-5 h-5 ${
-                  isLiked ? "fill-cyan-500 text-cyan-500" : ""
-                }`}
-              />
-              <span className="text-sm font-medium">{likesCount}</span>
-            </button>
 
-            <button className="flex items-center gap-1.5 text-gray-600 hover:text-cyan-500 transition-colors">
-              <MessageCircle className="w-5 h-5" />
+          {/* Reacciones y comentarios */}
+          <div className="flex items-center gap-4">
+            {/* 🔹 Renderizar las reacciones */}
+            {fieldReaction?.reactions.map((reaction) => {
+              const isActive = fieldReaction.user_reaction === reaction.id;
+              return (
+                <button
+                  key={reaction.id}
+                  onClick={() => mutation.mutate(reaction.id)}
+                  className={`flex items-center gap-1 transition ${
+                    isActive
+                      ? "opacity-100 scale-105"
+                      : "opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <Image
+                    src={reaction.icon_url}
+                    alt={reaction.label}
+                    width={22}
+                    height={22}
+                    className="rounded-full"
+                  />
+                  <span className="text-sm font-medium">{reaction.count}</span>
+                </button>
+              );
+            })}
+
+            {/* Comentarios */}
+            <div className="flex items-center gap-1 text-gray-600">
+              <MessageCircle className="w-5 h-5 text-[#8fd0e2]" />
               <span className="text-sm font-medium">{commentsCount}</span>
-            </button>
+            </div>
           </div>
         </div>
       </div>

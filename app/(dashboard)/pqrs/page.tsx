@@ -11,7 +11,7 @@ export default function PqrsPage() {
 
   return (
     <div className="relative">
-      <div className="container mx-auto py-6">
+      <div className="container mx-auto py-6 px-6 md:px-10">
         {/* Header */}
         <PQRHeader setIsModalOpen={setIsModalOpen} />
 

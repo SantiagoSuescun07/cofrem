@@ -23,7 +23,10 @@ export function SignOutButton({
 
   return (
     <Button
-      onClick={handleClick}
+      onClick={() => {
+        localStorage.clear()
+        handleClick();
+      }}
       variant={variant}
       className={cn(
         "rounded-lg px-3 py-2.5 text-primary/70 transition-all hover:text-primary dark:text-primary/70 dark:hover:text-primary hover:bg-gray-200/40 dark:hover:bg-gray-600/40",

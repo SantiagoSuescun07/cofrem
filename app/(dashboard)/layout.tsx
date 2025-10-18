@@ -58,19 +58,13 @@ export default function DashboardLayout({
       icon: "/icons/calendar.png",
       url: "/calendar",
     },
-    // {
-    //   id: "pqrs",
-    //   label: "PQRS",
-    //   icon: "/icons/",
-    //   url: "/pqrs",
-    // },
+    {
+      id: "pqrs",
+      label: "PQRS",
+      icon: "/icons/news.png",
+      url: "/pqrs",
+    },
   ];
-
-  const handleGoogleLogin = () => {
-    alert(
-      "🔐 Autenticación con Google Workspace\n\nIntegración SSO configurada para:\n• Gmail corporativo\n• Google Drive\n• Google Calendar\n• Google Directory"
-    );
-  };
 
   useEffect(() => {
     if (
@@ -92,7 +86,6 @@ export default function DashboardLayout({
         sidebarItems={sidebarItems}
         activeModule={activeModule}
         onModuleChange={setActiveModule}
-        onGoogleLogin={handleGoogleLogin}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -108,7 +101,7 @@ export default function DashboardLayout({
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/10 backdrop-blur bg-opacity-50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
