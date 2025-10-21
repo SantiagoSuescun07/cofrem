@@ -1,41 +1,28 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
-import { Header } from "@/components/common/header";
-import { Sidebar } from "@/components/common/sidebar";
 import { useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Menu, ChevronDown, ChevronUp } from "lucide-react";
+import { Tabs } from "@/components/ui/tabs";
+import { Header } from "@/components/common/header";
+import { Sidebar } from "@/components/common/sidebar";
 import { BreadcrumbHeader } from "@/components/directory/breadcrumb-header";
-import { UserProfile } from "@/components/common/user-profile";
 import { useAreas } from "@/queries/directory/useAreas";
-import { DirectoryList } from "@/components/directory/directory-list";
-import Image from "next/image";
+import { DirectorySidebar } from "@/components/directory/DirectorySidebar";
+import { DirectorySidebarMobile } from "@/components/directory/DirectorySidebarMobile";
+import { DirectoryTabsContent } from "@/components/directory/DirectoryTabsContent";
 
-// 🔹 shadcn/ui Sheet para móvil
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const router = useRouter();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showMainSidebar, setShowMainSidebar] = useState(false);
-  const [showMainshet, setShowMainshet] = useState(false);
+  const [showMainSheet, setShowMainSheet] = useState(false);
   const [openCollapse, setOpenCollapse] = useState<string | null>(null);
   const [notifications] = useState(3);
+  const [activeModule, setActiveModule] = useState("dashboard");
 
   const [currentUser] = useState({
     name: "María González",
@@ -46,65 +33,33 @@ export default function DashboardLayout({
     sede: "Sede Principal",
   });
 
-  const [activeModule, setActiveModule] = useState("dashboard");
-
   const sidebarItems = [
     { id: "dashboard", label: "Inicio", icon: "/icons/home.png", url: "/" },
     { id: "news", label: "Noticias", icon: "/icons/news.png", url: "/news" },
-    {
-      id: "directory",
-      label: "Directorio",
-      icon: "/icons/directory.png",
-      url: "/directory",
-    },
-    {
-      id: "management-system",
-      label: "Sistema de Gestión de calidad",
-      icon: "/icons/management-system.png",
-      url: "/management-system",
-    },
-    {
-      id: "about",
-      label: "Nosotros",
-      icon: "/icons/about-us.png",
-      url: "/about-us",
-    },
-    {
-      id: "games",
-      label: "Gamificación",
-      icon: "/icons/gamification.png",
-      url: "/games",
-    },
-    {
-      id: "calendar",
-      label: "Calendario",
-      icon: "/icons/calendar.png",
-      url: "/calendar",
-    },
+    { id: "directory", label: "Directorio", icon: "/icons/directory.png", url: "/directory" },
+    { id: "management-system", label: "Sistema de Gestión", icon: "/icons/management-system.png", url: "/management-system" },
+    { id: "about", label: "Nosotros", icon: "/icons/about-us.png", url: "/about-us" },
+    { id: "games", label: "Gamificación", icon: "/icons/gamification.png", url: "/games" },
+    { id: "calendar", label: "Calendario", icon: "/icons/calendar.png", url: "/calendar" },
     { id: "pqrs", label: "PQRS", icon: "/icons/news.png", url: "/pqrs" },
   ];
 
   const { data: areas, isLoading } = useAreas();
 
   useEffect(() => {
-    if (
-      session?.drupal?.accessToken &&
-      !localStorage.getItem("cofrem.access_token")
-    ) {
+    if (session?.drupal?.accessToken && !localStorage.getItem("cofrem.access_token")) {
       localStorage.setItem("cofrem.access_token", session.drupal.accessToken);
       localStorage.setItem("cofrem.user", JSON.stringify(session.drupal.user));
     }
   }, [session?.drupal?.accessToken]);
 
   useEffect(() => {
-    if (!pathname.startsWith("/directory")) {
-      setShowMainSidebar(false);
-    }
+    if (!pathname.startsWith("/directory")) setShowMainSidebar(false);
   }, [pathname]);
 
-  // 🔹 Layout especial para /directory
+  // 🔹 Directorio Layout
   if (pathname.startsWith("/directory")) {
-    if (isLoading || !areas || areas.length === 0) {
+    if (isLoading || !areas?.length) {
       return (
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
           <p className="text-gray-500">Cargando áreas...</p>
@@ -114,199 +69,36 @@ export default function DashboardLayout({
 
     return (
       <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 relative">
-        <Tabs
-          defaultValue={String(areas[0].id)}
-          orientation="vertical"
-          className="flex flex-1 flex-col md:flex-row w-full gap-0"
-        >
-          {/* Sidebar fijo en desktop */}
-          <aside className="hidden md:flex md:w-72 bg-white border-r border-gray-100 flex-col sticky top-0 h-screen z-10">
-            <div className="flex items-center justify-between h-[74px] px-6 border-b border-gray-100">
-              <Image
-                src="/icons/logo_cofrem.svg"
-                alt=""
-                width={100}
-                height={30}
-                className="h-[40px] w-auto"
-              />
-            </div>
-
-            <button
-              onClick={() => router.push("/profile")}
-              className="p-6 border-b border-gray-100 hover:bg-[#2deb7915] transition-colors"
-            >
-              <UserProfile />
-            </button>
-
-            <nav className="flex-1 overflow-y-auto p-4">
-              <button
-                onClick={() => setShowMainSidebar(true)}
-                className="flex items-center gap-2 text-[#2f8cbd] font-medium mb-4 hover:text-[#11c99d]"
-              >
-                <Menu className="h-5 w-5" />
-                <span>Menú Principal</span>
-              </button>
-
-              <TabsList className="flex flex-col h-auto w-full bg-transparent space-y-1">
-                {areas.map((area) => (
-                  <div key={area.id} className="w-full">
-                    <TabsTrigger
-                      value={String(area.id)}
-                      onClick={() =>
-                        area.children.length > 0
-                          ? setOpenCollapse(
-                              openCollapse === String(area.id)
-                                ? null
-                                : String(area.id)
-                            )
-                          : null
-                      }
-                      className="w-full justify-between items-start px-3 py-2.5 text-sm text-left rounded-md flex whitespace-normal leading-tight transition-colors hover:bg-[#e4fef1] data-[state=active]:bg-[#e4fef1] data-[state=active]:text-[#11c99d]"
-                    >
-                      <span>{area.name}</span>
-                      {area.children.length > 0 &&
-                        (openCollapse === String(area.id) ? (
-                          <ChevronUp className="h-4 w-4 text-gray-400 mt-1" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-gray-400 mt-1" />
-                        ))}
-                    </TabsTrigger>
-
-                    {area.children.length > 0 &&
-                      openCollapse === String(area.id) && (
-                        <div className="w-full mt-1 space-y-1">
-                          {area.children.map((child) => (
-                            <TabsTrigger
-                              key={child.id}
-                              value={String(child.id)}
-                              className="w-full justify-between items-start px-3 py-2.5 text-sm text-left rounded-md flex whitespace-normal leading-tight hover:bg-[#e4fef1] data-[state=active]:bg-[#e4fef1] data-[state=active]:text-[#11c99d]"
-                            >
-                              {child.name}
-                            </TabsTrigger>
-                          ))}
-                        </div>
-                      )}
-                  </div>
-                ))}
-              </TabsList>
-            </nav>
-          </aside>
-
-          {/* Sidebar móvil idéntico pero dentro de un Sheet */}
-          <div className="md:hidden flex items-center justify-between  border-b bg-white">
-            <Sheet
-              open={showMainshet}
-              onOpenChange={() => {
-                setShowMainshet(!showMainshet);
-              }}
-            >
-              <SheetContent side="left" className="p-0 w-72 overflow-y-auto">
-                <SheetHeader className="p-4 border-b">
-                  <SheetTitle>
-                    <Image
-                      src="/icons/logo_cofrem.svg"
-                      alt="Logo"
-                      width={100}
-                      height={30}
-                      className="h-[40px] w-auto"
-                    />
-                  </SheetTitle>
-                </SheetHeader>
-
-                <button
-                  onClick={() => router.push("/profile")}
-                  className="p-6 border-b border-gray-100 hover:bg-[#2deb7915] transition-colors"
-                >
-                  <UserProfile />
-                </button>
-
-                <nav className="flex-1 overflow-y-auto p-4">
-                  <button
-                    onClick={() => (
-                      setShowMainshet(false), setShowMainSidebar(true)
-                    )}
-                    className="flex items-center gap-2 text-[#2f8cbd] font-medium mb-4 hover:text-[#11c99d]"
-                  >
-                    <Menu className="h-5 w-5" />
-                    <span>Menú Principal</span>
-                  </button>
-
-                  <TabsList className="flex flex-col h-auto w-full bg-transparent space-y-1">
-                    {areas.map((area) => (
-                      <div key={area.id} className="w-full">
-                        <TabsTrigger
-                          value={String(area.id)}
-                          onClick={() =>
-                            area.children.length > 0
-                              ? setOpenCollapse(
-                                  openCollapse === String(area.id)
-                                    ? null
-                                    : String(area.id)
-                                )
-                              : null
-                          }
-                          className="w-full justify-between items-start px-3 py-2.5 text-sm text-left rounded-md flex whitespace-normal leading-tight transition-colors hover:bg-[#e4fef1] data-[state=active]:bg-[#e4fef1] data-[state=active]:text-[#11c99d]"
-                        >
-                          <span>{area.name}</span>
-                          {area.children.length > 0 &&
-                            (openCollapse === String(area.id) ? (
-                              <ChevronUp className="h-4 w-4 text-gray-400 mt-1" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-gray-400 mt-1" />
-                            ))}
-                        </TabsTrigger>
-
-                        {area.children.length > 0 &&
-                          openCollapse === String(area.id) && (
-                            <div className="w-full mt-1 space-y-1">
-                              {area.children.map((child) => (
-                                <TabsTrigger
-                                  key={child.id}
-                                  value={String(child.id)}
-                                  className="w-full justify-between items-start px-3 py-2.5 text-sm text-left rounded-md flex whitespace-normal leading-tight hover:bg-[#e4fef1] data-[state=active]:bg-[#e4fef1] data-[state=active]:text-[#11c99d]"
-                                >
-                                  {child.name}
-                                </TabsTrigger>
-                              ))}
-                            </div>
-                          )}
-                      </div>
-                    ))}
-                  </TabsList>
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Contenido principal */}
-          <main className="flex-1 min-w-0 overflow-hidden flex flex-col relative">
-            <Header
-              onMenuClick={() => setShowMainshet(true)}
-              notifications={notifications}
-            />
+        <Tabs defaultValue={String(areas[0].id)} orientation="vertical" className="flex flex-1 flex-col md:flex-row w-full">
+          <DirectorySidebar
+            areas={areas}
+            openCollapse={openCollapse}
+            setOpenCollapse={setOpenCollapse}
+            router={router}
+            onShowMainSidebar={() => setShowMainSidebar(true)}
+          />
+          <DirectorySidebarMobile
+            open={showMainSheet}
+            setOpen={setShowMainSheet}
+            areas={areas}
+            openCollapse={openCollapse}
+            setOpenCollapse={setOpenCollapse}
+            router={router}
+            onShowMainSidebar={() => setShowMainSidebar(true)}
+          />
+          <main className="flex-1 flex flex-col overflow-hidden">
+            <Header onMenuClick={() => setShowMainSheet(true)} notifications={notifications} />
             <BreadcrumbHeader />
             <div className="flex-1 overflow-y-auto p-8">
-              {areas.map((area) => (
-                <TabsContent key={area.id} value={String(area.id)}>
-                  <DirectoryList areaId={Number(area.id)} />
-                </TabsContent>
-              ))}
-              {areas.flatMap((a) =>
-                a.children.map((child) => (
-                  <TabsContent key={child.id} value={String(child.id)}>
-                    <DirectoryList areaId={Number(child.id)} />
-                  </TabsContent>
-                ))
-              )}
+              <DirectoryTabsContent areas={areas} />
             </div>
           </main>
         </Tabs>
 
-        {/* Sidebar principal en overlay */}
         {showMainSidebar && (
           <div className="fixed inset-0 z-50 flex">
             <Sidebar
-              isOpen={true}
+              isOpen
               onClose={() => setShowMainSidebar(false)}
               currentUser={currentUser}
               sidebarItems={sidebarItems}
@@ -340,13 +132,8 @@ export default function DashboardLayout({
         }}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header
-          onMenuClick={() => setSidebarOpen(true)}
-          notifications={notifications}
-        />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto">
-          {children}
-        </main>
+        <Header onMenuClick={() => setSidebarOpen(true)} notifications={notifications} />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto">{children}</main>
       </div>
     </div>
   );
