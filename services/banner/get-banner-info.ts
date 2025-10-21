@@ -15,24 +15,24 @@ export interface BannerData {
   title: string;
   created: string;
   changed: string;
-  field_gallery: BannerImage[];
+  image: BannerImage | null;
+  link: string;
+  newTab: boolean;
 }
 
-export const fetchBanner = async (): Promise<BannerData | null> => {
+export const fetchBanner = async (): Promise<BannerData[] | null> => {
   try {
-    const response = await api.get(
-      "/jsonapi/node/page",
-      {
-        params: {
-          "filter[title]": "Banner Inicio",
-          include: "field_gallery",
-        },
-      }
-    );
+    const response = await api.get("/jsonapi/node/banner", {
+      params: {
+        include: "field_image_banner",
+        "filter[status]": "1", // solo activos
+        "sort": "-created", // más recientes primero
+      },
+    });
 
     const data = response.data;
 
-    // Crear un mapa de "included" (archivos)
+    // Crear mapa de archivos incluidos (si los hay)
     const includedById = new Map<string, any>();
     if (data.included) {
       data.included.forEach((included: any) => {
@@ -40,31 +40,43 @@ export const fetchBanner = async (): Promise<BannerData | null> => {
       });
     }
 
-    // Tomar el primer resultado (asumiendo que "Banner Inicio" es único)
-    const item = data.data?.[0];
-    if (!item) return null;
+    // Mapear los banners
+    const banners: BannerData[] = data.data.map((item: any) => {
+      const { id, attributes, relationships } = item;
 
-    // Procesar imágenes de "field_gallery"
-    const galleryData = item.relationships.field_gallery?.data || [];
-    const fieldGallery = galleryData.map((galItem: any) => {
-      const galIncluded = includedById.get(galItem.id);
+      // Obtener relación de imagen
+      const imageRel = relationships?.field_image_banner?.data;
+      let image: BannerImage | null = null;
+
+      if (imageRel) {
+        const includedImage = includedById.get(imageRel.id);
+        if (includedImage) {
+          const attrs = includedImage.attributes;
+          image = {
+            id: includedImage.id,
+            url: apiBaseUrl + attrs.uri.url,
+            alt: imageRel.meta?.alt || "",
+            title: imageRel.meta?.title || "",
+            width: imageRel.meta?.width || 0,
+            height: imageRel.meta?.height || 0,
+          };
+        }
+      }
+
       return {
-        id: galIncluded?.id,
-        url: galIncluded ? apiBaseUrl + galIncluded.attributes.uri.url : "",
-        alt: galItem.meta.alt,
-        title: galItem.meta.title,
-        width: galItem.meta.width,
-        height: galItem.meta.height,
+        id,
+        title: attributes.title,
+        created: attributes.created,
+        changed: attributes.changed,
+        image,
+        link: attributes.field_any_link?.uri || "",
+        newTab: attributes.field_new_tab || false,
       };
     });
 
-    return {
-      id: item.id,
-      title: item.attributes.title,
-      created: item.attributes.created,
-      changed: item.attributes.changed,
-      field_gallery: fieldGallery,
-    };
+    console.log("BANNERS: ", banners)
+
+    return banners;
   } catch (error) {
     console.error("Error fetching banner:", error);
     return null;
