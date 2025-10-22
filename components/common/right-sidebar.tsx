@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Calendar, Users, Loader2 } from "lucide-react";
+import { Calendar, Users } from "lucide-react";
 import { useCalendarEventsQuery } from "@/queries/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { BirthdaySlider } from "./birthday-slider";
 
 interface RightSidebarProps {
   onPlayGames?: () => void;
@@ -27,7 +28,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     <div className="space-y-6">
       {/* Próximos eventos */}
       <div className="bg-white p-6 rounded-xl border border-gray-200">
-        <h3 className="font-semibold text-gray-900 mb-4">Próximos Eventos</h3>
+        <h3 className="text-gray-900 mb-4">Próximos Eventos</h3>
 
         {isLoading && (
           <div className="space-y-3">
@@ -97,9 +98,12 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         )}
       </div>
 
+      {/* Calendario */}
+      <BirthdaySlider />
+
       {/* Gamificación */}
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-100">
-        <h3 className="font-semibold text-gray-900 mb-4">🏆 Tu Progreso</h3>
+        <h3 className="text-gray-900 mb-4">🏆 Tu Progreso</h3>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Puntos totales</span>
@@ -127,7 +131,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
       {/* Encuesta */}
       <div className="bg-white p-6 rounded-xl border border-gray-200">
-        <h3 className="font-semibold text-gray-900 mb-4">Encuesta Activa</h3>
+        <h3 className="text-gray-900 mb-4">Encuesta Activa</h3>
         <p className="text-sm text-gray-600 mb-4">
           Evaluación de clima laboral 2025
         </p>

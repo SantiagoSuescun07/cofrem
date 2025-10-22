@@ -30,7 +30,9 @@ export default function SinglePublicationPage({
   } = useSinglePublication(id);
 
   if (isLoading)
-    return <p className="text-gray-500 animate-pulse">Cargando publicación...</p>;
+    return (
+      <p className="text-gray-500 animate-pulse">Cargando publicación...</p>
+    );
   if (isError) return <div>Error: {error?.message}</div>;
   if (!publication?.id) return router.push("/publications");
 
@@ -78,12 +80,11 @@ export default function SinglePublicationPage({
                   className="object-cover"
                 />
                 {/* Overlay contador si hay más imágenes */}
-                {index === 4 &&
-                  publication.field_gallery.length > 5 && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold">
-                      +{publication.field_gallery.length - 5}
-                    </div>
-                  )}
+                {index === 4 && publication.field_gallery.length > 5 && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-lg font-bold">
+                    +{publication.field_gallery.length - 5}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -98,45 +99,61 @@ export default function SinglePublicationPage({
         )}
 
         {/* Links */}
-{(publication.field_any_link || publication.field_video_link) && (
-  <div className="mb-8 space-y-4">
-    {publication.field_any_link && (
-      <a
-        href={publication.field_any_link}
-        target="_blank"
-        className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition group"
-      >
-        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-blue-100 text-blue-600">
-          🌐
-        </div>
-        <div className="overflow-hidden">
-          <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
-            {publication.field_any_link}
-          </p>
-          <p className="text-xs text-gray-500">Enlace relacionado</p>
-        </div>
-      </a>
-    )}
+        {(publication.field_any_link || publication.field_video_link) && (
+          <div className="mb-8 space-y-4">
+            {publication.field_any_link && (
+              <a
+                href={publication.field_any_link}
+                target="_blank"
+                className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition group"
+              >
+                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-blue-100 text-blue-600">
+                  🌐
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
+                    {publication.field_any_link}
+                  </p>
+                  <p className="text-xs text-gray-500">Enlace relacionado</p>
+                </div>
+              </a>
+            )}
 
-    {publication.field_video_link && (
-      <a
-        href={publication.field_video_link}
-        target="_blank"
-        className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition group"
-      >
-        <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-red-100 text-red-600">
-          ▶
-        </div>
-        <div className="overflow-hidden">
-          <p className="text-sm font-medium text-gray-800 group-hover:text-red-600 truncate">
-            {publication.field_video_link}
-          </p>
-          <p className="text-xs text-gray-500">Video relacionado</p>
-        </div>
-      </a>
-    )}
-  </div>
-)}
+            {publication.field_video_link && (
+              <a
+                href={publication.field_video_link}
+                target="_blank"
+                className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition group"
+              >
+                <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-red-100 text-red-600">
+                  ▶
+                </div>
+                <div className="overflow-hidden">
+                  <p className="text-sm font-medium text-gray-800 group-hover:text-red-600 truncate">
+                    {publication.field_video_link}
+                  </p>
+                  <p className="text-xs text-gray-500">Video relacionado</p>
+                </div>
+              </a>
+            )}
+
+            {/* {publication.field_video_link && (
+              <div className="mb-6">
+                <div className="aspect-video w-full rounded-xl overflow-hidden shadow">
+                  <iframe
+                    src={publication.field_video_link.replace(
+                      "/view?pli=1",
+                      "/preview"
+                    )}
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    className="w-full h-full"
+                  ></iframe>
+                </div>
+              </div>
+            )} */}
+          </div>
+        )}
 
         {/* Acciones sociales estilo feed */}
         <div className="flex items-center justify-around border-t pt-4 text-gray-600 text-sm">
@@ -145,8 +162,7 @@ export default function SinglePublicationPage({
             12
           </button>
           <button className="flex items-center gap-2 hover:text-blue-600 transition">
-            <MessageCircle className="h-5 w-5" />
-            8
+            <MessageCircle className="h-5 w-5" />8
           </button>
           <button className="flex items-center gap-2 hover:text-green-600 transition">
             <Share2 className="h-5 w-5" />

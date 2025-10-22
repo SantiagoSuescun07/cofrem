@@ -1,25 +1,11 @@
-// components/dashboard/QuickAccessGrid.tsx
 import React from "react";
-import { QuickAccessCard } from "@/components/common/quick-access-card";
-import { QuickAccessItem } from "@/types";
 import { ProgressBar } from "./progress-bar";
+import { useDigitalServicesQuery } from "@/queries/digital-services";
+import Link from "next/link";
+import Image from "next/image";
 
-interface QuickAccessGridProps {
-  quickAccessData: QuickAccessItem[];
-  onItemClick?: (item: QuickAccessItem) => void;
-}
-
-export const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
-  quickAccessData,
-  onItemClick,
-}) => {
-  const handleItemClick = (item: QuickAccessItem): void => {
-    if (onItemClick) {
-      onItemClick(item);
-    } else {
-      console.log(`Clicked: ${item.name}`);
-    }
-  };
+export const QuickAccessGrid = () => {
+  const { data: quickAccessData } = useDigitalServicesQuery();
 
   return (
     <div className="mt-20">
@@ -27,12 +13,22 @@ export const QuickAccessGrid: React.FC<QuickAccessGridProps> = ({
         Servicios en línea <ProgressBar />
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4">
-        {quickAccessData.map((item, index) => (
-          <QuickAccessCard
-            key={`${item.name}-${index}`}
-            item={item}
-            onClick={handleItemClick}
-          />
+        {quickAccessData?.map((access) => (
+          <Link
+            key={access.id}
+            href={access.link}
+            target={access.newTab ? "_blank" : "_self"}
+            className="flex flex-col gap-2 items-center justify-center group bg-white p-4 rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200 w-full"
+          >
+            <Image
+              src={access.icon?.url ?? ""}
+              alt="Icon"
+              width={40}
+              height={40}
+              className="size-[40px] object-conver"
+            />
+            {access.title}
+          </Link>
         ))}
       </div>
     </div>
