@@ -1,11 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Calendar, Users } from "lucide-react";
 import { useCalendarEventsQuery } from "@/queries/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { BirthdaySlider } from "./birthday-slider";
+import { SurveyDialog } from "./survey-dialog";
 
 interface RightSidebarProps {
   onPlayGames?: () => void;
@@ -21,6 +22,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   userRanking = "top 10",
 }) => {
   const { data: events, isLoading, isError } = useCalendarEventsQuery();
+  const [openSurvey, setOpenSurvey] = useState(false);
 
   const progressPercentage = Math.min((userPoints / 2000) * 100, 100);
 
@@ -136,12 +138,14 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           Evaluación de clima laboral 2025
         </p>
         <button
-          onClick={onParticipateInSurvey}
+          onClick={() => setOpenSurvey(true)}
           className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Participar
         </button>
       </div>
+
+      <SurveyDialog open={openSurvey} onClose={() => setOpenSurvey(false)} />
     </div>
   );
 };

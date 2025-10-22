@@ -7,6 +7,7 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/axios";
 import { ProgressBar } from "@/components/common/progress-bar";
+import { MagazinesSkeleton } from "@/components/common/magazines-skeleton";
 
 // --------------------
 // 🔹 Tipos de datos
@@ -60,6 +61,10 @@ async function fetchMagazines(): Promise<MagazineWithImage[]> {
     "/jsonapi/node/magazine_link",
     {
       headers: { "Content-Type": "application/json" },
+      params: {
+        "filter[status]": "1", // 🔹 solo revistas activas
+        sort: "-created",      // 🔹 orden descendente (más recientes primero)
+      },
     }
   );
 
@@ -96,6 +101,7 @@ async function fetchMagazines(): Promise<MagazineWithImage[]> {
   return withImages;
 }
 
+
 // --------------------
 // 🔹 Página principal
 // --------------------
@@ -106,6 +112,11 @@ export default function MagazinesPage() {
   });
 
   const magazines = data ?? [];
+
+  if (isLoading) {
+  return <MagazinesSkeleton />;
+}
+
 
   return (
     <div className="min-h-screen">
