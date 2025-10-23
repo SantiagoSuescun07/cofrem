@@ -7,11 +7,12 @@ export function useDirectoryByArea(areaId: number) {
     queryKey: ["directory", areaId],
     enabled: !!areaId,
     queryFn: async () => {
+      // 1️⃣ Consultar el directorio filtrado por área/subárea
       const { data } = await api.get(
         `/jsonapi/node/directory?filter[field_area_subarea.meta.drupal_internal__target_id]=${areaId}&include=field_picture`
       );
 
-      // Crear un mapa de archivos incluidos para lookup rápido
+      // 2️⃣ Mapa de imágenes incluidas
       const includedFiles =
         data.included?.reduce((acc: any, file: any) => {
           if (file.type === "file--file") {
@@ -20,21 +21,55 @@ export function useDirectoryByArea(areaId: number) {
           return acc;
         }, {}) || {};
 
-      return data.data.map((item: any) => {
-        const imageId = item.relationships?.field_picture?.data?.id;
-        const imageUrl = imageId
-          ? `https://backoffice.cofrem.com.co${includedFiles[imageId]}`
-          : "/default.png";
+      // 3️⃣ Para cada persona, obtener la taxonomía del área_subárea
+      const people = await Promise.all(
+        data.data.map(async (item: any) => {
+          const imageId = item.relationships?.field_picture?.data?.id;
+          const imageUrl = imageId
+            ? `https://backoffice.cofrem.com.co${includedFiles[imageId]}`
+            : "/default.png";
 
-        return {
-          id: item.id,
-          name: item.attributes.title,
-          position: item.attributes.field_charge,
-          email: item.attributes.field_mail,
-          phone: item.attributes.field_phone,
-          imageUrl,
-        };
-      });
+          // Relación con área_subárea
+          const areaRelation =
+            item.relationships?.field_area_subarea?.data ?? null;
+          let areaName = null;
+          let parentArea = null;
+
+          if (areaRelation?.id) {
+            try {
+              // Llamar al endpoint de taxonomía
+              const { data: areaData } = await api.get(
+                `/jsonapi/taxonomy_term/area_subarea/${areaRelation.id}`
+              );
+
+              areaName = areaData.data?.attributes?.name ?? null;
+              const parentRel = areaData.data?.relationships?.parent?.data?.[0];
+              if (parentRel?.id) {
+                // Si tiene padre, obtener también su nombre
+                const { data: parentData } = await api.get(
+                  `/jsonapi/taxonomy_term/area_subarea/${parentRel.id}`
+                );
+                parentArea = parentData.data?.attributes?.name ?? null;
+              }
+            } catch (err) {
+              console.warn("Error fetching area/subarea:", err);
+            }
+          }
+
+          return {
+            id: item.id,
+            name: item.attributes.title,
+            position: item.attributes.field_charge,
+            email: item.attributes.field_mail,
+            phone: item.attributes.field_phone,
+            imageUrl,
+            area: areaName,
+            parentArea,
+          };
+        })
+      );
+
+      return people;
     },
   });
 }

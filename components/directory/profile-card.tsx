@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Building2, User, Phone, Mail } from "lucide-react";
+import { Building2, User, Phone, Mail, BookUser } from "lucide-react";
 import Image from "next/image";
 
 interface ProfileCardProps {
@@ -10,20 +10,20 @@ interface ProfileCardProps {
   phone: string;
   email: string;
   imageUrl: string;
+  area?: string;
 }
 
 export function ProfileCard({
   name,
   position,
-  division,
-  jobTitle,
   phone,
+  area,
   email,
   imageUrl,
 }: ProfileCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow py-0">
-      <div className="relative h-64 ">
+      <div className="relative h-[400px] ">
         <Image
           src={imageUrl || "/placeholder.svg"}
           alt={name}
@@ -39,18 +39,14 @@ export function ProfileCard({
         <div className="space-y-3">
           <div className="flex items-start gap-3">
             <Building2 className="h-5 w-5 text-primary mt-0.5" />
+            <p className="text-sm text-foreground leading-relaxed">{area}</p>
+          </div>
+          <div className="flex items-start gap-3">
+            <BookUser className="h-5 w-5 text-primary mt-0.5" />
             <p className="text-sm text-foreground leading-relaxed">
               {position}
             </p>
           </div>
-
-          {/* <div className="flex items-start gap-3">
-            <User className="h-5 w-5 text-primary mt-0.5" />
-            <p className="text-sm text-foreground leading-relaxed">
-              {jobTitle}
-            </p>
-          </div> */}
-
           <div className="flex items-center gap-3">
             <Phone className="h-5 w-5 text-primary " />
             <p className="text-sm text-foreground">{phone}</p>
