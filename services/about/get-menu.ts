@@ -48,27 +48,26 @@ export const fetchAboutUsMenu = async (): Promise<AboutUsMenuItem[]> => {
   return data;
 };
 
-// Contenido de cada sección
 export const fetchAboutUsNode = async (id: string): Promise<AboutUsNode> => {
-  console.log("NODE ID: ", id)
-   const { data } = await api.get(`/node/${id}?_format=json`, {
+  const { data } = await api.get(`/node/${id}?_format=json`, {
     auth: {
       username: process.env.NEXT_PUBLIC_BASIC_AUTH_USER || "admin",
       password: process.env.NEXT_PUBLIC_BASIC_AUTH_PASS || "admin",
     },
   });
 
-
   return {
     nid: data.nid?.[0]?.value,
     title: data.title?.[0]?.value,
     body: data.body?.[0]?.processed ?? "",
+
     field_file: data.field_file?.map((f: any) => ({
       target_id: f.target_id,
       display: f.display,
       description: f.description,
       url: f.url,
     })),
+
     field_gallery: data.field_gallery?.map((g: any) => ({
       target_id: g.target_id,
       alt: g.alt,
@@ -77,5 +76,17 @@ export const fetchAboutUsNode = async (id: string): Promise<AboutUsNode> => {
       height: g.height,
       url: g.url,
     })),
+
+    // 🔹 Agregamos el campo principal
+    field_main_image_optional: data.field_main_image_optional?.map(
+      (img: any) => ({
+        target_id: img.target_id,
+        alt: img.alt,
+        title: img.title,
+        width: img.width,
+        height: img.height,
+        url: img.url,
+      })
+    ),
   };
 };

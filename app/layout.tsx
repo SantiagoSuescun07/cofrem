@@ -53,6 +53,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cofrem Intranet",
   description: "Interfaz con fuentes corporativas Humms777 BT y Colvetica",
+  icons: {
+    icon: [{ url: "/favicon.ico" }],
+  },
 };
 
 export default async function RootLayout({

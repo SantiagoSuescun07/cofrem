@@ -15,7 +15,7 @@ export const QuickAccessGrid = () => {
 
   return (
     <div className="mt-20 text-center">
-      <h2 className="flex items-center justify-center gap-3 text-xl text-[#323c45] mb-6">
+      <h2 className="flex items-center gap-3 text-xl text-[#323c45] mb-6">
         Servicios en línea <ProgressBar />
       </h2>
 
