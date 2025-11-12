@@ -43,7 +43,7 @@ export function HomeNewsCard({ news }: HomeNewsCardProps) {
   );
 
   return (
-    <div className="bg-white rounded-2xl shadow-md overflow-hidden transition-shadow hover:shadow-lg">
+    <div className="bg-white rounded-2xl shadow-md mb-5 overflow-hidden transition-shadow hover:shadow-lg">
       <div className="p-5">
         {/* Header */}
         <div className="flex items-center gap-2 mb-3">

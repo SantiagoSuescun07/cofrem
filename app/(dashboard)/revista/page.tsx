@@ -111,7 +111,7 @@ export default function MagazinesPage() {
     queryFn: fetchMagazines,
   });
 
-  const magazines = data ?? [];
+  const magazines = (data ?? []).slice(0, 12);
 
   if (isLoading) {
   return <MagazinesSkeleton />;
@@ -154,7 +154,7 @@ export default function MagazinesPage() {
 
         {/* Grid de revistas */}
         {!isLoading && magazines.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             {magazines.map((magazine) => (
               <Card
                 key={magazine.id}
@@ -163,28 +163,32 @@ export default function MagazinesPage() {
                 <CardContent className="p-0">
                   {/* Imagen */}
                   {magazine.image.url ? (
-                    <Image
-                      src={magazine.image.url}
-                      alt={magazine.image.filename || magazine.attributes.title}
-                      width={400}
-                      height={300}
-                      className="object-cover w-full"
-                    />
+                    <div className="w-full h-[200px] sm:h-[240px] md:h-[280px] lg:h-[320px] bg-gray-100 flex items-center justify-center overflow-hidden">
+                      <Image
+                        src={magazine.image.url}
+                        alt={magazine.image.filename || magazine.attributes.title}
+                        width={300}
+                        height={200}
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="object-contain w-full h-full"
+                        style={{ objectFit: "contain" }}
+                      />
+                    </div>
                   ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <div className="flex items-center justify-center h-[200px] sm:h-[240px] md:h-[280px] lg:h-[320px] text-muted-foreground text-sm bg-gray-100">
                       Sin imagen
                     </div>
                   )}
 
                   {/* Información */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-1">
+                  <div className="p-4">
+                    <h3 className="text-base font-semibold mb-2 line-clamp-2">
                       {magazine.attributes.title}
                     </h3>
 
                     <Button
                       variant="ghost"
-                      className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal group"
+                      className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal text-sm group"
                       asChild
                     >
                       <a
@@ -193,7 +197,7 @@ export default function MagazinesPage() {
                         rel="noopener noreferrer"
                       >
                         Ver revista
-                        <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
                       </a>
                     </Button>
                   </div>

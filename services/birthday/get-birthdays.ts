@@ -3,6 +3,9 @@ import api from "@/lib/axios";
 export interface Birthday {
   name: string;
   field_birthdate: string;
+  email?: string;
+  profileImage?: string;
+  area?: string;
 }
 
 export const getBirthdays = async (): Promise<Birthday[]> => {
