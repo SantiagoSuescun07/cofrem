@@ -15,10 +15,7 @@ import { AboutSidebar } from "@/components/about/AboutSidebar";
 import { AboutSidebarMobile } from "@/components/about/AboutSidebarMobile";
 import { AboutContent } from "@/components/common/about-content";
 import { AboutUsNode } from "@/services/about/get-menu";
-import { ManagementSidebar } from "@/components/management/management-sidebar";
-import { ManagementSidebarMobile } from "@/components/management/ManagementSidebarMobile";
-import { ManagementContent } from "@/components/management/ManagementTabsContent";
-import { managementModules } from "@/constants/data";
+import { ManagementSystemLayout } from "@/components/management/ManagementSystemLayout";
 
 export default function DashboardLayout({
   children,
@@ -29,15 +26,9 @@ export default function DashboardLayout({
   const { data: session } = useSession();
   const router = useRouter();
 
-  const firstModule = managementModules[0];
-  const firstCategory = firstModule.categories[0];
-
-  const [openCollapser, setOpenCollapser] = useState<string | null>(
-    firstModule.id
-  );
-  const [activeCategory, setActiveCategory] = useState<string | null>(
-    firstCategory
-  );
+  // Inicialización de módulos - se establecerá dinámicamente cuando se carguen los documentos
+  const [openCollapser, setOpenCollapser] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showMainSidebar, setShowMainSidebar] = useState(false);
@@ -225,66 +216,25 @@ export default function DashboardLayout({
 
   if (pathname.startsWith("/management-system")) {
     return (
-      <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 relative">
-        <Tabs
-          orientation="vertical"
-          className="flex flex-1 flex-col md:flex-row w-full gap-0"
-        >
-          <ManagementSidebar
-            openCollapse={openCollapser}
-            setOpenCollapse={setOpenCollapser}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            router={router}
-            onShowMainSidebar={() => setShowMainSidebar(true)}
-          />
-
-          <ManagementSidebarMobile
-            open={showMainSheet}
-            setOpen={setShowMainSheet}
-            openCollapse={openCollapser}
-            setOpenCollapse={setOpenCollapser}
-            activeCategory={activeCategory}
-            setActiveCategory={setActiveCategory}
-            router={router}
-            onShowMainSidebar={() => setShowMainSidebar(true)}
-          />
-
-          <main className="flex-1 flex flex-col overflow-hidden">
-            <Header
-              onMenuClick={() => setShowMainSheet(true)}
-              notifications={notifications}
-            />
-            <BreadcrumbHeader name="Gestion" />
-            <div className="flex-1 overflow-y-auto p-8">
-              <ManagementContent
-                activeModule={openCollapser} // módulo seleccionado
-                activeCategory={activeCategory} // categoría seleccionada
-              />
-            </div>
-          </main>
-        </Tabs>
-
-        {showMainSidebar && (
-          <div className="fixed inset-0 z-50 flex">
-            <Sidebar
-              isOpen
-              onClose={() => setShowMainSidebar(false)}
-              currentUser={currentUser}
-              sidebarItems={sidebarItems}
-              activeModule={activeModule ?? ""}
-              onModuleChange={(id) => {
-                setActiveModule(id);
-                setShowMainSidebar(false);
-                const item = sidebarItems.find((s) => s.id === id);
-                if (item?.url) router.push(item.url);
-              }}
-            />
-          </div>
-        )}
-      </div>
+      <ManagementSystemLayout
+        openCollapser={openCollapser}
+        setOpenCollapser={setOpenCollapser}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+        showMainSheet={showMainSheet}
+        setShowMainSheet={setShowMainSheet}
+        showMainSidebar={showMainSidebar}
+        setShowMainSidebar={setShowMainSidebar}
+        notifications={notifications}
+        router={router}
+        currentUser={currentUser}
+        sidebarItems={sidebarItems}
+        activeModule={activeModule}
+        setActiveModule={setActiveModule}
+      />
     );
   }
+
   // 🔹 Layout general
   return (
     <div className="flex h-screen bg-gray-50">

@@ -66,3 +66,20 @@ export interface GameConfig {
   difficulty: "easy" | "medium" | "hard";
 }
 
+export interface RankingEntry {
+  position: number;
+  user: string;
+  area: string | null;
+  points: string;
+  games_completed: string;
+  is_current_user: boolean;
+}
+
+export interface RankingResponse {
+  campaign: string;
+  period: string;
+  visibility: string;
+  tiebreaker: string;
+  ranking: RankingEntry[];
+}
+

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCampaigns, useGameDetails } from "@/queries/games";
+import { useCampaigns, useGameDetails, useRanking } from "@/queries/games";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { Button } from "@/components/ui/button";
-import { Trophy } from "lucide-react";
+import { Trophy, Medal, Crown, Gamepad2 } from "lucide-react";
 import Image from "next/image";
+import { Tabs, TabsContent} from "@/components/ui/tabs";
 
 function getGameTypeIcon(gameType: string) {
   switch (gameType) {
@@ -58,7 +59,9 @@ function getGameButtonColor(gameType: string) {
 export default function GamesPage() {
   const router = useRouter();
   const { data: campaigns, isLoading: campaignsLoading } = useCampaigns();
+  const { data: ranking, isLoading: rankingLoading } = useRanking();
   const [gameUrl, setGameUrl] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"games" | "ranking">("games");
 
   // Obtener la primera campaña
   const campaign = campaigns && campaigns.length > 0 ? campaigns[0] : null;
@@ -200,7 +203,7 @@ export default function GamesPage() {
       </Breadcrumb>
 
       {/* Banner con imagen de fondo y título superpuesto */}
-      <div className="relative rounded-2xl mb-8 overflow-hidden h-64">
+      <div className="relative rounded-2xl mb-8 overflow-hidden h-94">
         {campaign.field_main_image ? (
           <>
             <Image
@@ -239,33 +242,205 @@ export default function GamesPage() {
         </div>
       </div>
 
-      <div className="md:ml-4 flex-shrink-0 w-full flex justify-end pr-4 mb-6">
-        <Button className="bg-[#306393] hover:bg-[#306393]/90 text-white px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap">
-          <Trophy className="w-5 h-5" />
-          Ranking
-        </Button>
-      </div>
+      {/* Tabs para alternar entre juegos y ranking */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "games" | "ranking")} className="w-full">
+        <div className="flex justify-end items-center mb-6">
+  
+          {activeTab === "games" && (
+            <Button
+              onClick={() => setActiveTab("ranking")}
+              className="bg-[#306393] hover:bg-[#306393]/90 text-white px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
+            >
+              <Trophy className="w-5 h-5" />
+              Ver Ranking
+            </Button>
+          )}
+          {activeTab === "ranking" && (
+            <Button
+              onClick={() => setActiveTab("games")}
+              className="bg-[#306393] hover:bg-[#306393]/90 text-white px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
+            >
+              <Gamepad2 className="w-5 h-5" />
+              Ver Juegos
+            </Button>
+          )}
+        </div>
 
-      {/* Tarjetas de juegos en grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {gameLoading ? (
-          <>
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-white p-6 rounded-xl border border-gray-200"
-              >
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393] mx-auto mb-4"></div>
-                  <p className="text-gray-500">Cargando juego...</p>
+        <TabsContent value="games" className="mt-0">
+          {/* Tarjetas de juegos en grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {gameLoading ? (
+              <>
+                {[1, 2, 3].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white p-6 rounded-xl border border-gray-200"
+                  >
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393] mx-auto mb-4"></div>
+                      <p className="text-gray-500">Cargando juego...</p>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              games.map((game) => renderGameCard(game))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="ranking" className="mt-0">
+          {rankingLoading ? (
+            <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393] mx-auto mb-4"></div>
+                <p className="text-gray-500">Cargando ranking...</p>
+              </div>
+            </div>
+          ) : ranking && ranking.ranking && ranking.ranking.length > 0 ? (
+            <div className="space-y-8">
+      
+
+              {/* Ranking - Lista Completa de Posiciones */}
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+                {/* Header de la tabla */}
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                  <div className="grid grid-cols-12 gap-4 items-center text-sm font-semibold text-gray-700">
+                    <div className="col-span-1 text-center">Pos</div>
+                    <div className="col-span-5">Usuario</div>
+                    <div className="col-span-2 text-center">Área</div>
+                    <div className="col-span-2 text-center">Puntos</div>
+                    <div className="col-span-2 text-center">Juegos</div>
+                  </div>
+                </div>
+
+                {/* Lista de posiciones */}
+                <div className="divide-y divide-gray-100">
+                  {ranking.ranking.map((entry: typeof ranking.ranking[0], index: number) => {
+                    // Iconos y colores según la posición
+                    const getPositionStyle = (position: number) => {
+                      if (position === 1) {
+                        return {
+                          icon: <Crown className="w-5 h-5 text-yellow-500" />,
+                          bgColor: "bg-yellow-50",
+                          borderColor: "border-yellow-300",
+                          textColor: "text-yellow-700",
+                        };
+                      }
+                      if (position === 2) {
+                        return {
+                          icon: <Medal className="w-5 h-5 text-gray-400" />,
+                          bgColor: "bg-gray-50",
+                          borderColor: "border-gray-300",
+                          textColor: "text-gray-700",
+                        };
+                      }
+                      if (position === 3) {
+                        return {
+                          icon: <Medal className="w-5 h-5 text-amber-600" />,
+                          bgColor: "bg-amber-50",
+                          borderColor: "border-amber-300",
+                          textColor: "text-amber-700",
+                        };
+                      }
+                      return {
+                        icon: null,
+                        bgColor: "",
+                        borderColor: "",
+                        textColor: "text-gray-600",
+                      };
+                    };
+
+                    const positionStyle = getPositionStyle(entry.position);
+                    const isCurrentUser = entry.is_current_user;
+
+                    return (
+                      <div
+                        key={index}
+                        className={`px-6 py-4 transition-colors ${
+                          isCurrentUser
+                            ? "bg-[#306393]/10 border-l-4 border-l-[#306393] font-semibold"
+                            : "hover:bg-gray-50"
+                        } ${positionStyle.bgColor}`}
+                      >
+                        <div className="grid grid-cols-12 gap-4 items-center">
+                          {/* Posición */}
+                          <div className="col-span-1 flex items-center justify-center gap-2">
+                            {positionStyle.icon ? (
+                              <div className="flex items-center gap-1">
+                                {positionStyle.icon}
+                                <span className={`text-lg font-bold ${positionStyle.textColor}`}>
+                                  {entry.position}
+                                </span>
+                              </div>
+                            ) : (
+                              <span
+                                className={`text-lg font-bold ${
+                                  isCurrentUser ? "text-[#306393]" : positionStyle.textColor
+                                }`}
+                              >
+                                {entry.position}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Usuario */}
+                          <div className="col-span-5 flex items-center gap-2">
+                            <p
+                              className={`font-semibold truncate ${
+                                isCurrentUser ? "text-[#306393]" : "text-gray-900"
+                              }`}
+                            >
+                              {entry.user}
+                            </p>
+                            {isCurrentUser && (
+                              <span className="flex-shrink-0 text-xs bg-[#306393] text-white px-2 py-1 rounded-full font-semibold">
+                                Tú
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Área */}
+                          <div className="col-span-2 text-center">
+                            <span className="text-sm text-gray-600">
+                              {entry.area || "-"}
+                            </span>
+                          </div>
+
+                          {/* Puntos */}
+                          <div className="col-span-2 text-center">
+                            <p
+                              className={`font-bold ${
+                                isCurrentUser ? "text-[#306393]" : "text-gray-900"
+                              }`}
+                            >
+                              {entry.points}
+                            </p>
+                            <p className="text-xs text-gray-500">puntos</p>
+                          </div>
+
+                          {/* Juegos completados */}
+                          <div className="col-span-2 text-center">
+                            <p className="text-sm font-medium text-gray-700">
+                              {entry.games_completed}
+                            </p>
+                            <p className="text-xs text-gray-500">juegos</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </>
-        ) : (
-          games.map((game) => renderGameCard(game))
-        )}
-      </div>
+            </div>
+          ) : (
+            <div className="bg-white p-12 rounded-xl border border-gray-200 shadow-sm text-center">
+              <Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No hay datos de ranking disponibles</p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

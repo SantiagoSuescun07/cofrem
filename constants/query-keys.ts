@@ -10,3 +10,5 @@ export const PQRS_QUERY_KEY = "pqrs";
 export const CAMPAIGNS_QUERY_KEY = "campaigns";
 export const SINGLE_CAMPAIGN_KEY = "single-campaign";
 export const GAME_DETAILS_QUERY_KEY = "game-details";
+export const RANKING_QUERY_KEY = "ranking";
+export const DOCUMENTS_QUERY_KEY = "documents";
