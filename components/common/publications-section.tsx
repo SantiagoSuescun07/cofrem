@@ -10,7 +10,7 @@ export function PublicationsSection() {
 
   return (
     <div className="lg:col-span-2">
-      <div className="space-y-6">
+      <div className="space-y-6 ">
         {isLoading
           ? Array.from({ length: 3 }).map((_, i) => (
               <PublicationCardSkeleton key={i} />

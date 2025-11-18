@@ -6,11 +6,15 @@ import { useEffect, useState, useCallback } from "react";
 import { useBirthdayQuery } from "@/queries/birthday";
 import { Loader2, User } from "lucide-react";
 import Image from "next/image";
+import { BirthdayModal } from "./birthday-modal";
+import { Birthday } from "@/services/birthday/get-birthdays";
 
 export function BirthdaySlider() {
   const { data: birthdays = [], isLoading } = useBirthdayQuery();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const today = new Date().toISOString().slice(5, 10); // MM-DD
   const todayBirthdays = birthdays.filter(b => b.field_birthdate?.slice(5, 10) === today);
@@ -62,7 +66,11 @@ export function BirthdaySlider() {
               {pair.map((person, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg"
+                  onClick={() => {
+                    setSelectedBirthday(person);
+                    setIsModalOpen(true);
+                  }}
+                  className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg cursor-pointer hover:bg-[#e2e8f0] transition-colors"
                 >
                   <div className="w-10 h-10 rounded-full bg-[#2deb79]/20 flex items-center justify-center">
                     <User className="text-[#2deb79] h-5 w-5" />
@@ -71,7 +79,9 @@ export function BirthdaySlider() {
                     <p className="font-medium text-sm text-gray-800">
                       {person.name}
                     </p>
-                    <p className="text-xs text-gray-500">Área no especificada</p>
+                    <p className="text-xs text-gray-500">
+                      {person.area || "Área no especificada"}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -92,6 +102,16 @@ export function BirthdaySlider() {
           />
         ))}
       </div>
+
+      {/* Modal de cumpleaños */}
+      <BirthdayModal
+        birthday={selectedBirthday}
+        open={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBirthday(null);
+        }}
+      />
     </div>
   );
 }

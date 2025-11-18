@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCalendarEventsQuery } from "@/queries/calendar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { BirthdaySlider } from "./birthday-slider";
 import { SurveyDialog } from "./survey-dialog";
+import { EventDetailModal } from "@/app/(dashboard)/calendar/_components/event-detail-modal";
+import { CalendarEvent } from "@/types";
+import useEmblaCarousel from "embla-carousel-react";
+import Autoplay from "embla-carousel-autoplay";
+import { useCallback, useEffect } from "react";
 
 interface RightSidebarProps {
   onPlayGames?: () => void;
@@ -23,12 +28,83 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 }) => {
   const { data: events, isLoading, isError } = useCalendarEventsQuery();
   const [openSurvey, setOpenSurvey] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    { loop: true, align: "start" },
+    [Autoplay({ delay: 4000 })]
+  );
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const progressPercentage = Math.min((userPoints / 2000) * 100, 100);
 
+  // Ordenar eventos por fecha y tomar los próximos 4, o los más recientes si no hay próximos
+  const upcomingEvents = React.useMemo(() => {
+    if (!events || events.length === 0) {
+      console.log("No hay eventos disponibles");
+      return [];
+    }
+
+    console.log("Eventos recibidos:", events.length, events);
+
+    // Ordenar todos los eventos por fecha (más recientes primero)
+    const sortedEvents = [...events].sort((a, b) => {
+      if (!a.date || !b.date) return 0;
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateA - dateB; // Orden ascendente (más antiguos primero)
+    });
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+
+    // Filtrar eventos próximos (hoy o futuros)
+    const futureEvents = sortedEvents.filter((event) => {
+      if (!event.date) {
+        console.log("Evento sin fecha:", event);
+        return false;
+      }
+      try {
+        const eventDate = new Date(event.date);
+        eventDate.setHours(0, 0, 0, 0);
+        const isUpcoming = eventDate >= now;
+        console.log("Evento:", event.title, "Fecha:", event.date, "Fecha parseada:", eventDate, "Es próximo:", isUpcoming);
+        return isUpcoming;
+      } catch (error) {
+        console.error("Error parseando fecha:", event.date, error);
+        return false;
+      }
+    });
+
+    // Si hay eventos próximos, usar esos. Si no, usar los más recientes disponibles
+    const eventsToShow = futureEvents.length > 0 ? futureEvents : sortedEvents;
+    
+    const result = eventsToShow.slice(0, 4);
+    console.log("Eventos próximos filtrados:", result.length, result);
+    return result;
+  }, [events]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    emblaApi.on("select", onSelect);
+  }, [emblaApi, onSelect]);
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
   return (
     <div className="space-y-6">
-      {/* Próximos eventos */}
+      {/* Próximos eventos - Carrusel */}
       <div className="bg-white p-6 rounded-xl border border-gray-200">
         <h3 className="text-gray-900 mb-4">Próximos Eventos</h3>
 
@@ -50,50 +126,106 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         )}
 
         {isError && (
-          <p className="text-sm text-red-500">
-            Error al cargar los eventos. Intenta nuevamente.
-          </p>
+          <div className="text-sm text-red-500 text-center py-4">
+            <p>Error al cargar los eventos. Intenta nuevamente.</p>
+            <p className="text-xs mt-2 text-gray-500">
+              Verifica la consola para más detalles.
+            </p>
+          </div>
         )}
 
-        {!isLoading && events && (
-          <div className="space-y-3">
-            {events.slice(0, 3).map((event, index) => (
-              <div
-                key={event.id}
-                className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors"
-              >
-                <div
-                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    index % 2 === 0 ? "bg-blue-100" : "bg-green-100"
-                  }`}
-                >
-                  {index % 2 === 0 ? (
-                    <Calendar
-                      size={16}
-                      className={`${
-                        index % 2 === 0 ? "text-blue-600" : "text-green-600"
-                      }`}
-                    />
-                  ) : (
-                    <Users size={16} className="text-green-600" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                    {event.title}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {format(new Date(event.date), "dd MMM - h:mm a", {
-                      locale: es,
-                    })}
-                  </p>
-                </div>
+        {!isLoading && upcomingEvents.length > 0 && (
+          <div className="relative">
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex">
+                {upcomingEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex-[0_0_100%] min-w-0 px-1"
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setIsEventModalOpen(true);
+                    }}
+                  >
+                    <div className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer">
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          upcomingEvents.indexOf(event) % 2 === 0
+                            ? "bg-blue-100"
+                            : "bg-green-100"
+                        }`}
+                      >
+                        {upcomingEvents.indexOf(event) % 2 === 0 ? (
+                          <Calendar
+                            size={16}
+                            className="text-blue-600"
+                          />
+                        ) : (
+                          <Users size={16} className="text-green-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                          {event.title}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {format(new Date(event.date), "dd MMM - h:mm a", {
+                            locale: es,
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
 
-            {events.length === 0 && (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No hay eventos próximos.
+            {/* Botones de navegación */}
+            {upcomingEvents.length > 1 && (
+              <>
+                <button
+                  onClick={scrollPrev}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50 transition-colors z-10"
+                  aria-label="Evento anterior"
+                >
+                  <ChevronLeft className="w-4 h-4 text-gray-700" />
+                </button>
+                <button
+                  onClick={scrollNext}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-50 transition-colors z-10"
+                  aria-label="Siguiente evento"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-700" />
+                </button>
+              </>
+            )}
+
+            {/* Dots indicadores */}
+            {upcomingEvents.length > 1 && (
+              <div className="flex justify-center mt-3 gap-2">
+                {upcomingEvents.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => emblaApi?.scrollTo(index)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === selectedIndex
+                        ? "bg-[#306393]"
+                        : "bg-gray-300"
+                    }`}
+                    aria-label={`Ir al evento ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!isLoading && upcomingEvents.length === 0 && !isError && (
+          <div className="text-sm text-gray-500 text-center py-4">
+            <p>No hay eventos próximos.</p>
+            {events && events.length > 0 && (
+              <p className="text-xs mt-2">
+                Total de eventos disponibles: {events.length}
               </p>
             )}
           </div>
@@ -146,6 +278,16 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       </div>
 
       <SurveyDialog open={openSurvey} onClose={() => setOpenSurvey(false)} />
+
+      {/* Modal de detalle del evento */}
+      <EventDetailModal
+        event={selectedEvent}
+        open={isEventModalOpen}
+        onClose={() => {
+          setIsEventModalOpen(false);
+          setSelectedEvent(null);
+        }}
+      />
     </div>
   );
 };

@@ -25,16 +25,21 @@ export const QuickAccessGrid = () => {
             key={access.id}
             href={access.link}
             target={access.newTab ? "_blank" : "_self"}
-            className="flex flex-col gap-2 items-center justify-center group bg-white p-4 rounded-lg border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all duration-200 w-full max-w-[180px]"
+            className="flex flex-col items-center justify-between group bg-white p-4 rounded-lg border border-gray-200 hover:border-[#306393] hover:shadow-md transition-all duration-200 w-full max-w-[180px] h-[140px]"
           >
-            <Image
-              src={access.icon?.url ?? ""}
-              alt={access.title}
-              width={40}
-              height={40}
-              className="object-contain"
-            />
-            <span className="text-sm font-medium text-gray-700 text-center">
+            {/* Contenedor fijo para iconos - siempre en la parte superior */}
+            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3">
+              <Image
+                src={access.icon?.url ?? ""}
+                alt={access.title}
+                width={48}
+                height={48}
+                className="object-contain"
+                style={{ maxWidth: "48px", maxHeight: "48px", width: "auto", height: "auto" }}
+              />
+            </div>
+            {/* Contenedor fijo para texto - siempre en la parte inferior */}
+            <span className="text-sm font-medium text-gray-700 text-center h-[48px] flex items-center justify-center leading-tight px-1">
               {access.title}
             </span>
           </Link>
@@ -44,7 +49,7 @@ export const QuickAccessGrid = () => {
       {quickAccessData && quickAccessData.length > 8 && (
         <button
           onClick={() => setShowAll((prev) => !prev)}
-          className="mt-6 px-5 py-2 text-sm font-medium text-[#0066cc] hover:underline transition-all"
+          className="mt-6 px-5 py-2 text-sm font-medium text-[#306393] hover:text-[#306393]/80 hover:underline transition-all"
         >
           {showAll ? "Ver menos" : "Ver más"}
         </button>
