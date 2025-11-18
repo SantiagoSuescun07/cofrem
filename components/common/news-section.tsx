@@ -50,6 +50,7 @@ export function NewsSection() {
         initial="hidden"
         animate="visible"
         exit="hidden"
+        className="space-y-6"
       >
         <AnimatePresence mode="popLayout">
           {paginatedItems.map((item) => (

@@ -37,6 +37,7 @@ export default function NewsPage() {
           initial="hidden"
           animate="visible"
           exit="hidden"
+          className="space-y-4 pb-6"
         >
           <AnimatePresence mode="popLayout">
             {paginatedItems.map((item) => (

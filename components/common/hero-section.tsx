@@ -116,7 +116,7 @@ export const HeroSection: React.FC = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 shadow hover:bg-white cursor-pointer z-50"
+        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 shadow hover:bg-white cursor-pointer z-30"
       >
         <ChevronLeft size={20} className="text-gray-700" />
       </motion.button>
@@ -125,13 +125,13 @@ export const HeroSection: React.FC = () => {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 shadow hover:bg-white cursor-pointer z-50"
+        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 shadow hover:bg-white cursor-pointer z-30"
       >
         <ChevronRight size={20} className="text-gray-700" />
       </motion.button>
 
       {/* Indicadores */}
-      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-50">
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-30">
         {banners.map((_, index) => (
           <button
             key={index}
@@ -148,7 +148,7 @@ export const HeroSection: React.FC = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-        className="absolute top-4 right-4 p-2 rounded-full bg-white/80 shadow hover:bg-white z-[9999]"
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/80 shadow hover:bg-white z-30"
       >
         {isAutoPlaying ? (
           <Pause className="text-blue-500 size-4" />
