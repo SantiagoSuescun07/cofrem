@@ -11,6 +11,8 @@ export const fetchDocuments = async (): Promise<Document[]> => {
     });
 
     console.log("Response completa:", response.data);
+    console.log("Total included items:", response.data?.included?.length || 0);
+    console.log("Included types:", [...new Set(response.data?.included?.map((i: any) => i.type) || [])]);
 
     const data = response.data;
 
@@ -35,31 +37,47 @@ export const fetchDocuments = async (): Promise<Document[]> => {
     const fileData = item.relationships.field_file?.data;
     const fieldFile: DocumentFile[] = [];
     
-    if (Array.isArray(fileData)) {
+    if (Array.isArray(fileData) && fileData.length > 0) {
       fileData.forEach((fileRef: any) => {
+        if (!fileRef?.id) return;
+        
         const fileIncluded = includedById.get(fileRef.id);
-        if (fileIncluded) {
+        if (fileIncluded && fileIncluded.attributes) {
+          const uri = fileIncluded.attributes.uri?.url;
+          if (uri) {
+            fieldFile.push({
+              id: fileIncluded.id,
+              filename: fileIncluded.attributes.filename || "",
+              url: apiBaseUrl + uri,
+              filemime: fileIncluded.attributes.filemime || "",
+              filesize: fileIncluded.attributes.filesize || 0,
+              description: fileRef.meta?.description || undefined,
+            });
+          } else {
+            console.warn(`Archivo ${fileRef.id} no tiene URI válida:`, fileIncluded);
+          }
+        } else {
+          console.warn(`Archivo ${fileRef.id} no encontrado en included para documento ${item.id}`);
+        }
+      });
+    } else if (fileData && fileData.id) {
+      const fileIncluded = includedById.get(fileData.id);
+      if (fileIncluded && fileIncluded.attributes) {
+        const uri = fileIncluded.attributes.uri?.url;
+        if (uri) {
           fieldFile.push({
             id: fileIncluded.id,
             filename: fileIncluded.attributes.filename || "",
-            url: apiBaseUrl + fileIncluded.attributes.uri.url,
+            url: apiBaseUrl + uri,
             filemime: fileIncluded.attributes.filemime || "",
             filesize: fileIncluded.attributes.filesize || 0,
-            description: fileRef.meta?.description || undefined,
+            description: fileData.meta?.description || undefined,
           });
+        } else {
+          console.warn(`Archivo ${fileData.id} no tiene URI válida:`, fileIncluded);
         }
-      });
-    } else if (fileData) {
-      const fileIncluded = includedById.get(fileData.id);
-      if (fileIncluded) {
-        fieldFile.push({
-          id: fileIncluded.id,
-          filename: fileIncluded.attributes.filename || "",
-          url: apiBaseUrl + fileIncluded.attributes.uri.url,
-          filemime: fileIncluded.attributes.filemime || "",
-          filesize: fileIncluded.attributes.filesize || 0,
-          description: fileData.meta?.description || undefined,
-        });
+      } else {
+        console.warn(`Archivo ${fileData.id} no encontrado en included para documento ${item.id}`);
       }
     }
 

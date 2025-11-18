@@ -29,7 +29,7 @@ export default function NewsletterPage({
   }
 
   return (
-    <div className="min-h-screen bg-muted/40 md:pb-12 md:px-4">
+    <div className="min-h-screen bg-muted/40 md:pb-12 md:px-10 max-md:px-8 py-8">
       <article className="container mx-auto bg-white rounded-3xl shadow-lg overflow-hidden">
         {/* Encabezado con imagen */}
         {newsletter.field_main_image?.url && (

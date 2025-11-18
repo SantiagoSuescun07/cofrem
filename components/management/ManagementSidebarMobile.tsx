@@ -48,14 +48,12 @@ export const ManagementSidebarMobile = ({
     const modulesMap = new Map<string, ModuleGroup>();
 
     documents.forEach((doc) => {
-      // Solo incluir documentos que tienen archivos
-      if (!doc.field_file || doc.field_file.length === 0) return;
-
       const moduleId = doc.field_modulo?.drupal_internal__tid?.toString() || "unknown";
       const moduleName = doc.field_modulo?.name || "Sin módulo";
       const categoryName = doc.field_module_category?.name;
 
-      if (!categoryName) return;
+      // Solo incluir documentos que tienen módulo y categoría
+      if (!moduleId || moduleId === "unknown" || !categoryName) return;
 
       // Obtener o crear el módulo
       if (!modulesMap.has(moduleId)) {
@@ -68,14 +66,19 @@ export const ManagementSidebarMobile = ({
 
       const module = modulesMap.get(moduleId)!;
 
-      // Agregar categoría si no existe
+      // Agregar categoría si no existe, contar solo documentos con archivos
       const existingCategory = module.categories.find((cat) => cat.name === categoryName);
+      const hasFiles = doc.field_file && doc.field_file.length > 0;
+      
       if (existingCategory) {
-        existingCategory.count++;
+        // Solo incrementar el contador si el documento tiene archivos
+        if (hasFiles) {
+          existingCategory.count++;
+        }
       } else {
         module.categories.push({
           name: categoryName,
-          count: 1,
+          count: hasFiles ? 1 : 0,
         });
       }
     });
@@ -137,9 +140,15 @@ export const ManagementSidebarMobile = ({
                   <div key={mod.id} className="w-full">
                     {/* Botón principal del módulo */}
                     <button
-                      onClick={() =>
-                        setOpenCollapse(openCollapse === mod.id ? null : mod.id)
-                      }
+                      onClick={() => {
+                        const newOpenState = openCollapse === mod.id ? null : mod.id;
+                        setOpenCollapse(newOpenState);
+                        
+                        // Si se abre el módulo y no hay categoría activa, seleccionar la primera categoría
+                        if (newOpenState === mod.id && mod.categories.length > 0 && !activeCategory) {
+                          setActiveCategory(mod.categories[0].name);
+                        }
+                      }}
                       className={`w-full flex justify-between items-center px-3 py-2.5 text-sm text-left rounded-md transition-colors ${
                         openCollapse === mod.id
                           ? "bg-[#e4fef1] text-[#11c99d]"
@@ -161,6 +170,10 @@ export const ManagementSidebarMobile = ({
                           <button
                             key={cat.name}
                             onClick={() => {
+                              // Abrir el módulo correspondiente si no está abierto
+                              if (openCollapse !== mod.id) {
+                                setOpenCollapse(mod.id);
+                              }
                               setActiveCategory(cat.name);
                               setOpen(false);
                             }}

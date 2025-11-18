@@ -44,16 +44,42 @@ export const ManagementSystemLayout = ({
 }: ManagementSystemLayoutProps) => {
   const { data: documents, isLoading } = useDocuments();
 
-  // Auto-seleccionar el primer módulo cuando se carguen los documentos
+  // Auto-seleccionar el primer módulo y su primera categoría cuando se cargan los documentos por primera vez
   useEffect(() => {
-    if (documents && documents.length > 0 && !openCollapser) {
+    if (documents && documents.length > 0 && !openCollapser && !activeCategory) {
       // Buscar el primer documento con módulo
       const firstDoc = documents.find((doc) => doc.field_modulo?.drupal_internal__tid);
       if (firstDoc?.field_modulo?.drupal_internal__tid) {
-        setOpenCollapser(firstDoc.field_modulo.drupal_internal__tid.toString());
+        const moduleId = firstDoc.field_modulo.drupal_internal__tid.toString();
+        setOpenCollapser(moduleId);
+        
+        // Buscar la primera categoría de este módulo
+        const moduleDoc = documents.find(
+          (doc) => 
+            doc.field_modulo?.drupal_internal__tid?.toString() === moduleId &&
+            doc.field_module_category?.name
+        );
+        if (moduleDoc?.field_module_category?.name) {
+          setActiveCategory(moduleDoc.field_module_category.name);
+        }
       }
     }
-  }, [documents, openCollapser, setOpenCollapser]);
+  }, [documents, openCollapser, setOpenCollapser, activeCategory, setActiveCategory]);
+
+  // Auto-seleccionar la primera categoría cuando se selecciona un módulo y no hay categoría activa
+  useEffect(() => {
+    if (documents && documents.length > 0 && openCollapser && !activeCategory) {
+      // Buscar la primera categoría del módulo seleccionado
+      const moduleDoc = documents.find(
+        (doc) => 
+          doc.field_modulo?.drupal_internal__tid?.toString() === openCollapser &&
+          doc.field_module_category?.name
+      );
+      if (moduleDoc?.field_module_category?.name) {
+        setActiveCategory(moduleDoc.field_module_category.name);
+      }
+    }
+  }, [openCollapser, documents, activeCategory, setActiveCategory]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 relative">

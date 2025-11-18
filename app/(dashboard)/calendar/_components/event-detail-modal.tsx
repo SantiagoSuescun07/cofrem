@@ -145,19 +145,19 @@ export function EventDetailModal({
           <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
             <Button
               onClick={() => window.open(googleCalendarUrl, "_blank")}
-              className="flex-1 gap-2"
+              className="flex-1 gap-2 min-w-0 whitespace-normal text-wrap h-auto py-2"
             >
-              <Plus className="h-4 w-4" />
-              Añadir a Google Calendar
+              <Plus className="h-4 w-4 flex-shrink-0" />
+              <span className="line-clamp-2 text-center">Añadir a Google Calendar</span>
             </Button>
             {event.infoButton.uri && (
               <Button
                 variant="outline"
                 onClick={() => window.open(event.infoButton.uri, "_blank")}
-                className="flex-1 gap-2"
+                className="flex-1 gap-2 min-w-0 whitespace-normal text-wrap h-auto py-2"
               >
-                {event.infoButton.title}
-                <ExternalLink className="h-4 w-4" />
+                <span className="line-clamp-2 text-center">{event.infoButton.title}</span>
+                <ExternalLink className="h-4 w-4 flex-shrink-0" />
               </Button>
             )}
           </div>

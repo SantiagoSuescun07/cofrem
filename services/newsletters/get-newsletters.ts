@@ -5,8 +5,7 @@ import { Newsletter } from "@/types/newsletters";
 export const fetchNewsletters = async (): Promise<Newsletter[]> => {
   const response = await api.get("/jsonapi/node/report", {
     params: {
-      include:
-        "field_attachments,field_category_report,field_main_image,field_report_pdf,field_type_report",
+      include: "field_main_image",
     },
   });
 
@@ -19,20 +18,24 @@ export const fetchNewsletters = async (): Promise<Newsletter[]> => {
   return data.data.map((item: any) => {
     // Archivos adjuntos
     const attachmentsData = item.relationships.field_attachments?.data || [];
-    const fieldAttachments = attachmentsData.map((att: any) => {
-      const attIncluded = includedById.get(att.id);
-      return {
-        id: attIncluded.id,
-        url: apiBaseUrl + attIncluded.attributes.uri.url,
-      };
-    });
+    const fieldAttachments = attachmentsData
+      .map((att: any) => {
+        if (!att?.id) return null;
+        const attIncluded = includedById.get(att.id);
+        if (!attIncluded?.attributes?.uri?.url) return null;
+        return {
+          id: attIncluded.id,
+          url: apiBaseUrl + attIncluded.attributes.uri.url,
+        };
+      })
+      .filter((att: any) => att !== null);
 
     // Categoría (taxonomy)
     const categoryData = item.relationships.field_category_report?.data;
-    const categoryIncluded = categoryData
+    const categoryIncluded = categoryData?.id
       ? includedById.get(categoryData.id)
       : null;
-    const fieldCategoryReport = categoryIncluded
+    const fieldCategoryReport = categoryIncluded?.attributes
       ? {
           id: categoryIncluded.id,
           tid: categoryIncluded.attributes.drupal_internal__tid,
@@ -42,24 +45,25 @@ export const fetchNewsletters = async (): Promise<Newsletter[]> => {
 
     // Imagen principal
     const mainImageData = item.relationships.field_main_image?.data;
-    const mainImageIncluded = mainImageData
+    const mainImageIncluded = mainImageData?.id
       ? includedById.get(mainImageData.id)
       : null;
-    const fieldMainImage = mainImageIncluded
-      ? {
-          id: mainImageIncluded.id,
-          url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
-          alt: mainImageData.meta.alt,
-          title: mainImageData.meta.title,
-          width: mainImageData.meta.width,
-          height: mainImageData.meta.height,
-        }
-      : null;
+    const fieldMainImage =
+      mainImageIncluded?.attributes?.uri?.url && mainImageData?.meta
+        ? {
+            id: mainImageIncluded.id,
+            url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
+            alt: mainImageData.meta.alt || "",
+            title: mainImageData.meta.title || "",
+            width: mainImageData.meta.width || 0,
+            height: mainImageData.meta.height || 0,
+          }
+        : null;
 
     // PDF
     const pdfData = item.relationships.field_report_pdf?.data;
-    const pdfIncluded = pdfData ? includedById.get(pdfData.id) : null;
-    const fieldReportPdf = pdfIncluded
+    const pdfIncluded = pdfData?.id ? includedById.get(pdfData.id) : null;
+    const fieldReportPdf = pdfIncluded?.attributes?.uri?.url
       ? {
           id: pdfIncluded.id,
           url: apiBaseUrl + pdfIncluded.attributes.uri.url,
@@ -68,8 +72,8 @@ export const fetchNewsletters = async (): Promise<Newsletter[]> => {
 
     // Tipo de reporte (taxonomy)
     const typeData = item.relationships.field_type_report?.data;
-    const typeIncluded = typeData ? includedById.get(typeData.id) : null;
-    const fieldTypeReport = typeIncluded
+    const typeIncluded = typeData?.id ? includedById.get(typeData.id) : null;
+    const fieldTypeReport = typeIncluded?.attributes
       ? {
           id: typeIncluded.id,
           tid: typeIncluded.attributes.drupal_internal__tid,
