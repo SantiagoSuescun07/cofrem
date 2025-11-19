@@ -79,7 +79,7 @@ body {
   --muted: oklch(0.95 0.01 240);
   --muted-foreground: oklch(0.45 0.02 240);
 
-  --accent: #2deb79; /* verde corporativo */
+  --accent: #2deb7942; /* verde corporativo */
   --accent-foreground: oklch(0.25 0.08 150);
 
   --destructive: oklch(0.577 0.245 27.325);
