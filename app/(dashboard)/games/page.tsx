@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCampaigns, useGameDetails, useRanking } from "@/queries/games";
+import { useCampaigns, useRanking, useGameDetailsBatch } from "@/queries/games";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,19 +17,6 @@ import { Trophy, Medal, Crown, Gamepad2 } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent} from "@/components/ui/tabs";
 
-function getGameTypeIcon(gameType: string) {
-  switch (gameType) {
-    case "paragraph--wordsearch_game":
-      return "🔤";
-    case "paragraph--puzzle_game":
-      return "🧩";
-    case "paragraph--trivia_game":
-      return "❓";
-    default:
-      return "🎮";
-  }
-}
-
 function getGameTypeName(gameType: string) {
   switch (gameType) {
     case "paragraph--wordsearch_game":
@@ -38,6 +25,20 @@ function getGameTypeName(gameType: string) {
       return "Rompecabezas";
     case "paragraph--trivia_game":
       return "Trivia";
+    case "paragraph--complete_phrase_game":
+      return "Completar frase";
+    case "paragraph--emoji_discovery_game":
+      return "Descubrir emoji";
+    case "paragraph--hangman_game":
+      return "Ahorcado";
+    case "paragraph--memory_game":
+      return "Memoria";
+    case "paragraph--quiz_game":
+      return "Quiz";
+    case "paragraph--true_false_game":
+      return "Verdadero o Falso";
+    case "paragraph--word_match_game":
+      return "Emparejar palabras";
     default:
       return "Juego";
   }
@@ -51,8 +52,76 @@ function getGameButtonColor(gameType: string) {
       return "bg-[#2da2eb] hover:bg-[#2da2eb]/90";
     case "paragraph--trivia_game":
       return "bg-[#2deb79] hover:bg-[#2deb79]/90";
+    case "paragraph--complete_phrase_game":
+      return "bg-[#9b59b6] hover:bg-[#9b59b6]/90";
+    case "paragraph--emoji_discovery_game":
+      return "bg-[#f39c12] hover:bg-[#f39c12]/90";
+    case "paragraph--hangman_game":
+      return "bg-[#e74c3c] hover:bg-[#e74c3c]/90";
+    case "paragraph--memory_game":
+      return "bg-[#3498db] hover:bg-[#3498db]/90";
+    case "paragraph--quiz_game":
+      return "bg-[#16a085] hover:bg-[#16a085]/90";
+    case "paragraph--true_false_game":
+      return "bg-[#27ae60] hover:bg-[#27ae60]/90";
+    case "paragraph--word_match_game":
+      return "bg-[#d35400] hover:bg-[#d35400]/90";
     default:
       return "bg-[#306393] hover:bg-[#306393]/90";
+  }
+}
+
+function getGameIconBg(gameType: string) {
+  switch (gameType) {
+    case "paragraph--wordsearch_game":
+      return "bg-[#306393]/10";
+    case "paragraph--puzzle_game":
+      return "bg-[#2da2eb]/10";
+    case "paragraph--trivia_game":
+      return "bg-[#2deb79]/10";
+    case "paragraph--complete_phrase_game":
+      return "bg-[#9b59b6]/10";
+    case "paragraph--emoji_discovery_game":
+      return "bg-[#f39c12]/10";
+    case "paragraph--hangman_game":
+      return "bg-[#e74c3c]/10";
+    case "paragraph--memory_game":
+      return "bg-[#3498db]/10";
+    case "paragraph--quiz_game":
+      return "bg-[#16a085]/10";
+    case "paragraph--true_false_game":
+      return "bg-[#27ae60]/10";
+    case "paragraph--word_match_game":
+      return "bg-[#d35400]/10";
+    default:
+      return "bg-[#306393]/10";
+  }
+}
+
+function getGameRoute(gameType: string) {
+  switch (gameType) {
+    case "paragraph--wordsearch_game":
+      return "/games/wordsearch";
+    case "paragraph--puzzle_game":
+      return "/games/puzzle";
+    case "paragraph--trivia_game":
+      return "/games/trivia";
+    case "paragraph--complete_phrase_game":
+      return "/games/complete-phrase";
+    case "paragraph--emoji_discovery_game":
+      return "/games/emoji-discovery";
+    case "paragraph--hangman_game":
+      return "/games/hangman";
+    case "paragraph--memory_game":
+      return "/games/memory";
+    case "paragraph--quiz_game":
+      return "/games/quiz";
+    case "paragraph--true_false_game":
+      return "/games/true-false";
+    case "paragraph--word_match_game":
+      return "/games/word-match";
+    default:
+      return null;
   }
 }
 
@@ -60,19 +129,42 @@ export default function GamesPage() {
   const router = useRouter();
   const { data: campaigns, isLoading: campaignsLoading } = useCampaigns();
   const { data: ranking, isLoading: rankingLoading } = useRanking();
-  const [gameUrl, setGameUrl] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"games" | "ranking">("games");
 
   // Obtener la primera campaña
   const campaign = campaigns && campaigns.length > 0 ? campaigns[0] : null;
 
-  React.useEffect(() => {
-    if (campaign?.field_game_type?.href) {
-      setGameUrl(campaign.field_game_type.href);
-    }
-  }, [campaign]);
+  // Usar React Query para cargar detalles de todos los juegos en paralelo con caché
+  const { gameDetailsMap, loadingGames, isLoading: gamesDetailsLoading } = useGameDetailsBatch(
+    campaign?.field_game_type || null
+  );
 
-  const { data: gameDetails, isLoading: gameLoading } = useGameDetails(gameUrl);
+  // Convertir los juegos de la campaña al formato para mostrar
+  // Este useMemo DEBE estar antes de cualquier return condicional para cumplir con las reglas de hooks
+  const games = React.useMemo(() => {
+    if (!campaign?.field_game_type || campaign.field_game_type.length === 0) {
+      return [];
+    }
+
+    return campaign.field_game_type.map((gameType) => {
+      const gameDetails = gameDetailsMap[gameType.id];
+      const route = getGameRoute(gameType.type);
+      const isImplemented = route !== null;
+
+      return {
+        id: gameType.id,
+        type: gameType.type,
+        name: gameDetails?.field_title || getGameTypeName(gameType.type),
+        description: gameDetails?.field_description || null,
+        enabled: isImplemented,
+        buttonColor: getGameButtonColor(gameType.type),
+        iconBg: getGameIconBg(gameType.type),
+        route: route,
+        details: gameDetails,
+        href: gameType.href,
+      };
+    });
+  }, [campaign, gameDetailsMap]);
 
   if (campaignsLoading) {
     return (
@@ -96,45 +188,9 @@ export default function GamesPage() {
     );
   }
 
-  const gameType = campaign.field_game_type?.type || "";
-  const gameIcon = getGameTypeIcon(gameType);
-  const gameName = getGameTypeName(gameType);
-  const buttonColor = getGameButtonColor(gameType);
-
-  // Array de juegos para mostrar en el grid
-  // Puedes agregar más juegos aquí con diferentes estados (habilitado/deshabilitado)
-  const games = [
-    {
-      id: 1,
-      type: gameType || "paragraph--wordsearch_game",
-      name: gameName || "Sopa de letras",
-      enabled: true,
-      icon: gameIcon || "🔤",
-      buttonColor: buttonColor || "bg-[#306393] hover:bg-[#306393]/90",
-      iconBg: "bg-[#306393]/10",
-    },
-    {
-      id: 2,
-      type: "paragraph--puzzle_game",
-      name: "Rompecabezas",
-      enabled: false,
-      icon: "🧩",
-      buttonColor: "bg-[#2da2eb] hover:bg-[#2da2eb]/90",
-      iconBg: "bg-[#2da2eb]/10",
-    },
-    {
-      id: 3,
-      type: "paragraph--trivia_game",
-      name: "Trivia",
-      enabled: false,
-      icon: "❓",
-      buttonColor: "bg-[#2deb79] hover:bg-[#2deb79]/90",
-      iconBg: "bg-[#2deb79]/10",
-    },
-  ];
-
   const renderGameCard = (game: typeof games[0]) => {
-    const isDisabled = !game.enabled || gameLoading;
+    const isLoading = loadingGames.has(game.id);
+    const isDisabled = !game.enabled || isLoading;
     
     return (
       <div
@@ -144,11 +200,15 @@ export default function GamesPage() {
         }`}
       >
         <div className="text-center">
-          {gameDetails?.field_icon && game.id === 1 ? (
+          {isLoading ? (
+            <div className="w-24 h-24 mx-auto mb-4 rounded-lg flex items-center justify-center bg-gray-100">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393]"></div>
+            </div>
+          ) : game.details?.field_icon ? (
             <div className="w-24 h-24 mx-auto mb-4 relative rounded-lg overflow-hidden bg-gray-100">
               <Image
-                src={"/icons/rompecabezas.png"}
-                alt={gameDetails.field_icon.alt || game.name}
+                src={game.details.field_icon.url}
+                alt={game.details.field_icon.alt || game.name}
                 fill
                 className="object-contain p-2"
               />
@@ -157,16 +217,22 @@ export default function GamesPage() {
             <div
               className={`w-24 h-24 mx-auto mb-4 rounded-lg flex items-center justify-center ${game.iconBg || "bg-[#306393]/10"}`}
             >
-              <span className="text-5xl">{game.icon}</span>
+              <div className="w-16 h-16 bg-gray-300 rounded"></div>
             </div>
           )}
-          <h3 className="font-semibold text-gray-900 mb-4 text-lg">
-            {game.name}
+          <h3 className="font-semibold text-gray-900 mb-2 text-lg">
+            {game.details?.field_title || game.name}
           </h3>
+          {game.details?.field_description && (
+            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+              {game.details.field_description}
+            </p>
+          )}
           <button
             onClick={() => {
-              if (game.type === "paragraph--wordsearch_game") {
-                router.push(`/games/wordsearch`);
+              if (game.route) {
+                // Pasar el ID del juego como parámetro
+                router.push(`${game.route}?id=${game.id}`);
               } else {
                 alert("Este tipo de juego aún no está implementado");
               }
@@ -178,7 +244,7 @@ export default function GamesPage() {
             } text-white rounded-lg transition-colors`}
             disabled={isDisabled}
           >
-            {isDisabled ? "Próximamente" : "A jugar"}
+            {isLoading ? "Cargando..." : isDisabled ? "Próximamente" : "A jugar"}
           </button>
         </div>
       </div>
@@ -268,25 +334,32 @@ export default function GamesPage() {
 
         <TabsContent value="games" className="mt-0">
           {/* Tarjetas de juegos en grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {gameLoading ? (
-              <>
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="bg-white p-6 rounded-xl border border-gray-200"
-                  >
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393] mx-auto mb-4"></div>
-                      <p className="text-gray-500">Cargando juego...</p>
-                    </div>
+          {campaignsLoading || gamesDetailsLoading || loadingGames.size > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white p-6 rounded-xl border border-gray-200 animate-pulse"
+                >
+                  <div className="text-center space-y-4">
+                    <div className="w-24 h-24 mx-auto rounded-lg bg-gradient-to-br from-gray-200 to-gray-300"></div>
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-10 bg-gray-200 rounded-lg"></div>
                   </div>
-                ))}
-              </>
-            ) : (
-              games.map((game) => renderGameCard(game))
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          ) : games.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {games.map((game) => renderGameCard(game))}
+            </div>
+          ) : (
+            <div className="bg-white p-12 rounded-xl border border-gray-200 shadow-sm text-center">
+              <Gamepad2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No hay juegos disponibles</p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="ranking" className="mt-0">

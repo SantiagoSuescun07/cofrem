@@ -145,7 +145,7 @@ export const ManagementContent = ({
           <p>No hay documentos disponibles en esta categoría.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 w-[40%] gap-2">
           {filteredDocuments.map((doc) => {
             // Tomar el primer archivo válido del documento (que tenga URL)
             const file = doc.field_file?.find((f) => f && f.url && f.url.trim() !== "");
@@ -160,27 +160,27 @@ export const ManagementContent = ({
                 href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col p-4 border border-gray-200 rounded-lg hover:bg-[#e4fef1] hover:border-[#11c99d] transition-all group"
+                className="flex flex-col p-2.5 border border-gray-200 rounded-lg hover:bg-[#e4fef1] hover:border-[#11c99d] transition-all group"
               >
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 flex-shrink-0 rounded-lg bg-[#11c99d]/10 flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-[#11c99d]" />
+                <div className="flex items-start gap-2 mb-2">
+                  <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-[#11c99d]/10 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-[#11c99d]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 group-hover:text-[#2f8cbd] transition-colors line-clamp-2">
+                    <h4 className="text-sm font-normal text-gray-900 group-hover:text-[#2f8cbd] transition-colors line-clamp-2">
                       {doc.title}
                     </h4>
                     {file.description && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
                         {file.description}
                       </p>
                     )}
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-gray-400" />
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="h-3 w-3 text-gray-400" />
                     <span className="text-xs text-gray-500">
                       {isPDF ? "PDF" : file.filemime.split("/")[1]?.toUpperCase() || "Archivo"}
                     </span>
@@ -190,7 +190,7 @@ export const ManagementContent = ({
                       </span>
                     )}
                   </div>
-                  <Download className="h-4 w-4 text-[#2f8cbd] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Download className="h-3.5 w-3.5 text-[#2f8cbd] opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </a>
             );

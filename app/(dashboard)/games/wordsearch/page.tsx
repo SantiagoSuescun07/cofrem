@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCampaigns, useGameDetails } from "@/queries/games";
 import WordSearchGame from "@/components/games/WordSearchGame";
+import GameLoader from "@/components/games/GameLoader";
 import { GameConfig } from "@/types/games";
 import {
   Breadcrumb,
@@ -64,11 +66,15 @@ function gameDetailsToConfig(
     directions,
     timeLimit: gameDetails.field_time_limit || 0,
     difficulty: "easy",
+    gameId: gameDetails.drupal_internal__id,
   };
 }
 
 export default function WordSearchPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const gameId = searchParams?.get("id");
+  
   const { data: campaigns, isLoading: campaignsLoading } = useCampaigns();
   const [gameUrl, setGameUrl] = useState<string | null>(null);
   const [gameConfig, setGameConfig] = useState<GameConfig | null>(null);
@@ -77,10 +83,19 @@ export default function WordSearchPage() {
   const campaign = campaigns && campaigns.length > 0 ? campaigns[0] : null;
 
   useEffect(() => {
-    if (campaign?.field_game_type?.href) {
-      setGameUrl(campaign.field_game_type.href);
+    if (campaign?.field_game_type) {
+      // Si hay un ID en los parámetros, buscar ese juego específico
+      const targetGame = gameId
+        ? campaign.field_game_type.find((game) => game.id === gameId)
+        : campaign.field_game_type.find(
+            (game) => game.type === "paragraph--wordsearch_game"
+          );
+      
+      if (targetGame?.href) {
+        setGameUrl(targetGame.href);
+      }
     }
-  }, [campaign]);
+  }, [campaign, gameId]);
 
   const { data: gameDetails, isLoading: gameLoading } = useGameDetails(gameUrl);
 
@@ -92,14 +107,7 @@ export default function WordSearchPage() {
   }, [campaign, gameDetails]);
 
   if (campaignsLoading || gameLoading || !gameConfig) {
-    return (
-      <div className="max-w-6xl mx-auto px-6 md:px-10 py-6">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando juego...</p>
-        </div>
-      </div>
-    );
+    return <GameLoader message="Cargando Sopa de Letras..." />;
   }
 
   if (!campaign || !gameDetails) {

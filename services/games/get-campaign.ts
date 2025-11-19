@@ -39,16 +39,34 @@ export const fetchCampaign = async (
         }
       : null;
 
-    // Resolver field_game_type
+    // Resolver field_game_type (siempre es un array)
     const gameTypeData = item.relationships.field_game_type?.data;
-    const fieldGameType = gameTypeData
-      ? {
-          type: gameTypeData.type,
-          id: gameTypeData.id,
-          href:
-            item.relationships.field_game_type.links?.related?.href || "",
+    const fieldGameType: Array<{
+      type: string;
+      id: string;
+      href: string;
+    }> = [];
+    
+    if (gameTypeData) {
+      // Convertir a array si no lo es
+      const gameTypes = Array.isArray(gameTypeData) ? gameTypeData : [gameTypeData];
+      
+      gameTypes.forEach((gameType: any) => {
+        if (gameType && gameType.type && gameType.id) {
+          // Construir la URL del tipo de juego específico
+          // Los paragraphs en Drupal JSON:API usan el formato: /jsonapi/paragraph/{type}/{id}
+          const paragraphType = gameType.type.replace('paragraph--', '');
+          const gameTypeId = gameType.id;
+          const href = `/jsonapi/paragraph/${paragraphType}/${gameTypeId}`;
+          
+          fieldGameType.push({
+            type: gameType.type,
+            id: gameType.id,
+            href: href,
+          });
         }
-      : null;
+      });
+    }
 
     // Resolver field_badges
     const badgesData = item.relationships.field_badges?.data;

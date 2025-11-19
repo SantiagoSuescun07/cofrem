@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { CalendarEvent, CalendarView } from "@/types";
 import { EventDetailModal } from "./_components/event-detail-modal";
 import { CalendarListView } from "./_components/calendar-list-view";
@@ -12,11 +13,26 @@ import { BreadcrumbNav } from "./_components/breadcrumb-nav";
 import { useCalendarEventsQuery } from "@/queries/calendar"; // 👈 importas el hook
 
 export default function CalendarPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [view, setView] = useState<CalendarView>("month");
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   // 👇 Hook de React Query (sin useEffect)
   const { data: events = [], isLoading, isError } = useCalendarEventsQuery();
+
+  // Abrir evento si viene en query params (desde notificaciones)
+  useEffect(() => {
+    const eventId = searchParams?.get("eventId");
+    if (eventId && events.length > 0) {
+      const event = events.find((e) => e.id === eventId);
+      if (event) {
+        setSelectedEvent(event);
+        // Limpiar el query param después de abrir el evento
+        router.replace("/calendar", { scroll: false });
+      }
+    }
+  }, [searchParams, events, router]);
 
   return (
     <div className="min-h-screen bg-background">
