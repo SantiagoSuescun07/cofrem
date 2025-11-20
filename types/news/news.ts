@@ -19,6 +19,7 @@ export interface News {
     url: string;
     display: boolean;
     description: string;
+    filename: string;
   } | null;
   field_gallery: Array<{
     id: string;

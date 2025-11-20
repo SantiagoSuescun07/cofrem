@@ -26,19 +26,29 @@ export function ArticleFile({ news }: ArticleFileProps) {
 
         {/* Info del archivo */}
         <div>
-          <p className="text-sm text-muted-foreground mb-4">Documento PDF</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {news?.field_file_new?.description || "Documento PDF"}
+          </p>
 
           {/* Botón de descarga */}
-          <div className="pl-4">
-            <Link target="_blank" href={news?.field_file_new?.url!} download>
+          <div className="flex items-center gap-3 pl-4">
+            <Link 
+              target="_blank" 
+              href={news?.field_file_new?.url!} 
+              download
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
               <Image
                 src="/icons/pdf-icon.png"
                 alt="PDF icon"
                 width={40}
                 height={40}
                 priority
-                className="w-[30px] h-[40px] object-cover mr-2"
+                className="w-[30px] h-[40px] object-cover"
               />
+              <span className="text-blue-600 hover:underline font-medium">
+                {news?.field_file_new?.filename || "Descargar PDF"}
+              </span>
             </Link>
           </div>
         </div>

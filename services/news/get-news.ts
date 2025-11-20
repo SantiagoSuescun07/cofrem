@@ -34,6 +34,7 @@ export const fetchNews = async (): Promise<{
           url: apiBaseUrl + fileNewIncluded.attributes.uri.url,
           display: item.relationships.field_file_new.data.meta.display,
           description: item.relationships.field_file_new.data.meta.description,
+          filename: fileNewIncluded.attributes.filename || "",
         }
       : null;
 
