@@ -28,6 +28,7 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
       },
     });
 
+    console.log("RESPONSE: ", response.data);
     const data = response.data;
 
     // Crear mapa de archivos incluidos (si los hay)
@@ -61,10 +62,19 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
         }
       }
 
+      // Procesar el link: convertir entity:node/X a la URL interna
+      let link = attributes.field_any_link?.uri || "";
+      if (link.startsWith("entity:node/")) {
+        // Extraer el ID del nodo (ej: "entity:node/110" -> "110")
+        const nodeId = link.replace("entity:node/", "");
+        // Construir la URL interna
+        link = `${apiBaseUrl}node/${nodeId}`;
+      }
+
       return {
         id,
         title: attributes.title,
-        link: attributes.field_any_link?.uri || "",
+        link,
         newTab: attributes.field_new_tab || false,
         icon,
       };

@@ -83,7 +83,10 @@ export function PQRModal({ isOpen, onClose }: PQRModalProps) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      setSelectedFiles(Array.from(files));
+      // Agregar los nuevos archivos a la lista existente
+      setSelectedFiles((prev) => [...prev, ...Array.from(files)]);
+      // Limpiar el input para permitir seleccionar los mismos archivos nuevamente
+      event.target.value = "";
     }
   };
 

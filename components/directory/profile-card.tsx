@@ -35,7 +35,7 @@ export function ProfileCard({
       </div>
       <CardContent className="p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-4">
         <div>
-          <h3 className="text-lg sm:text-xl font-semibold text-foreground">{name}</h3>
+          <h3 className="text-lg sm:text-xl font-medium text-foreground">{name}</h3>
         </div>
 
         <div className="space-y-2 sm:space-y-3">

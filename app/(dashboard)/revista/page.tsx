@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,12 @@ import Image from "next/image";
 import api from "@/lib/axios";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { MagazinesSkeleton } from "@/components/common/magazines-skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // --------------------
 // 🔹 Tipos de datos
@@ -106,6 +113,9 @@ async function fetchMagazines(): Promise<MagazineWithImage[]> {
 // 🔹 Página principal
 // --------------------
 export default function MagazinesPage() {
+  const [selectedPdfUrl, setSelectedPdfUrl] = useState<string | null>(null);
+  const [selectedMagazineTitle, setSelectedMagazineTitle] = useState<string>("");
+
   const { data, isLoading, isError } = useQuery<MagazineWithImage[], Error>({
     queryKey: ["magazines"],
     queryFn: fetchMagazines,
@@ -113,9 +123,19 @@ export default function MagazinesPage() {
 
   const magazines = (data ?? []).slice(0, 12);
 
+  const handleOpenPdf = (pdfUrl: string, title: string) => {
+    setSelectedPdfUrl(pdfUrl);
+    setSelectedMagazineTitle(title);
+  };
+
+  const handleClosePdf = () => {
+    setSelectedPdfUrl(null);
+    setSelectedMagazineTitle("");
+  };
+
   if (isLoading) {
-  return <MagazinesSkeleton />;
-}
+    return <MagazinesSkeleton />;
+  }
 
 
   return (
@@ -182,23 +202,22 @@ export default function MagazinesPage() {
 
                   {/* Información */}
                   <div className="p-4">
-                    <h3 className="text-base font-semibold mb-2 line-clamp-2">
+                    <h3 className="text-base font-medium mb-2 line-clamp-2">
                       {magazine.attributes.title}
                     </h3>
 
                     <Button
                       variant="ghost"
                       className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 p-0 h-auto font-normal text-sm group"
-                      asChild
+                      onClick={() =>
+                        handleOpenPdf(
+                          magazine.attributes.field_any_link.uri,
+                          magazine.attributes.title
+                        )
+                      }
                     >
-                      <a
-                        href={magazine.attributes.field_any_link.uri}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Ver revista
-                        <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
-                      </a>
+                      Ver revista
+                      <ArrowRight className="ml-2 h-3 w-3 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </div>
                 </CardContent>
@@ -214,6 +233,26 @@ export default function MagazinesPage() {
           </div>
         )}
       </div>
+
+      {/* Modal para mostrar el PDF */}
+      <Dialog open={!!selectedPdfUrl} onOpenChange={handleClosePdf}>
+        <DialogContent className="max-w-6xl max-h-[90vh] w-[95vw] p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogTitle className="text-xl font-semibold">
+              {selectedMagazineTitle}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-[calc(90vh-100px)]">
+            {selectedPdfUrl && (
+              <iframe
+                src={selectedPdfUrl}
+                className="w-full h-full border-0"
+                title={selectedMagazineTitle}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

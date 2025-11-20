@@ -7,6 +7,7 @@ import { PublicationCard } from "../publications/publication-card";
 
 export function PublicationsSection() {
   const { data: publications, isLoading } = usePublications();
+  console.log("publications: ", publications);
 
   return (
     <div className="lg:col-span-2">

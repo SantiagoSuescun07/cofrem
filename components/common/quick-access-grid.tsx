@@ -24,7 +24,7 @@ export const QuickAccessGrid = () => {
           <Link
             key={access.id}
             href={access.link}
-            target={access.newTab ? "_blank" : "_self"}
+            target={"_blank" }
             className="flex flex-col items-center justify-between group bg-white p-4 rounded-lg border border-gray-200 hover:border-[#306393] hover:shadow-md transition-all duration-200 w-full max-w-[180px] h-[140px]"
           >
             {/* Contenedor fijo para iconos - siempre en la parte superior */}
