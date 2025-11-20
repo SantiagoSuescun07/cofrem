@@ -24,7 +24,8 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchTaxonomyTerms } from "@/services/taxonomies";
 import api from "@/lib/axios";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const editProfileSchema = z.object({
   gender: z.string().optional(),
@@ -46,6 +47,7 @@ export interface EditProfileDialogProps {
   };
   onClose?: () => void;
   onSuccess?: () => void;
+  className?: string
 }
 
 export function EditProfileDialog({
@@ -54,6 +56,7 @@ export function EditProfileDialog({
   defaultValues,
   onClose,
   onSuccess,
+  className
 }: EditProfileDialogProps) {
   const { data: genders } = useQuery({
     queryKey: ["taxonomy", "gender"],
@@ -70,13 +73,12 @@ export function EditProfileDialog({
     },
   });
 
-  const { isValid, isSubmitting } = form.formState
+  const { isSubmitting } = form.formState
 
   const [profileImageUrl, setProfileImageUrl] = React.useState<string>(
     defaultValues?.profileImageUrl || ""
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -85,6 +87,8 @@ export function EditProfileDialog({
       setProfileImageUrl(url);
       form.setValue("profileImage", file);
     }
+
+    e.target.value = "";
   };
 
 
@@ -143,6 +147,8 @@ export function EditProfileDialog({
           }
         );
 
+        console.log(uploadResponse)
+
         if (uploadResponse.status === 201) {
           const imageData = uploadResponse.data;
           payload.user_picture = [
@@ -180,8 +186,8 @@ export function EditProfileDialog({
       }}
     >
       {/* Utilizar el trigger pasado como prop para abrir el diálogo */}
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogTrigger asChild className={cn(className)}>{trigger}</DialogTrigger>
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle className="font-normal">Editar perfil</DialogTitle>
           <DialogDescription>
@@ -194,20 +200,27 @@ export function EditProfileDialog({
             className="space-y-6"
           >
             {/* Sección de la foto de perfil */}
-            <div className="flex flex-col items-center space-y-4">
-              <Avatar className="h-20 w-20 rounded-full">
-                <AvatarImage src={profileImageUrl || ""} className="object-contain" />
-                <AvatarFallback>IMG</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col space-y-2">
-                <Button
+            <div className="flex flex-col items-center space-y-4 bg-muted rounded-2xl py-4">
+              <div className="relative group">
+                <Avatar className="h-28 w-28 ring-4 ring-background shadow-xl transition-all group-hover:ring-primary/20">
+                  <AvatarImage
+                    src={profileImageUrl || ""}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-indigo-500 text-white text-2xl font-semibold">
+                    <Camera className="h-10 w-10" />
+                  </AvatarFallback>
+                </Avatar>
+
+                {/* Botón de cámara flotante */}
+                <button
                   type="button"
-                  variant="outline"
                   onClick={handleUploadClick}
+                  className="absolute bottom-0 right-0 h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-110 flex items-center justify-center border-4 border-background"
                 >
-                  Subir foto
-                </Button>
-                {/* Input file oculto */}
+                  <Camera className="h-5 w-5" />
+                </button>
+
                 <input
                   type="file"
                   accept="image/*"
@@ -215,80 +228,88 @@ export function EditProfileDialog({
                   className="hidden"
                   onChange={handleImageChange}
                 />
-                <p className="text-xs text-muted-foreground">
-                  JPG, GIF o PNG. Máx 1&nbsp;MB.
-                </p>
               </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                JPG, GIF o PNG · Máx 1 MB
+              </p>
             </div>
 
-            {/* Selector de género */}
-            <Controller
-              name="gender"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Género</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="min-w-full w-full" aria-invalid={fieldState.invalid}>
-                        <SelectValue placeholder="Selecciona tu género" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {genders?.map((gender) => (
-                          <SelectItem key={gender.id} value={String(gender.tid)}>
-                            {gender.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
-            {/* Campo de teléfono fijo */}
-            <Controller
-              name="phone"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder="Número de teléfono fijo"
-                      aria-invalid={fieldState.invalid}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="bg-neutral-100 rounded-2xl py-4 border px-4 space-y-6">
+              {/* Selector de género */}
+              <Controller
+                name="gender"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>Género</FormLabel>
+                    <FormControl>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="min-w-full w-full bg-white" aria-invalid={fieldState.invalid}>
+                          <SelectValue placeholder="Selecciona tu género" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {genders?.map((gender) => (
+                            <SelectItem key={gender.id} value={String(gender.tid)}>
+                              {gender.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Campo de celular */}
-            <Controller
-              name="mobile"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <FormItem>
-                  <FormLabel>Celular</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder="Número de celular"
-                      aria-invalid={fieldState.invalid}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Campo de teléfono fijo */}
+              <Controller
+                name="phone"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>Teléfono</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="Número de teléfono fijo"
+                        aria-invalid={fieldState.invalid}
+                        className="bg-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {/* Campo de celular */}
+              <Controller
+                name="mobile"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>Celular</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="Número de celular"
+                        aria-invalid={fieldState.invalid}
+                        className="bg-white"
+                      />
+                      
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter className="border-t pt-4">
+              {/* <Button type="button" variant="outline" className="flex-1">Cancelar</Button> */}
+              <Button type="submit" className="flex-1" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="size-5 animate-spin" />}
                 Guardar</Button>
             </DialogFooter>

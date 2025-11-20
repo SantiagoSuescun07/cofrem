@@ -9,7 +9,7 @@ export default function ProfilePage() {
       <div className="container mx-auto md:px-10 pt-6">
         <ProfileHeader />
 
-        <div className="mt-8">
+        <div className="my-8">
           {/* Columna principal - Información del perfil */}
           <div className="space-y-8">
             <ProfileInfo />

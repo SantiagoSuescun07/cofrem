@@ -1,9 +1,14 @@
 import React from "react";
 import { useCurrentUser } from "@/hooks/user-current-user";
 import Image from "next/image";
+import { useUserId } from "@/app/(dashboard)/profile/_components/profile-header";
+import { useUserProfile } from "@/queries/profile";
 
 export function UserProfile() {
+  const userId = useUserId()
   const user = useCurrentUser();
+
+   const { data: profile, isLoading } = useUserProfile(userId!)
 
   const initials = user?.name
     ? user.name
@@ -16,10 +21,10 @@ export function UserProfile() {
   return (
     <div className="flex items-center space-x-3 w-full">
       {/* Avatar */}
-      {user?.image ? (
+      {profile?.picture ? (
         <Image
-          src={user.image!}
-          alt={user.name ?? "user profile image"}
+          src={profile.picture!}
+          alt={profile.name ?? "user profile image"}
           width={40}
           height={40}
           priority
@@ -35,7 +40,7 @@ export function UserProfile() {
         <p className="text-sm font-medium text-gray-900 truncate">
           {user?.name}
         </p>
-        <p className="text-xs text-gray-500 truncate">Analista de RRHH</p>
+        <p className="text-xs text-gray-500 truncate">{profile?.position}</p>
       </div>
     </div>
   );
