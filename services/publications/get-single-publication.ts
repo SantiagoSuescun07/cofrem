@@ -7,7 +7,8 @@ export const fetchSinglePublication = async (
 ): Promise<Publication> => {
   const response = await api.get(`/jsonapi/node/publication/${id}`, {
     params: {
-      include: "field_gallery,field_image",
+      // include: "field_gallery,field_image",
+      include: "field_image",
     },
   });
 

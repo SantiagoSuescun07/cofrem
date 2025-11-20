@@ -5,11 +5,14 @@ import { Publication } from "@/types/publications";
 export const fetchPublications = async (): Promise<Publication[]> => {
   const response = await api.get("/jsonapi/node/publication", {
     params: {
-      include: "field_gallery,field_image",
+      // include: "field_gallery,field_image",
+      include: "field_image",
     },
   });
 
   const data = response.data;
+
+  console.log(response.statusText)
 
   // Map de entidades incluidas
   const includedById = new Map<string, any>();
