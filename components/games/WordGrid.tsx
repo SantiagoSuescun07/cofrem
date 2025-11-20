@@ -278,49 +278,51 @@ export default function WordGrid({
       </div>
     );
 
-  const maxContainerWidth = Math.min(600, typeof window !== "undefined" ? window.innerWidth - 40 : 600);
-  const cellSize = Math.floor(maxContainerWidth / gridSize) - 2;
-
   return (
     <div
-      className="w-full max-w-[600px] mx-auto border-[3px] border-[#306393] rounded-2xl bg-white shadow-[0_8px_24px_rgba(48,99,147,0.25)] select-none mt-4 overflow-hidden transition-shadow duration-300"
+      className="w-full mx-auto select-none overflow-visible"
       onMouseLeave={handleMouseUp}
     >
       <div
-        className="grid gap-0.5 justify-items-center items-center"
-        style={{ gridTemplateColumns: `repeat(${gridSize}, 1fr)` }}
+        className="grid gap-1.5 justify-items-stretch items-stretch bg-white p-4 sm:p-6 rounded-xl border-2 border-[#09d6a6]/30 shadow-inner w-full"
+        style={{ 
+          gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
+          aspectRatio: '1 / 1'
+        }}
       >
         {grid.map((row, i) =>
           row.map((cell, j) => {
             const permanentColor = getCellColor(i, j);
             const isSelected = isCellSelected(i, j);
             const bgColor = isSelected
-              ? "#FFEB3B"
+              ? "#09d6a6"
               : permanentColor
                 ? permanentColor
-                : "#ffffff";
-            const textColor = isSelected || permanentColor ? "#ffffff" : "#333";
+                : "#f9fafb";
+            const textColor = isSelected || permanentColor ? "#ffffff" : "#374151";
             const boxShadow = isSelected
-              ? "0 0 10px rgba(255,235,59,0.7)"
+              ? "0 0 0 2px rgba(9,214,166,0.3), 0 4px 8px rgba(9,214,166,0.4)"
               : permanentColor
-                ? `0 0 8px ${permanentColor}`
-                : "none";
+                ? `0 0 0 2px ${permanentColor}30, 0 2px 4px ${permanentColor}20`
+                : "0 1px 2px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.8)";
 
             return (
               <div
                 key={`${i}-${j}`}
                 onMouseDown={() => handleMouseDown(i, j)}
                 onMouseEnter={() => handleMouseEnter(i, j)}
-                className="flex items-center justify-center border border-gray-300 rounded cursor-pointer font-bold transition-all duration-200 p-0 box-border"
+                className="flex items-center justify-center rounded-lg cursor-pointer font-bold transition-all duration-200 box-border border-2 hover:border-[#09d6a6]/60 hover:shadow-md aspect-square"
                 style={{
-                  width: `${cellSize}px`,
-                  height: `${cellSize}px`,
                   backgroundColor: bgColor,
                   color: textColor,
                   boxShadow,
-                  transform: isSelected ? "scale(1.05)" : "scale(1)",
-                  fontSize: `clamp(12px, ${cellSize * 0.4}px, 24px)`,
-                  lineHeight: `${cellSize}px`,
+                  borderColor: isSelected 
+                    ? "#09d6a6" 
+                    : permanentColor 
+                      ? `${permanentColor}40` 
+                      : "#e5e7eb",
+                  transform: isSelected ? "scale(1.1)" : "scale(1)",
+                  fontSize: `clamp(8px, 1.2vw, 12px)`,
                 }}
               >
                 {cell}
