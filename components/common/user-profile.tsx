@@ -8,7 +8,9 @@ export function UserProfile() {
   const userId = useUserId()
   const user = useCurrentUser();
 
-   const { data: profile, isLoading } = useUserProfile(userId!)
+  
+  const { data: profile, isLoading } = useUserProfile(userId!)
+  console.log(profile)
 
   const initials = user?.name
     ? user.name
@@ -21,10 +23,10 @@ export function UserProfile() {
   return (
     <div className="flex items-center space-x-3 w-full">
       {/* Avatar */}
-      {profile?.picture ? (
+      {profile?.picture || user?.image ? (
         <Image
-          src={profile.picture!}
-          alt={profile.name ?? "user profile image"}
+          src={profile?.picture || user?.image!}
+          alt={profile?.name ?? "user profile image"}
           width={40}
           height={40}
           priority

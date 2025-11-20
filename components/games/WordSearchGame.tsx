@@ -97,13 +97,13 @@ export default function WordSearchGame({
         setIsGameActive(false);
         
         // Actualizar ranking si se completó el juego y hay un nid de campaña
-        if (campaignNid && !rankingUpdated) {
+        // Manejo silencioso del error - el juego continúa funcionando incluso si falla
+        if (campaignNid && config.gameId && !rankingUpdated) {
           setRankingUpdated(true);
-          try {
-            await updateRanking([campaignNid]);
-          } catch (error) {
-            console.error("Error al actualizar el ranking:", error);
-          }
+          updateRanking(campaignNid, config.gameId).catch((error) => {
+            // Error silencioso - solo se registra en consola, no interrumpe la experiencia
+            console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+          });
         }
       }
     }
@@ -113,6 +113,21 @@ export default function WordSearchGame({
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  };
+
+  // Función para reiniciar el juego
+  const handleRetry = () => {
+    setFoundWordsSet(new Set());
+    setFoundWordsData([]);
+    setPoints(0);
+    setTimeLeft(config.timeLimit);
+    setCurrentWords(config.words);
+    setIsGameActive(true);
+    setShowWarning(false);
+    setRankingUpdated(false);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
   };
 
   const getCompletionMessage = () => {
@@ -211,12 +226,20 @@ export default function WordSearchGame({
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="px-8 py-4 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-          >
-            ← Volver a la Campaña
-          </button>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={handleRetry}
+              className="px-6 py-3 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+            >
+              🔄 Jugar de Nuevo
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-gray-500 text-white rounded-full text-lg font-semibold shadow-lg hover:bg-gray-600 transition-all duration-200"
+            >
+              ← Volver a la Campaña
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex gap-8 flex-wrap justify-center mt-4">

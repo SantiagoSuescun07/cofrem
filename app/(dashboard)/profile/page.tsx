@@ -6,7 +6,7 @@ import { AchievementCards } from './_components/achievement-cards'
 export default function ProfilePage() {
   return (
     <div className='relative'>
-      <div className="container mx-auto md:px-10 pt-6">
+      <div className="container mx-auto px-6 md:px-10 pt-6">
         <ProfileHeader />
 
         <div className="my-8">
