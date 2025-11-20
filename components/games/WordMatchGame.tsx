@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { WordMatchGameDetails, WordMatchPair } from "@/types/games";
 import { updateRanking } from "@/services/games/update-ranking";
-import GameInstructions from "./GameInstructions";
+import { InfoIcon } from "lucide-react";
 import Image from "next/image";
 
 interface WordMatchGameProps {
@@ -258,50 +258,87 @@ export default function WordMatchGame({
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden w-full bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Encabezado */}
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-8 p-6 bg-white rounded-2xl border-2 border-[#306393] shadow-lg">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#306393] to-blue-400 rounded-2xl flex items-center justify-center text-3xl shadow-md">
-            🔗
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#306393] to-blue-400 bg-clip-text text-transparent">
-              {gameDetails.field_title}
-            </h1>
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        {/* Card unificada con header e instrucciones */}
+        <div className="mb-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-xl flex items-center justify-center text-2xl shadow-md flex-shrink-0">
+                  🔗
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {gameDetails.field_title}
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">Emparejar Palabras</p>
+                </div>
+              </div>
+              <div className="flex gap-3 sm:gap-4">
+                {gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && (
+                  <div className="flex items-center gap-2 bg-white rounded-xl border-2 px-4 py-2.5 shadow-sm">
+                    <span className="text-lg">⏱️</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 leading-none">Tiempo</span>
+                      <span
+                        className={`text-lg font-bold leading-none ${
+                          timeLeft <= 30
+                            ? "text-red-600 animate-pulse"
+                            : timeLeft <= 60
+                            ? "text-orange-600"
+                            : "text-[#09d6a6]"
+                        }`}
+                      >
+                        {formatTime(timeLeft)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 bg-green-50 rounded-xl border-2 border-green-400 px-4 py-2.5 shadow-sm">
+                  <span className="text-lg">✅</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 leading-none">Pares</span>
+                    <span className="text-lg font-bold text-green-600 leading-none">
+                      {matchedPairs.size}/{totalPairs}
+                    </span>
+                  </div>
+                </div>
+                {isGameWon && (
+                  <div className="flex items-center gap-2 bg-gradient-to-br from-[#e6fff2] to-white rounded-xl border-2 border-[#09d6a6] px-4 py-2.5 shadow-sm">
+                    <span className="text-lg">🌟</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 leading-none">Puntos</span>
+                      <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                        {points}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Instrucciones */}
+            {gameDetails.field_description && gameDetails.field_description.trim() !== "" && (
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-lg flex items-center justify-center text-white shadow-md">
+                  <InfoIcon className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                    Instrucciones
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 items-center">
-          {gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && (
-            <div
-              className={`text-xl font-bold px-4 py-2 rounded-xl border-2 ${
-                timeLeft <= 10
-                  ? "text-red-600 bg-red-50 border-red-500 animate-pulse"
-                  : timeLeft <= 30
-                  ? "text-yellow-600 bg-yellow-50 border-yellow-500"
-                  : "text-[#306393] bg-blue-50 border-[#306393]"
-              }`}
-            >
-              ⏱️ {formatTime(timeLeft)}
-            </div>
-          )}
-          <div className="text-xl font-bold text-green-600 bg-green-50 px-4 py-2 rounded-xl border-2 border-green-400">
-            ✅ {matchedPairs.size}/{totalPairs}
-          </div>
-          {isGameWon && (
-            <div className="text-xl font-bold text-purple-600 bg-purple-50 px-4 py-2 rounded-xl border-2 border-purple-400">
-              🌟 {points}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {gameDetails.field_description && (
-        <GameInstructions text={gameDetails.field_description} />
-      )}
-
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-2xl border-2 border-[#306393] shadow-xl p-8 max-w-7xl w-full">
+        {/* Contenido principal del juego */}
+        <div className="flex-1 flex items-center justify-center min-h-[500px]">
+          <div className="bg-white rounded-2xl border-2 border-[#09d6a6]/30 shadow-xl p-6 sm:p-8 max-w-7xl w-full">
           {/* Resultado del juego */}
           {isGameWon && (
             <div className="text-center mb-8">
@@ -319,7 +356,7 @@ export default function WordMatchGame({
                 <div className="flex gap-4 justify-center mt-6">
                   <button
                     onClick={handleRetry}
-                    className="px-6 py-3 bg-gradient-to-r from-[#d35400] to-orange-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-200 transform hover:scale-105"
+                    className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
                   >
                     🔄 Jugar de Nuevo
                   </button>
@@ -353,12 +390,12 @@ export default function WordMatchGame({
           {/* Área de juego mejorada */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
             {/* Columna de palabras - LADO IZQUIERDO */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border-2 border-blue-200">
+            <div className="bg-gradient-to-br from-[#e6fff2] to-white rounded-2xl p-6 border-2 border-[#09d6a6]/30">
               <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-full flex items-center justify-center text-white text-2xl font-bold">
                   A
                 </div>
-                <h3 className="text-2xl font-bold text-[#306393]">
+                <h3 className="text-2xl font-bold text-[#09d6a6]">
                   Palabras
                 </h3>
               </div>
@@ -378,8 +415,8 @@ export default function WordMatchGame({
                         ${isMatched
                           ? "bg-green-200 border-4 border-green-500 opacity-75 cursor-not-allowed"
                           : isSelected
-                          ? "bg-blue-300 border-4 border-blue-600 scale-105 shadow-xl ring-4 ring-blue-400 ring-opacity-50"
-                          : "bg-white border-3 border-gray-300 hover:border-blue-400 hover:bg-blue-50 hover:scale-105 hover:shadow-lg cursor-pointer"
+                          ? "bg-[#09d6a6]/30 border-4 border-[#09d6a6] scale-105 shadow-xl ring-4 ring-[#09d6a6]/50"
+                          : "bg-white border-3 border-gray-300 hover:border-[#09d6a6] hover:bg-[#e6fff2] hover:scale-105 hover:shadow-lg cursor-pointer"
                         }
                       `}
                     >
@@ -388,7 +425,7 @@ export default function WordMatchGame({
                           ✓
                         </div>
                       )}
-                      <span className={`text-xl font-bold ${isMatched ? "text-green-800 line-through" : isSelected ? "text-blue-900" : "text-gray-800"}`}>
+                      <span className={`text-xl font-bold ${isMatched ? "text-green-800 line-through" : isSelected ? "text-[#09d6a6]" : "text-gray-800"}`}>
                         {word.text}
                       </span>
                     </button>
@@ -398,12 +435,12 @@ export default function WordMatchGame({
             </div>
 
             {/* Columna de imágenes - LADO DERECHO */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
+            <div className="bg-gradient-to-br from-[#e6fff2] to-white rounded-2xl p-6 border-2 border-[#09d6a6]/30">
               <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-full flex items-center justify-center text-white text-2xl font-bold">
                   B
                 </div>
-                <h3 className="text-2xl font-bold text-purple-700">
+                <h3 className="text-2xl font-bold text-[#09d6a6]">
                   Imágenes
                 </h3>
               </div>
@@ -422,8 +459,8 @@ export default function WordMatchGame({
                         ${isMatched
                           ? "opacity-60 cursor-not-allowed border-4 border-green-500 scale-95"
                           : isSelected
-                          ? "scale-110 border-4 border-purple-600 shadow-2xl ring-4 ring-purple-400 ring-opacity-50"
-                          : "border-4 border-gray-300 hover:border-purple-400 hover:scale-105 hover:shadow-xl cursor-pointer"
+                          ? "scale-110 border-4 border-[#09d6a6] shadow-2xl ring-4 ring-[#09d6a6]/50"
+                          : "border-4 border-gray-300 hover:border-[#09d6a6] hover:scale-105 hover:shadow-xl cursor-pointer"
                         }
                         bg-white
                       `}
@@ -445,7 +482,7 @@ export default function WordMatchGame({
                             </div>
                           )}
                           {isSelected && !isMatched && (
-                            <div className="absolute inset-0 bg-purple-400 bg-opacity-30 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-[#09d6a6] bg-opacity-30 flex items-center justify-center">
                               <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
                                 <span className="text-2xl">👆</span>
                               </div>
@@ -468,7 +505,7 @@ export default function WordMatchGame({
           <div className="mt-8 mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-gray-700">Progreso</span>
-              <span className="text-sm font-bold text-[#306393]">
+              <span className="text-sm font-bold text-[#09d6a6]">
                 {matchedPairs.size} de {totalPairs} pares completados
               </span>
             </div>
@@ -487,13 +524,16 @@ export default function WordMatchGame({
           </div>
 
           {/* Botón para volver */}
-          <div className="text-center">
-            <button
-              onClick={onClose}
-              className="px-8 py-4 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
-            >
-              ← Volver a la Campaña
-            </button>
+          {!isGameWon && (
+            <div className="text-center">
+              <button
+                onClick={onClose}
+                className="px-6 sm:px-8 py-3 bg-white text-gray-700 rounded-xl text-base sm:text-lg font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+              >
+                ← Volver a la Campaña
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </div>

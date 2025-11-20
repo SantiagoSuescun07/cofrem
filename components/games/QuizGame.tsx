@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { QuizGameDetails, QuizQuestion } from "@/types/games";
 import { updateRanking } from "@/services/games/update-ranking";
-import GameInstructions from "./GameInstructions";
+import { InfoIcon } from "lucide-react";
 
 interface QuizGameProps {
   gameDetails: QuizGameDetails;
@@ -159,50 +159,69 @@ export default function QuizGame({
   }
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden w-full">
-      {/* Encabezado */}
-      <div className="flex justify-between items-center mb-8 p-6 bg-white rounded-2xl border border-[#306393] shadow-lg">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#306393] to-blue-400 rounded-2xl flex items-center justify-center text-3xl shadow-md">
-            📝
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#306393] to-blue-400 bg-clip-text text-transparent">
-              {gameDetails.field_title}
-            </h1>
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        {/* Card unificada con header e instrucciones */}
+        <div className="mb-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-xl flex items-center justify-center text-2xl shadow-md flex-shrink-0">
+                  ❓
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {gameDetails.field_title}
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">Quiz</p>
+                </div>
+              </div>
+              <div className="flex gap-3 sm:gap-4">
+            
+                <div className="flex items-center gap-2 bg-white rounded-xl border-2 px-4 py-2.5 shadow-sm">
+                  <span className="text-lg">📊</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 leading-none">Progreso</span>
+                    <span className="text-lg font-bold text-gray-700 leading-none">
+                      {currentQuestionIndex + 1}/{totalQuestions}
+                    </span>
+                  </div>
+                </div>
+                {isGameComplete && (
+                  <div className="flex items-center gap-2 bg-gradient-to-br from-[#e6fff2] to-white rounded-xl border-2 border-[#09d6a6] px-4 py-2.5 shadow-sm">
+                    <span className="text-lg">🌟</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 leading-none">Puntos</span>
+                      <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                        {points}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Instrucciones */}
+            {gameDetails.field_description && gameDetails.field_description.trim() !== "" && (
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-lg flex items-center justify-center text-white shadow-md">
+                  <InfoIcon className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                    Instrucciones
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex gap-6 items-center">
-          {gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && !isGameComplete && (
-            <div
-              className={`text-xl font-bold px-4 py-2 rounded-2xl border-2 ${
-                timeLeft <= 10
-                  ? "text-red-600 bg-red-50 border-red-500 animate-pulse"
-                  : timeLeft <= 30
-                  ? "text-yellow-600 bg-yellow-50 border-yellow-500"
-                  : "text-[#306393] bg-blue-50 border-[#306393]"
-              }`}
-            >
-              ⏱️ {formatTime(timeLeft)}
-            </div>
-          )}
-          <div className="text-xl font-bold text-[#306393] bg-blue-50 px-4 py-2 rounded-2xl border-2 border-dashed border-[#306393]">
-            📊 {currentQuestionIndex + 1}/{totalQuestions}
-          </div>
-          {isGameComplete && (
-            <div className="text-xl font-bold text-purple-600 bg-purple-50 px-4 py-2 rounded-2xl border-2 border-dashed border-purple-400">
-              🌟 {points}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {gameDetails.field_description && (
-        <GameInstructions text={gameDetails.field_description} />
-      )}
-
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-2xl border-2 border-[#306393] shadow-xl p-8 max-w-4xl w-full">
+        {/* Contenido principal del juego */}
+        <div className="flex-1 flex items-center justify-center min-h-[500px]">
+          <div className="bg-white rounded-2xl border-2 border-[#09d6a6]/30 shadow-xl p-6 sm:p-8 max-w-4xl w-full">
           {isGameComplete ? (
             // Resultado final
             <div className="text-center">
@@ -226,7 +245,7 @@ export default function QuizGame({
               <div className="flex gap-4 justify-center mt-6">
                 <button
                   onClick={handleRetry}
-                  className="px-6 py-3 bg-gradient-to-r from-[#16a085] to-teal-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-teal-600 hover:to-teal-700 transition-all duration-200 transform hover:scale-105"
+                  className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
                 >
                   🔄 Jugar de Nuevo
                 </button>
@@ -243,7 +262,7 @@ export default function QuizGame({
               {/* Pregunta actual */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-[#306393] text-white px-4 py-2 rounded-lg font-bold text-lg">
+                  <span className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white px-4 py-2 rounded-lg font-bold text-lg">
                     Pregunta {currentQuestion.field_question_number || currentQuestionIndex + 1}
                   </span>
                   {currentQuestion.field_hint && (
@@ -295,12 +314,12 @@ export default function QuizGame({
                               : isCorrect
                               ? "bg-green-50 border-2 border-green-300"
                               : "bg-gray-100 border-2 border-gray-300 cursor-not-allowed"
-                            : "bg-gradient-to-r from-[#306393] to-blue-500 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 hover:shadow-lg cursor-pointer border-2 border-transparent"
+                            : "bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white hover:from-[#0bc9a0] hover:to-[#0dbc9a] hover:scale-105 hover:shadow-lg cursor-pointer border-2 border-transparent"
                           }
                         `}
                       >
                         <div className="flex items-center gap-4">
-                          <span className="bg-white text-[#306393] px-4 py-2 rounded-lg font-bold text-lg min-w-[50px] text-center">
+                          <span className="bg-white text-[#09d6a6] px-4 py-2 rounded-lg font-bold text-lg min-w-[50px] text-center">
                             {getOptionLabel(optionNum)}
                           </span>
                           <span className="text-lg font-semibold flex-1">{optionValue}</span>
@@ -320,7 +339,7 @@ export default function QuizGame({
               <div className="mt-8">
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
-                    className="bg-gradient-to-r from-[#306393] to-blue-500 h-3 rounded-full transition-all duration-300"
+                    className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] h-3 rounded-full transition-all duration-300"
                     style={{ width: `${((currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
                   />
                 </div>
@@ -332,13 +351,16 @@ export default function QuizGame({
           ) : null}
 
           {/* Botón para volver */}
-          <div className="text-center mt-8">
-            <button
-              onClick={onClose}
-              className="px-8 py-4 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-            >
-              ← Volver a la Campaña
-            </button>
+          {!isGameComplete && (
+            <div className="text-center mt-8">
+              <button
+                onClick={onClose}
+                className="px-6 sm:px-8 py-3 bg-white text-gray-700 rounded-xl text-base sm:text-lg font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+              >
+                ← Volver a la Campaña
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </div>

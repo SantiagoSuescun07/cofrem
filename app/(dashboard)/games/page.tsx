@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -71,30 +71,141 @@ function getGameButtonColor(gameType: string) {
   }
 }
 
+function getGameCardHoverBgColor(gameType: string) {
+  // Hover con colores diferentes para cada juego, usando variaciones de #09d6a6 y colores complementarios
+  switch (gameType) {
+    case "paragraph--wordsearch_game":
+      return "hover:bg-[#09d6a6]/15";
+    case "paragraph--puzzle_game":
+      return "hover:bg-[#2da2eb]/15";
+    case "paragraph--trivia_game":
+      return "hover:bg-[#2deb79]/15";
+    case "paragraph--complete_phrase_game":
+      return "hover:bg-[#9b59b6]/15";
+    case "paragraph--emoji_discovery_game":
+      return "hover:bg-[#f39c12]/15";
+    case "paragraph--hangman_game":
+      return "hover:bg-[#e74c3c]/15";
+    case "paragraph--memory_game":
+      return "hover:bg-[#3498db]/15";
+    case "paragraph--quiz_game":
+      return "hover:bg-[#16a085]/15";
+    case "paragraph--true_false_game":
+      return "hover:bg-[#27ae60]/15";
+    case "paragraph--word_match_game":
+      return "hover:bg-[#d35400]/15";
+    default:
+      return "hover:bg-[#09d6a6]/15";
+  }
+}
+
 function getGameIconBg(gameType: string) {
   switch (gameType) {
     case "paragraph--wordsearch_game":
-      return "bg-[#306393]/10";
+      return "bg-[#306393]";
     case "paragraph--puzzle_game":
-      return "bg-[#2da2eb]/10";
+      return "bg-[#2da2eb]";
     case "paragraph--trivia_game":
-      return "bg-[#2deb79]/10";
+      return "bg-[#2deb79]";
     case "paragraph--complete_phrase_game":
-      return "bg-[#9b59b6]/10";
+      return "bg-[#9b59b6]";
     case "paragraph--emoji_discovery_game":
-      return "bg-[#f39c12]/10";
+      return "bg-[#f39c12]";
     case "paragraph--hangman_game":
-      return "bg-[#e74c3c]/10";
+      return "bg-[#e74c3c]";
     case "paragraph--memory_game":
-      return "bg-[#3498db]/10";
+      return "bg-[#3498db]";
     case "paragraph--quiz_game":
-      return "bg-[#16a085]/10";
+      return "bg-[#16a085]";
     case "paragraph--true_false_game":
-      return "bg-[#27ae60]/10";
+      return "bg-[#27ae60]";
     case "paragraph--word_match_game":
-      return "bg-[#d35400]/10";
+      return "bg-[#d35400]";
     default:
-      return "bg-[#306393]/10";
+      return "bg-[#306393]";
+  }
+}
+
+function getGameButtonBorderColor(gameType: string) {
+  // Bordes con los mismos colores que el hover bg, pero con opacidad para el borde
+  switch (gameType) {
+    case "paragraph--wordsearch_game":
+      return "border-[#09d6a6]/40";
+    case "paragraph--puzzle_game":
+      return "border-[#2da2eb]/40";
+    case "paragraph--trivia_game":
+      return "border-[#2deb79]/40";
+    case "paragraph--complete_phrase_game":
+      return "border-[#9b59b6]/40";
+    case "paragraph--emoji_discovery_game":
+      return "border-[#f39c12]/40";
+    case "paragraph--hangman_game":
+      return "border-[#e74c3c]/40";
+    case "paragraph--memory_game":
+      return "border-[#3498db]/40";
+    case "paragraph--quiz_game":
+      return "border-[#16a085]/40";
+    case "paragraph--true_false_game":
+      return "border-[#27ae60]/40";
+    case "paragraph--word_match_game":
+      return "border-[#d35400]/40";
+    default:
+      return "border-[#09d6a6]/40";
+  }
+}
+
+function getGameButtonTextColor(gameType: string) {
+  // Texto con colores diferentes para cada juego, coincidiendo con el borde
+  switch (gameType) {
+    case "paragraph--wordsearch_game":
+      return "text-[#09d6a6]";
+    case "paragraph--puzzle_game":
+      return "text-[#2da2eb]";
+    case "paragraph--trivia_game":
+      return "text-[#2deb79]";
+    case "paragraph--complete_phrase_game":
+      return "text-[#9b59b6]";
+    case "paragraph--emoji_discovery_game":
+      return "text-[#f39c12]";
+    case "paragraph--hangman_game":
+      return "text-[#e74c3c]";
+    case "paragraph--memory_game":
+      return "text-[#3498db]";
+    case "paragraph--quiz_game":
+      return "text-[#16a085]";
+    case "paragraph--true_false_game":
+      return "text-[#27ae60]";
+    case "paragraph--word_match_game":
+      return "text-[#d35400]";
+    default:
+      return "text-[#09d6a6]";
+  }
+}
+
+function getGameEmoji(gameType: string) {
+  switch (gameType) {
+    case "paragraph--wordsearch_game":
+      return "🔤";
+    case "paragraph--puzzle_game":
+      return "🧩";
+    case "paragraph--trivia_game":
+      return "🎯";
+    case "paragraph--complete_phrase_game":
+      return "📝";
+    case "paragraph--emoji_discovery_game":
+      return "😊";
+    case "paragraph--hangman_game":
+      return "✏️";
+    case "paragraph--memory_game":
+      return "🧠";
+    case "paragraph--quiz_game":
+      return "❓";
+    case "paragraph--true_false_game":
+      return "✔️";
+    case "paragraph--word_match_game":
+      return "🔗";
+    default:
+      return "🎮";
   }
 }
 
@@ -159,6 +270,11 @@ export default function GamesPage() {
         enabled: isImplemented,
         buttonColor: getGameButtonColor(gameType.type),
         iconBg: getGameIconBg(gameType.type),
+        iconBorderColor: getGameButtonBorderColor(gameType.type),
+        buttonBorderColor: getGameButtonBorderColor(gameType.type),
+        buttonTextColor: getGameButtonTextColor(gameType.type),
+        cardHoverBgColor: getGameCardHoverBgColor(gameType.type),
+        emoji: getGameEmoji(gameType.type),
         route: route,
         details: gameDetails,
         href: gameType.href,
@@ -195,39 +311,32 @@ export default function GamesPage() {
     return (
       <div
         key={game.id}
-        className={`bg-white p-6 rounded-xl border border-gray-200 transition-shadow ${
-          isDisabled ? "opacity-60" : "hover:shadow-lg"
+        className={`bg-gradient-to-br from-white via-white to-gray-50/50 p-6 rounded-xl border-2 border-gray-200 transition-all duration-300 ${
+          isDisabled 
+            ? "opacity-60" 
+            : `${game.cardHoverBgColor || "hover:bg-[#09d6a6]/15"} hover:shadow-xl`
         }`}
       >
         <div className="text-center">
           {isLoading ? (
-            <div className="w-24 h-24 mx-auto mb-4 rounded-lg flex items-center justify-center bg-gray-100">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393]"></div>
-            </div>
-          ) : game.details?.field_icon ? (
-            <div className="w-24 h-24 mx-auto mb-4 relative rounded-lg overflow-hidden bg-gray-100">
-              <Image
-                src={game.details.field_icon.url}
-                alt={game.details.field_icon.alt || game.name}
-                fill
-                className="object-contain p-2"
-              />
+            <div className="w-24 h-24 mx-auto mb-4 rounded-lg flex items-center justify-center bg-white/50">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#09d6a6]"></div>
             </div>
           ) : (
             <div
-              className={`w-24 h-24 mx-auto mb-4 rounded-lg flex items-center justify-center ${game.iconBg || "bg-[#306393]/10"}`}
+              className={`w-24 h-24 mx-auto mb-4 rounded-xl flex items-center justify-center text-5xl bg-white/80 backdrop-blur-sm border-2 border-gray-200 transition-all duration-300 ${
+                !isDisabled ? " hover:scale-105" : ""
+              }`}
             >
-              <div className="w-16 h-16 bg-gray-300 rounded"></div>
+              <span role="img" aria-label={`Icono de ${game.name}`}>
+                {game.emoji || "🎮"}
+              </span>
             </div>
           )}
-          <h3 className="font-semibold text-gray-900 mb-2 text-lg">
+          <h3 className="font-medium text-gray-800 mb-2 text-lg transition-colors">
             {game.details?.field_title || game.name}
           </h3>
-          {game.details?.field_description && (
-            <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-              {game.details.field_description}
-            </p>
-          )}
+        
           <button
             onClick={() => {
               if (game.route) {
@@ -237,14 +346,14 @@ export default function GamesPage() {
                 alert("Este tipo de juego aún no está implementado");
               }
             }}
-            className={`w-full px-4 py-2 ${
+            className={`w-full px-4 py-2.5 rounded-lg transition-all duration-300 ${
               isDisabled
-                ? "bg-neutral-400 cursor-not-allowed"
-                : game.buttonColor
-            } text-white rounded-lg transition-colors`}
+                ? "bg-neutral-300/50 border-2 border-neutral-400/50 cursor-not-allowed text-neutral-600"
+                : `border-2 border-gray-200 bg-white/90  hover:shadow-md hover:scale-[1.02]`
+            } font-medium`}
             disabled={isDisabled}
           >
-            {isLoading ? "Cargando..." : isDisabled ? "Próximamente" : "A jugar"}
+            {isLoading ? "Cargando..." : isDisabled ? "Próximamente" : "Jugar →"}
           </button>
         </div>
       </div>
@@ -366,7 +475,7 @@ export default function GamesPage() {
           {rankingLoading ? (
             <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#306393] mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#09d6a6] mx-auto mb-4"></div>
                 <p className="text-gray-500">Cargando ranking...</p>
               </div>
             </div>

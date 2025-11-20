@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { HangmanGameDetails } from "@/types/games";
 import { updateRanking } from "@/services/games/update-ranking";
-import GameInstructions from "./GameInstructions";
+import { InfoIcon } from "lucide-react";
 
 interface HangmanGameProps {
   gameDetails: HangmanGameDetails;
@@ -158,30 +158,43 @@ export default function HangmanGame({
 
   // Renderizar la palabra con espacios y letras adivinadas
   const renderWord = () => {
-    return word.split("").map((char, index) => {
-      if (char === " ") {
-        return <span key={index} className="mx-2" />;
-      } else if (!/[A-ZÑÁÉÍÓÚÜ]/.test(char)) {
-        return <span key={index} className="text-4xl font-bold text-gray-800 mx-1">{char}</span>;
-      } else {
-        // Verificar si la letra (o su versión normalizada) ha sido adivinada
-        const normalizedChar = normalizeLetter(char);
-        const isGuessed = Array.from(guessedLetters).some(
-          (guessed) => normalizeLetter(guessed) === normalizedChar
-        );
-        return (
-          <span
-            key={index}
-            className={`text-5xl font-bold mx-2 min-w-[40px] inline-block text-center border-b-4 ${
-              isGuessed
-                ? "text-[#306393] border-[#306393]"
-                : "text-transparent border-gray-400"
-            }`}
-          >
-            {isGuessed ? char : " "}
-          </span>
-        );
-      }
+    // Dividir la palabra en palabras separadas por espacios
+    const words = word.split(" ");
+    
+    return words.map((wordPart, wordIndex) => {
+      const letters = wordPart.split("").map((char, charIndex) => {
+        if (!/[A-ZÑÁÉÍÓÚÜ]/.test(char)) {
+          return (
+            <span key={`${wordIndex}-${charIndex}`} className="text-xl font-bold text-gray-800 mx-0.5">
+              {char}
+            </span>
+          );
+        } else {
+          // Verificar si la letra (o su versión normalizada) ha sido adivinada
+          const normalizedChar = normalizeLetter(char);
+          const isGuessed = Array.from(guessedLetters).some(
+            (guessed) => normalizeLetter(guessed) === normalizedChar
+          );
+          return (
+            <span
+              key={`${wordIndex}-${charIndex}`}
+              className={`text-2xl sm:text-3xl font-bold mx-0.5 min-w-[28px] sm:min-w-[32px] inline-flex items-center justify-center border-b-3 sm:border-b-4 leading-none ${
+                isGuessed
+                  ? "text-[#09d6a6] border-[#09d6a6]"
+                  : "text-transparent border-gray-400"
+              }`}
+            >
+              {isGuessed ? char : " "}
+            </span>
+          );
+        }
+      });
+
+      return (
+        <span key={wordIndex} className="inline-flex items-baseline mx-2">
+          {letters}
+        </span>
+      );
     });
   };
 
@@ -244,57 +257,89 @@ export default function HangmanGame({
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden w-full">
-      {/* Encabezado */}
-      <div className="flex justify-between items-center mb-8 p-6 bg-white rounded-2xl border border-[#306393] shadow-lg">
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#306393] to-blue-400 rounded-2xl flex items-center justify-center text-3xl shadow-md">
-            🎯
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#306393] to-blue-400 bg-clip-text text-transparent">
-              {gameDetails.field_title}
-            </h1>
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        {/* Card unificada con header e instrucciones */}
+        <div className="mb-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-xl flex items-center justify-center text-2xl shadow-md flex-shrink-0">
+                  ✏️
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {gameDetails.field_title}
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-1">Ahorcado</p>
+                </div>
+              </div>
+              <div className="flex gap-3 sm:gap-4">
+                <div className="flex items-center gap-2 bg-white rounded-xl border-2 px-4 py-2.5 shadow-sm">
+                  <span className="text-lg">⏱️</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 leading-none">Tiempo</span>
+                    <span
+                      className={`text-lg font-bold leading-none ${
+                        timeLeft <= 30
+                          ? "text-red-600 animate-pulse"
+                          : timeLeft <= 60
+                          ? "text-orange-600"
+                          : "text-[#09d6a6]"
+                      }`}
+                    >
+                      {formatTime(timeLeft)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 bg-gradient-to-br from-[#e6fff2] to-white rounded-xl border-2 border-[#09d6a6] px-4 py-2.5 shadow-sm">
+                  <span className="text-lg">🌟</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 leading-none">Puntos</span>
+                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                      {points}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 bg-red-50 rounded-xl border-2 border-red-300 px-4 py-2.5 shadow-sm">
+                  <span className="text-lg">❌</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 leading-none">Errores</span>
+                    <span className="text-lg font-bold text-red-600 leading-none">
+                      {errors}/{MAX_ERRORS}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Instrucciones */}
+            {gameDetails.field_description && gameDetails.field_description.trim() !== "" && (
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-lg flex items-center justify-center text-white shadow-md">
+                  <InfoIcon className="w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                    Instrucciones
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-        <div className="flex gap-6 items-center">
-          {/* Cronómetro siempre visible de 60 segundos */}
-          <div
-            className={`text-xl font-bold px-4 py-2 rounded-2xl border-2 ${
-              timeLeft <= 10
-                ? "text-red-600 bg-red-50 border-red-500 animate-pulse"
-                : timeLeft <= 30
-                ? "text-yellow-600 bg-yellow-50 border-yellow-500"
-                : "text-[#306393] bg-blue-50 border-[#306393]"
-            }`}
-          >
-            ⏱️ {formatTime(timeLeft)}
-          </div>
-          <div className={`text-xl font-bold px-4 py-2 rounded-2xl border-2 ${
-            isGameWon && points > 0
-              ? "text-[#306393] bg-blue-50 border-[#306393] border-dashed"
-              : "text-gray-400 bg-gray-50 border-gray-300"
-          }`}>
-            🌟 {points}
-          </div>
-          <div className="text-lg font-semibold text-red-600 bg-red-50 px-4 py-2 rounded-2xl border-2 border-red-300">
-            ❌ {errors}/{MAX_ERRORS}
-          </div>
-        </div>
-      </div>
 
-      {gameDetails.field_description && (
-        <GameInstructions text={gameDetails.field_description} />
-      )}
-
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-2xl border-2 border-[#306393] shadow-xl p-8 max-w-4xl w-full">
+        {/* Contenido principal del juego */}
+        <div className="flex-1 flex items-center justify-center min-h-[500px]">
+          <div className="bg-white rounded-2xl border-2 border-[#09d6a6]/30 shadow-xl p-6 sm:p-8 max-w-4xl w-full">
           {/* Dibujo del ahorcado */}
           {renderHangman()}
 
           {/* Palabra a adivinar */}
           <div className="mb-8 text-center">
-            <div className="flex flex-wrap items-center justify-center min-h-[80px]">
+            <div className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2 min-h-[60px] px-4">
               {renderWord()}
             </div>
           </div>
@@ -302,40 +347,62 @@ export default function HangmanGame({
           {/* Resultado del juego */}
           {isGameWon && (
             <div className="text-center mb-6">
-              <div className="bg-green-50 border-2 border-green-400 rounded-xl p-6 mb-4">
-                <div className="text-5xl mb-2">🎉</div>
-                <h3 className="text-2xl font-bold text-green-700 mb-2">
+              <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
+                <div className="text-6xl mb-3">🎉</div>
+                <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
                   ¡Felicidades!
                 </h3>
-                <p className="text-green-600 mb-2">
-                  Has adivinado la palabra: <strong>{word}</strong>
+                <p className="text-gray-700 mb-2 text-lg">
+                  Has adivinado la palabra: <strong className="text-[#09d6a6]">{word}</strong>
                 </p>
-                <p className="text-green-600">
-                  Has ganado {points} puntos
+                <p className="text-gray-700 mb-6 text-lg">
+                  Has ganado <strong className="text-[#09d6a6] text-xl">{points}</strong> puntos
                 </p>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={handleRetry}
+                    className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-base font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
+                  >
+                    🔄 Jugar de Nuevo
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="px-6 py-3 bg-white text-gray-700 rounded-xl text-base font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+                  >
+                    ← Volver
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
           {isGameLost && (
             <div className="text-center mb-6">
-              <div className="bg-red-50 border-2 border-red-400 rounded-xl p-6 mb-4">
-                <div className="text-5xl mb-2">💀</div>
-                <h3 className="text-2xl font-bold text-red-700 mb-2">
+              <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
+                <div className="text-6xl mb-3">💀</div>
+                <h3 className="text-3xl font-bold text-red-700 mb-3">
                   ¡Game Over!
                 </h3>
-                <p className="text-red-600 mb-2">
+                <p className="text-red-600 mb-2 text-lg">
                   La palabra era: <strong>{word}</strong>
                 </p>
-                <p className="text-red-600 mb-4">
+                <p className="text-red-600 mb-6 text-lg">
                   Has alcanzado el máximo de errores
                 </p>
-                <button
-                  onClick={handleRetry}
-                  className="px-6 py-3 bg-gradient-to-r from-[#e74c3c] to-red-600 text-white rounded-lg text-lg font-semibold shadow-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 transform hover:scale-105"
-                >
-                  🔄 Reintentar
-                </button>
+                <div className="flex gap-4 justify-center">
+                  <button
+                    onClick={handleRetry}
+                    className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-base font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
+                  >
+                    🔄 Reintentar
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="px-6 py-3 bg-white text-gray-700 rounded-xl text-base font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+                  >
+                    ← Volver
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -364,7 +431,7 @@ export default function HangmanGame({
                           ? "bg-red-500 text-white cursor-default"
                           : isDisabled
                           ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-[#306393] text-white hover:bg-blue-600 hover:scale-105 hover:shadow-lg"
+                          : "bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white hover:from-[#0bc9a0] hover:to-[#0dbc9a] hover:scale-105 hover:shadow-lg"
                       }`}
                     >
                       {letter}
@@ -376,32 +443,35 @@ export default function HangmanGame({
           )}
 
           {/* Pista */}
-          {gameDetails.field_hint && (
+          {gameDetails.field_hint && !isGameWon && !isGameLost && (
             <div className="mb-6">
               <button
                 onClick={() => setShowHint(!showHint)}
-                className="w-full px-4 py-2 bg-yellow-50 border border-yellow-300 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+                className="w-full px-4 py-3 bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6]/50 text-[#09d6a6] rounded-lg hover:bg-[#e6fff2] transition-colors font-medium shadow-sm"
               >
                 {showHint ? "Ocultar" : "Mostrar"} pista 💡
               </button>
               {showHint && (
-                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
-                  <p className="text-yellow-800">
-                    <strong>Pista:</strong> {gameDetails.field_hint}
+                <div className="mt-4 p-5 bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6]/30 rounded-lg shadow-sm">
+                  <p className="text-gray-800 text-base">
+                    <strong className="text-[#09d6a6]">Pista:</strong> {gameDetails.field_hint}
                   </p>
                 </div>
               )}
             </div>
           )}
 
-          {/* Botón para volver */}
-          <div className="text-center">
-            <button
-              onClick={onClose}
-              className="px-8 py-4 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-            >
-              ← Volver a la Campaña
-            </button>
+          {/* Botón para volver - Solo cuando el juego está activo */}
+          {!isGameWon && !isGameLost && (
+            <div className="text-center">
+              <button
+                onClick={onClose}
+                className="px-6 sm:px-8 py-3 bg-white text-gray-700 rounded-xl text-base sm:text-lg font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+              >
+                ← Volver a la Campaña
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </div>

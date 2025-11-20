@@ -5,6 +5,7 @@ import WordGrid from "./WordGrid";
 import GameInstructions from "./GameInstructions";
 import { GameConfig } from "@/types/games";
 import { updateRanking } from "@/services/games/update-ranking";
+import { InfoIcon } from "lucide-react";
 
 interface FoundWordData {
   word: string;
@@ -13,18 +14,18 @@ interface FoundWordData {
 }
 
 const WORD_COLORS = [
-  "#306393",
-  "#4a7ba7",
-  "#5a8bb5",
-  "#6b9bc3",
-  "#7cabd1",
-  "#8dbbdf",
-  "#9ecbed",
-  "#afdbfb",
-  "#c0e5ff",
-  "#d1efff",
-  "#e2f5ff",
-  "#f3fbff",
+  "#09d6a6",
+  "#0bc9a0",
+  "#0dbc9a",
+  "#0faf94",
+  "#12a28e",
+  "#159588",
+  "#188882",
+  "#1b7b7c",
+  "#1e6e76",
+  "#216170",
+  "#24546a",
+  "#274764",
 ];
 
 interface WordSearchGameProps {
@@ -95,14 +96,17 @@ export default function WordSearchGame({
 
       if (newFoundSet.size === config.words.length) {
         setIsGameActive(false);
-        
+
         // Actualizar ranking si se completó el juego y hay un nid de campaña
         // Manejo silencioso del error - el juego continúa funcionando incluso si falla
         if (campaignNid && config.gameId && !rankingUpdated) {
           setRankingUpdated(true);
           updateRanking(campaignNid, config.gameId).catch((error) => {
             // Error silencioso - solo se registra en consola, no interrumpe la experiencia
-            console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+            console.warn(
+              "No se pudo actualizar el ranking (esto no afecta tu puntuación):",
+              error
+            );
           });
         }
       }
@@ -135,13 +139,13 @@ export default function WordSearchGame({
       return {
         title: "¡Increíble! Has completado el juego",
         message: "¡Eres un maestro de las palabras!",
-        color: "#306393",
+        color: "#09d6a6",
       };
     } else {
       return {
         title: "¡Tiempo terminado!",
         message: `Encontraste ${foundWordsSet.size} de ${config.words.length} palabras`,
-        color: "#306393",
+        color: "#09d6a6",
       };
     }
   };
@@ -152,164 +156,224 @@ export default function WordSearchGame({
   const gridSize = config.gridSize;
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden w-full">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
       {showWarning && (
-        <div className="fixed top-0 left-0 right-0 z-[2000] bg-yellow-400 text-yellow-900 text-center py-3 px-4 rounded-b-2xl animate-bounce shadow-lg">
+        <div className="fixed top-0 left-0 right-0 z-[2000] bg-[#09d6a6] text-white text-center py-3 px-4 rounded-b-2xl animate-bounce shadow-lg font-semibold">
           ¡Atención! Quedan solo <strong>30 segundos</strong> para encontrar más
           palabras. ¡Dale con todo! 🚀
         </div>
       )}
 
-      {/* Encabezado */}
       <div
-        className={`flex justify-between items-center mb-8 p-6 bg-white rounded-2xl border border-[#306393] shadow-lg ${
-          showWarning ? "mt-16" : "mt-0"
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${
+          showWarning ? "pt-20" : "pt-4"
         }`}
       >
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 bg-gradient-to-br from-[#306393] to-blue-400 rounded-2xl flex items-center justify-center text-3xl shadow-md">
-            🎯
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#306393] to-blue-400 bg-clip-text text-transparent">
-              {config.title}
-            </h1>
-          </div>
-        </div>
-        <div className="flex gap-6 items-center">
-          {config.timeLimit > 0 && (
-            <div
-              className={`text-xl font-bold px-4 py-2 rounded-2xl border-2 ${
-                timeLeft <= 30
-                  ? "text-red-600 bg-red-50 border-red-500 animate-pulse"
-                  : timeLeft <= 60
-                  ? "text-yellow-600 bg-yellow-50 border-yellow-500"
-                  : "text-[#306393] bg-blue-50 border-[#306393]"
-              }`}
-            >
-              ⏱️ {formatTime(timeLeft)}
-            </div>
-          )}
-          <div className="text-xl font-bold text-[#306393] bg-blue-50 px-4 py-2 rounded-2xl border-2 border-dashed border-[#306393]">
-            🌟 {points}
-          </div>
-        </div>
-      </div>
-
-      <GameInstructions text={config.description} />
-
-      {!isGameActive ? (
-        <div className="mt-8 p-12 bg-gradient-to-br from-white to-blue-50 rounded-3xl text-center shadow-xl border-4 border-[#306393] max-w-2xl mx-auto animate-fade-in">
-          <div className="text-6xl mb-4 opacity-20 absolute top-4 right-4">
-            🎉
-          </div>
-          <h2
-            className="text-4xl font-bold mb-6"
-            style={{ color: completionData.color }}
-          >
-            {completionData.title}
-          </h2>
-          <p className="text-xl text-gray-700 mb-8 font-medium">
-            {completionData.message}
-          </p>
-          <div className="flex justify-center gap-6 mb-8 flex-wrap">
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#306393]">
-              <div className="text-sm text-gray-600 mb-2">Puntaje Final</div>
-              <div className="text-3xl font-bold text-[#306393]">{points}</div>
-            </div>
-            <div className="bg-white p-6 rounded-2xl shadow-lg border-2 border-[#306393]">
-              <div className="text-sm text-gray-600 mb-2">
-                Palabras Encontradas
+        {/* Card unificada con header e instrucciones */}
+        <div className="mb-6">
+          <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 pb-4 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-xl flex items-center justify-center text-2xl shadow-md flex-shrink-0">
+                  🎯
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {config.title}
+                  </h1>
+                </div>
               </div>
-              <div className="text-3xl font-bold text-[#306393]">
-                {foundWordsSet.size}
+              <div className="flex gap-3 sm:gap-4">
+                {config.timeLimit > 0 && (
+                  <div className="flex items-center gap-2 bg-white rounded-xl border-2 px-4 py-2.5 shadow-sm">
+                    <span className="text-lg">⏱️</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 leading-none">
+                        Tiempo
+                      </span>
+                      <span
+                        className={`text-lg font-bold leading-none ${
+                          timeLeft <= 30
+                            ? "text-red-600 animate-pulse"
+                            : timeLeft <= 60
+                            ? "text-orange-600"
+                            : "text-[#09d6a6]"
+                        }`}
+                      >
+                        {formatTime(timeLeft)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 bg-gradient-to-br from-[#e6fff2] to-white rounded-xl border-2 border-[#09d6a6] px-4 py-2.5 shadow-sm">
+                  <span className="text-lg">🌟</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 leading-none">
+                      Puntos
+                    </span>
+                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                      {points}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Instrucciones */}
+            {config.description && config.description.trim() !== "" && (
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-md">
+                  <InfoIcon className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                    Instrucciones
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed text-sm">
+                    {config.description}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex gap-4 justify-center">
-            <button
-              onClick={handleRetry}
-              className="px-6 py-3 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
-            >
-              🔄 Jugar de Nuevo
-            </button>
+        </div>
+
+        {!isGameActive ? (
+          <div className="mt-6">
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-[#09d6a6] p-8 sm:p-12 text-center max-w-2xl mx-auto">
+              <div className="text-6xl mb-6">🎉</div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-[#09d6a6] mb-4">
+                {completionData.title}
+              </h2>
+              <p className="text-lg text-gray-700 mb-8">
+                {completionData.message}
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-8 max-w-md mx-auto">
+                <div className="bg-gradient-to-br from-[#e6fff2] to-white p-6 rounded-xl border-2 border-[#09d6a6]/30">
+                  <div className="text-sm text-gray-600 mb-2">
+                    Puntaje Final
+                  </div>
+                  <div className="text-3xl font-bold text-[#09d6a6]">
+                    {points}
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-[#e6fff2] to-white p-6 rounded-xl border-2 border-[#09d6a6]/30">
+                  <div className="text-sm text-gray-600 mb-2">Palabras</div>
+                  <div className="text-3xl font-bold text-[#09d6a6]">
+                    {foundWordsSet.size}/{config.words.length}
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={handleRetry}
+                  className="px-8 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                >
+                  🔄 Jugar de Nuevo
+                </button>
+                <button
+                  onClick={onClose}
+                  className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl text-lg font-semibold hover:bg-gray-200 transition-all duration-200 border-2 border-gray-200"
+                >
+                  ← Volver
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            {/* Grilla principal */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-4 sm:p-6">
+                {currentWords.length > 0 ? (
+                  <WordGrid
+                    words={currentWords}
+                    gridSize={gridSize}
+                    directions={config.directions}
+                    onWordFound={handleWordFound}
+                    foundWordsData={foundWordsData}
+                    difficulty={config.difficulty}
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            {/* Panel de palabras */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6 sticky top-6">
+                <div className="mb-4 pb-4 border-b border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <span className="text-[#09d6a6]">📝</span>
+                    Palabras a encontrar
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {foundWordsSet.size} de {config.words.length} encontradas
+                  </p>
+                </div>
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                  {currentWords.map((word) => (
+                    <div
+                      key={word}
+                      className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 ${
+                        foundWordsSet.has(word)
+                          ? "bg-[#e6fff2] border-[#09d6a6] text-gray-600"
+                          : "bg-gray-50 border-gray-200 text-gray-900 hover:border-[#09d6a6]/50 hover:bg-[#e6fff2]/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`font-semibold text-base ${
+                            foundWordsSet.has(word) ? "line-through" : ""
+                          }`}
+                        >
+                          {word}
+                        </span>
+                        {foundWordsSet.has(word) && (
+                          <span className="text-[#09d6a6] text-lg">✓</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isGameActive && (
+          <div className="mt-6 text-center">
             <button
               onClick={onClose}
-              className="px-6 py-3 bg-gray-500 text-white rounded-full text-lg font-semibold shadow-lg hover:bg-gray-600 transition-all duration-200"
+              className="px-6 py-2.5 bg-white text-gray-700 rounded-xl text-base font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
             >
               ← Volver a la Campaña
             </button>
           </div>
-        </div>
-      ) : (
-        <div className="flex gap-8 flex-wrap justify-center mt-4">
-          <div className="flex-1 min-w-[320px] max-w-[650px]">
-            {currentWords.length > 0 ? (
-              <WordGrid
-                words={currentWords}
-                gridSize={gridSize}
-                directions={config.directions}
-                onWordFound={handleWordFound}
-                foundWordsData={foundWordsData}
-                difficulty={config.difficulty}
+        )}
+
+        {/* Confeti de celebración */}
+        {!isGameActive && foundWordsSet.size === config.words.length && (
+          <div className="fixed top-0 left-0 right-0 bottom-0 pointer-events-none z-[1000] overflow-hidden">
+            {[...Array(30)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute rounded-full animate-ping"
+                style={{
+                  top: `${Math.random() * 100}%`,
+                  left: `${Math.random() * 100}%`,
+                  width: `${10 + Math.random() * 10}px`,
+                  height: `${10 + Math.random() * 10}px`,
+                  backgroundColor:
+                    WORD_COLORS[Math.floor(Math.random() * WORD_COLORS.length)],
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${3 + Math.random() * 2}s`,
+                }}
               />
-            ) : null}
+            ))}
           </div>
-          <div className="flex flex-col gap-4 min-w-[280px] self-start mt-2">
-            <div className="flex flex-col gap-2">
-              <h3 className="text-[#306393] text-xl font-bold mb-2">
-                Palabras a encontrar:
-              </h3>
-              {currentWords.map((word) => (
-                <span
-                  key={word}
-                  className={`text-lg font-semibold px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
-                    foundWordsSet.has(word)
-                      ? "line-through text-gray-500 bg-green-100 border-green-400 shadow-md"
-                      : "text-gray-800 bg-white border-blue-200"
-                  }`}
-                >
-                  {word}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isGameActive && (
-        <div className="text-center mt-8 mb-4">
-          <button
-            onClick={onClose}
-            className="px-8 py-3 bg-gradient-to-r from-[#306393] to-blue-600 text-white rounded-full text-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            ← Volver a la Campaña
-          </button>
-        </div>
-      )}
-
-      {/* Confeti de celebración */}
-      {!isGameActive && foundWordsSet.size === config.words.length && (
-        <div className="fixed top-0 left-0 right-0 bottom-0 pointer-events-none z-[1000] overflow-hidden">
-          {[...Array(30)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full animate-ping"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                width: `${10 + Math.random() * 10}px`,
-                height: `${10 + Math.random() * 10}px`,
-                backgroundColor:
-                  WORD_COLORS[Math.floor(Math.random() * WORD_COLORS.length)],
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${3 + Math.random() * 2}s`,
-              }}
-            />
-          ))}
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
-
