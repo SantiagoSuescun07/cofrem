@@ -424,7 +424,7 @@ export default function GamesPage() {
           {activeTab === "games" && (
             <Button
               onClick={() => setActiveTab("ranking")}
-              className="bg-[#306393] hover:bg-[#306393]/90 text-white px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
+              className="bg-[#d6edfb] hover:bg-[#d6edfb]/80 text-gray-900 px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
             >
               <Trophy className="w-5 h-5" />
               Ver Ranking
@@ -433,7 +433,7 @@ export default function GamesPage() {
           {activeTab === "ranking" && (
             <Button
               onClick={() => setActiveTab("games")}
-              className="bg-[#306393] hover:bg-[#306393]/90 text-white px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
+              className="bg-[#d6edfb] hover:bg-[#d6edfb]/90 text-gray-900 px-6 py-3 rounded-lg flex items-center gap-2 whitespace-nowrap"
             >
               <Gamepad2 className="w-5 h-5" />
               Ver Juegos

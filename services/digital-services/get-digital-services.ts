@@ -16,6 +16,8 @@ export interface DigitalServiceData {
   link: string;
   newTab: boolean;
   icon: DigitalServiceIcon | null;
+  nodeId?: string; // ID del nodo si es un enlace interno (entity:node/X)
+  isInternal?: boolean; // Indica si es un enlace interno
 }
 
 export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | null> => {
@@ -43,6 +45,10 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
     const services: DigitalServiceData[] = data.data.map((item: any) => {
       const { id, attributes, relationships } = item;
 
+      console.log(`[DigitalServices] Procesando servicio: ${attributes.title}`);
+      console.log(`[DigitalServices] Attributes:`, JSON.stringify(attributes, null, 2));
+      console.log(`[DigitalServices] Relationships:`, JSON.stringify(relationships, null, 2));
+
       // Obtener relación del ícono
       const iconRel = relationships?.field_icon?.data;
       let icon: DigitalServiceIcon | null = null;
@@ -62,13 +68,45 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
         }
       }
 
-      // Procesar el link: convertir entity:node/X a la URL interna
-      let link = attributes.field_any_link?.uri || "";
-      if (link.startsWith("entity:node/")) {
-        // Extraer el ID del nodo (ej: "entity:node/110" -> "110")
-        const nodeId = link.replace("entity:node/", "");
-        // Construir la URL interna
-        link = `${apiBaseUrl}node/${nodeId}`;
+      // Procesar el link: detectar si es entity:node/X para enlaces internos
+      // El campo field_any_link puede venir en attributes directamente
+      let linkUri = attributes.field_any_link?.uri || 
+                    attributes.field_any_link || 
+                    "";
+
+      // Si no está en attributes, verificar si está en relationships
+      if (!linkUri && relationships?.field_any_link) {
+        console.log(`[DigitalServices] field_any_link encontrado en relationships:`, relationships.field_any_link);
+        // Si es una relación, intentar obtener el URI del included
+        const linkRel = relationships.field_any_link.data;
+        if (linkRel) {
+          const includedLink = includedById.get(linkRel.id);
+          if (includedLink) {
+            linkUri = includedLink.attributes?.uri || includedLink.attributes?.value || "";
+          }
+        }
+      }
+
+      let link = linkUri;
+      let nodeId: string | undefined;
+      let isInternal = false;
+
+      console.log(`[DigitalServices] linkUri extraído: "${linkUri}"`);
+
+      // Detectar si es un enlace interno (entity:node/X)
+      if (link && typeof link === "string" && link.trim().startsWith("entity:node/")) {
+        // Extraer el ID del nodo (ej: "entity:node/8" -> "8")
+        nodeId = link.trim().replace("entity:node/", "").trim();
+        if (nodeId) {
+          isInternal = true;
+          // Para enlaces internos, el link será la ruta de Next.js
+          link = `/digital-services/${nodeId}`;
+          console.log(`[DigitalServices] ✅ Servicio "${attributes.title}" es INTERNO - nodeId: ${nodeId}, ruta: ${link}`);
+        }
+      } else if (link) {
+        console.log(`[DigitalServices] ⚠️ Servicio "${attributes.title}" es EXTERNO - link: ${link}`);
+      } else {
+        console.log(`[DigitalServices] ⚠️ Servicio "${attributes.title}" NO TIENE LINK`);
       }
 
       return {
@@ -77,6 +115,8 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
         link,
         newTab: attributes.field_new_tab || false,
         icon,
+        nodeId,
+        isInternal,
       };
     });
 

@@ -3,10 +3,12 @@ import { ProgressBar } from "./progress-bar";
 import { useDigitalServicesQuery } from "@/queries/digital-services";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export const QuickAccessGrid = () => {
   const { data: quickAccessData } = useDigitalServicesQuery();
   console.log("quickAccessData: ", quickAccessData);
+  const router = useRouter();
 
   const [showAll, setShowAll] = useState(false);
 
@@ -22,30 +24,71 @@ export const QuickAccessGrid = () => {
       </h2>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-4 justify-items-center">
-        {displayedServices?.map((access) => (
-          <Link
-            key={access.id}
-            href={access.link}
-            target={"_blank" }
-            className="flex flex-col items-center justify-between group bg-white p-4 rounded-lg border border-gray-200 hover:border-[#306393] hover:shadow-md transition-all duration-200 w-full max-w-[180px] h-[140px]"
-          >
-            {/* Contenedor fijo para iconos - siempre en la parte superior */}
-            <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3">
-              <Image
-                src={access.icon?.url ?? ""}
-                alt={access.title}
-                width={48}
-                height={48}
-                className="object-contain"
-                style={{ maxWidth: "48px", maxHeight: "48px", width: "auto", height: "auto" }}
-              />
-            </div>
-            {/* Contenedor fijo para texto - siempre en la parte inferior */}
-            <span className="text-sm font-medium text-gray-700 text-center h-[48px] flex items-center justify-center leading-tight px-1">
-              {access.title}
-            </span>
-          </Link>
-        ))}
+        {displayedServices?.map((access) => {
+          // Si es un enlace interno (entity:node/X), usar navegación de Next.js
+          const isInternalLink = access.isInternal && access.nodeId;
+          
+          if (isInternalLink) {
+            const handleClick = (e: React.MouseEvent) => {
+              e.preventDefault();
+              const route = `/digital-services/${access.nodeId}`;
+              console.log(`[QuickAccessGrid] Navegando a ruta interna: ${route}`);
+              router.push(route);
+            };
+
+            return (
+              <button
+                key={access.id}
+                onClick={handleClick}
+                type="button"
+                className="flex flex-col items-center justify-between group bg-white p-4 rounded-lg border border-gray-200 hover:border-[#306393] hover:shadow-md transition-all duration-200 w-full max-w-[180px] h-[140px] cursor-pointer"
+              >
+                {/* Contenedor fijo para iconos - siempre en la parte superior */}
+                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3">
+                  <Image
+                    src={access.icon?.url ?? ""}
+                    alt={access.title}
+                    width={48}
+                    height={48}
+                    className="object-contain"
+                    style={{ maxWidth: "48px", maxHeight: "48px", width: "auto", height: "auto" }}
+                  />
+                </div>
+                {/* Contenedor fijo para texto - siempre en la parte inferior */}
+                <span className="text-sm font-medium text-gray-700 text-center h-[48px] flex items-center justify-center leading-tight px-1">
+                  {access.title}
+                </span>
+              </button>
+            );
+          }
+
+          // Si es un enlace externo, usar Link
+          return (
+            <Link
+              key={access.id}
+              href={access.link}
+              target={access.newTab ? "_blank" : "_self"}
+              rel={access.newTab ? "noopener noreferrer" : undefined}
+              className="flex flex-col items-center justify-between group bg-white p-4 rounded-lg border border-gray-200 hover:border-[#306393] hover:shadow-md transition-all duration-200 w-full max-w-[180px] h-[140px]"
+            >
+              {/* Contenedor fijo para iconos - siempre en la parte superior */}
+              <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 mb-3">
+                <Image
+                  src={access.icon?.url ?? ""}
+                  alt={access.title}
+                  width={48}
+                  height={48}
+                  className="object-contain"
+                  style={{ maxWidth: "48px", maxHeight: "48px", width: "auto", height: "auto" }}
+                />
+              </div>
+              {/* Contenedor fijo para texto - siempre en la parte inferior */}
+              <span className="text-sm font-medium text-gray-700 text-center h-[48px] flex items-center justify-center leading-tight px-1">
+                {access.title}
+              </span>
+            </Link>
+          );
+        })}
       </div>
 
       {quickAccessData && quickAccessData.length > 8 && (
