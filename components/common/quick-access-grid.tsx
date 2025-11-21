@@ -6,6 +6,8 @@ import Image from "next/image";
 
 export const QuickAccessGrid = () => {
   const { data: quickAccessData } = useDigitalServicesQuery();
+  console.log("quickAccessData: ", quickAccessData);
+
   const [showAll, setShowAll] = useState(false);
 
   // Mostrar solo 8 si no se ha presionado "Ver más"
