@@ -1,3 +1,38 @@
+export type PublicationContentType =
+  | "paragraph--link"
+  | "paragraph--galeria_publicaciones"
+  | "paragraph--enriched_text"
+  | "paragraph--game_type_publication";
+
+export interface PublicationContent {
+  type: PublicationContentType;
+  id: string;
+  // Para paragraph--link
+  field_link?: {
+    uri: string;
+    title: string;
+  };
+  // Para paragraph--galeria_publicaciones
+  field_gallery_images?: {
+    id: string;
+    url: string;
+    alt: string;
+    title: string;
+    width: number;
+    height: number;
+  }[];
+  // Para paragraph--enriched_text
+  field_body?: string;
+  // Para paragraph--game_type_publication
+  field_game?: {
+    id: string;
+    url: string;
+    title: string;
+    description?: string;
+    gameType: string; // Tipo de juego: paragraph--wordsearch_game, paragraph--puzzle_game, etc.
+  };
+}
+
 export interface Publication {
   id: string;
   drupal_internal__nid: number;
@@ -22,4 +57,9 @@ export interface Publication {
     width: number;
     height: number;
   } | null;
+  field_news_category: {
+    id: string;
+    name: string;
+  }[];
+  field_options_in_publication: PublicationContent | null;
 }

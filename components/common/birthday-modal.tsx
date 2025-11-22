@@ -13,6 +13,10 @@ import { Upload, X, Send } from "lucide-react";
 import Image from "next/image";
 import { Birthday } from "@/services/birthday/get-birthdays";
 import { toast } from "sonner";
+import {
+  uploadBirthdayImage,
+  sendBirthdayCongratulations,
+} from "@/services/birthday/send-congratulations";
 
 interface BirthdayModalProps {
   birthday: Birthday | null;
@@ -51,25 +55,33 @@ export function BirthdayModal({ birthday, open, onClose }: BirthdayModalProps) {
       return;
     }
 
-    if (!birthday.email) {
-      toast.error("No se encontró el correo del cumpleañero");
+    if (!birthday.uid) {
+      toast.error("No se encontró el ID del usuario");
       return;
     }
 
     setIsSending(true);
     try {
-      // TODO: Implementar el servicio de envío de correo
-      // Por ahora simulamos el envío
-      const formData = new FormData();
-      formData.append("to", birthday.email);
-      formData.append("subject", `¡Feliz Cumpleaños ${birthday.name}!`);
-      formData.append("message", message);
+      let imageId: number | undefined;
+
+      // Si hay una imagen seleccionada, subirla primero
       if (selectedImage) {
-        formData.append("image", selectedImage);
+        try {
+          imageId = await uploadBirthdayImage(selectedImage);
+        } catch (error) {
+          console.error("Error al subir imagen:", error);
+          toast.error("Error al subir la imagen. Intenta nuevamente.");
+          setIsSending(false);
+          return;
+        }
       }
 
-      // Aquí iría la llamada al API para enviar el correo
-      // await api.post("/api/birthday/send-greeting", formData);
+      // Enviar la felicitación
+      await sendBirthdayCongratulations({
+        user_id: parseInt(birthday.uid, 10),
+        message: message.trim(),
+        image_id: imageId,
+      });
 
       toast.success("¡Mensaje enviado exitosamente!");
       setMessage("");

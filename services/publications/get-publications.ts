@@ -54,6 +54,16 @@ export const fetchPublications = async (): Promise<Publication[]> => {
         }
       : null;
 
+    // field_news_category
+    const categoryData = item.relationships.field_news_category?.data || [];
+    const fieldNewsCategory = categoryData.map((catItem: any) => {
+      const catIncluded = includedById.get(catItem.id);
+      return {
+        id: catItem.id,
+        name: catIncluded?.attributes?.name || "",
+      };
+    });
+
     return {
       id: item.id,
       drupal_internal__nid: item.attributes.drupal_internal__nid,
@@ -64,6 +74,8 @@ export const fetchPublications = async (): Promise<Publication[]> => {
       field_video_link: item.attributes.field_video_link?.uri || null,
       field_gallery: fieldGallery,
       field_image: fieldImage,
+      field_news_category: fieldNewsCategory,
+      field_options_in_publication: null, // No incluimos el contenido completo en la lista
     };
   });
 

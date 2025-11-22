@@ -1,0 +1,199 @@
+"use client";
+
+import { PublicationContent } from "@/types/publications";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { GalleryModal } from "../common/gallery-modal";
+import { useRouter } from "next/navigation";
+
+interface Props {
+  content: PublicationContent;
+}
+
+export function PublicationContentRenderer({ content }: Props) {
+  const router = useRouter();
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [startIndex, setStartIndex] = useState(0);
+
+  const openGallery = (index: number) => {
+    setStartIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  switch (content.type) {
+    case "paragraph--link": {
+      if (!content.field_link) return null;
+      return (
+        <div className="mb-6">
+          <a
+            href={content.field_link.uri}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition group"
+          >
+            <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-blue-100 text-blue-600">
+              🔗
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
+                {content.field_link.title || content.field_link.uri}
+              </p>
+              <p className="text-xs text-gray-500">Enlace relacionado</p>
+            </div>
+          </a>
+        </div>
+      );
+    }
+
+    case "paragraph--galeria_publicaciones": {
+      if (!content.field_gallery_images || content.field_gallery_images.length === 0)
+        return null;
+
+      const images = content.field_gallery_images;
+      const visibleImages = images.slice(0, 4);
+      const extraCount = images.length > 4 ? images.length - 4 : 0;
+
+      return (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Galería</h3>
+          <div
+            className={`grid gap-2 ${
+              visibleImages.length === 1
+                ? "grid-cols-1"
+                : visibleImages.length === 2
+                ? "grid-cols-2"
+                : "grid-cols-2 grid-rows-2"
+            }`}
+          >
+            {visibleImages.map((img, index) => {
+              const isMain = index === 0 && visibleImages.length > 1;
+              const hasMore = index === 3 && extraCount > 0;
+
+              return (
+                <div
+                  key={img.id || index}
+                  onClick={() => openGallery(index)}
+                  className={`relative overflow-hidden rounded-lg cursor-pointer ${
+                    isMain ? "row-span-2" : "h-40"
+                  }`}
+                >
+                  <Image
+                    src={img.url}
+                    alt={img.alt || "Imagen de galería"}
+                    fill
+                    className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+                  />
+                  {hasMore && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-2xl font-semibold">
+                      +{extraCount}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {isGalleryOpen && (
+            <GalleryModal
+              images={images.map((img) => ({
+                id: img.id,
+                url: img.url,
+                alt: img.alt,
+                title: img.title,
+                width: img.width,
+                height: img.height,
+              }))}
+              initialIndex={startIndex}
+              onClose={() => setIsGalleryOpen(false)}
+            />
+          )}
+        </div>
+      );
+    }
+
+    case "paragraph--enriched_text": {
+      if (!content.field_body) return null;
+      return (
+        <div className="mb-6">
+          <div
+            className="prose prose-sm md:prose-base max-w-none text-gray-800 leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content.field_body }}
+          />
+        </div>
+      );
+    }
+
+    case "paragraph--game_type_publication": {
+      if (!content.field_game) return null;
+      
+      // Función para mapear el tipo de juego a la ruta
+      const getGameRoute = (gameType: string): string | null => {
+        switch (gameType) {
+          case "paragraph--wordsearch_game":
+            return `/games/wordsearch?id=${content.field_game!.id}`;
+          case "paragraph--puzzle_game":
+            return `/games/puzzle?id=${content.field_game!.id}`;
+          case "paragraph--spot_differences_game":
+            return `/games/spot-differences?id=${content.field_game!.id}`;
+          case "paragraph--complete_phrase_game":
+            return `/games/complete-phrase?id=${content.field_game!.id}`;
+          case "paragraph--trivia_game":
+            return `/games/trivia?id=${content.field_game!.id}`;
+          case "paragraph--emoji_discovery_game":
+            return `/games/emoji-discovery?id=${content.field_game!.id}`;
+          case "paragraph--hangman_game":
+            return `/games/hangman?id=${content.field_game!.id}`;
+          case "paragraph--memory_game":
+            return `/games/memory?id=${content.field_game!.id}`;
+          case "paragraph--quiz_game":
+            return `/games/quiz?id=${content.field_game!.id}`;
+          case "paragraph--true_false_game":
+            return `/games/true-false?id=${content.field_game!.id}`;
+          case "paragraph--word_match_game":
+            return `/games/word-match?id=${content.field_game!.id}`;
+          // Para otros tipos de juegos que aún no tienen página específica, redirigir a /games
+          default:
+            return `/games`;
+        }
+      };
+
+      const gameRoute = getGameRoute(content.field_game.gameType);
+
+      return (
+        <div className="mb-6">
+          <div className="p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              🎮 Juego Disponible
+            </h3>
+            {content.field_game.title && (
+              <h4 className="text-md font-medium text-gray-800 mb-2">
+                {content.field_game.title}
+              </h4>
+            )}
+            {content.field_game.description && (
+              <p className="text-sm text-gray-600 mb-4">
+                {content.field_game.description}
+              </p>
+            )}
+            <button
+              onClick={() => {
+                if (gameRoute) {
+                  router.push(gameRoute);
+                } else {
+                  router.push("/games");
+                }
+              }}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+            >
+              Jugar Ahora
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    default:
+      return null;
+  }
+}
+

@@ -16,6 +16,8 @@ import Image from "next/image";
 import { formatDate } from "@/utils/format-date";
 import { GalleryModal } from "@/components/common/gallery-modal";
 import { SinglePublicationSkeleton } from "@/components/skeletons/publications/single-publication-skeleton";
+import { PublicationContentRenderer } from "@/components/publications/publication-content";
+import { Tag } from "lucide-react";
 
 export default function SinglePublicationPage({
   params,
@@ -123,12 +125,38 @@ export default function SinglePublicationPage({
           </div>
         )}
 
+        {/* 🔹 Taxonomía (Categorías) */}
+        {publication.field_news_category && publication.field_news_category.length > 0 && (
+          <div className="mt-6 mb-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Tag className="h-4 w-4 text-gray-500" />
+              {publication.field_news_category.map((category) => (
+                <span
+                  key={category.id}
+                  className="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
+                >
+                  {category.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 🔹 Descripción */}
         {publication.description && (
           <div
             className="prose prose-sm md:prose-base max-w-none text-gray-800 mb-6 leading-relaxed mt-6"
             dangerouslySetInnerHTML={{ __html: publication.description }}
           />
+        )}
+
+        {/* 🔹 Contenido de la publicación (field_options_in_publication) */}
+        {publication.field_options_in_publication && (
+          <div className="mt-6">
+            <PublicationContentRenderer
+              content={publication.field_options_in_publication}
+            />
+          </div>
         )}
 
         {/* 🔹 Enlaces */}

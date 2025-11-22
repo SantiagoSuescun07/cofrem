@@ -12,6 +12,7 @@ import { CalendarEvent } from "@/types";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useCallback, useEffect } from "react";
+import { usePollQuery } from "@/queries/encuentas/usepoll-query";
 
 interface RightSidebarProps {
   onPlayGames?: () => void;
@@ -27,9 +28,15 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   userRanking = "top 10",
 }) => {
   const { data: events, isLoading, isError } = useCalendarEventsQuery();
+  const { data: poll, isLoading: isLoadingPoll } = usePollQuery();
   const [openSurvey, setOpenSurvey] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  
+  // Verificar si hay encuesta activa disponible
+  const hasNoActivePoll = 
+    (poll && (poll as any).message === "No active poll found.") ||
+    (!poll && !isLoadingPoll);
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "start" },
     [Autoplay({ delay: 4000 })]
@@ -266,14 +273,27 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       {/* Encuesta */}
       <div className="bg-white p-6 rounded-xl border border-gray-200">
         <h3 className="text-gray-900 mb-4">Encuesta Activa</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Evaluación de clima laboral 2025
-        </p>
+        {isLoadingPoll ? (
+          <p className="text-sm text-gray-500 mb-4">Cargando encuesta...</p>
+        ) : hasNoActivePoll ? (
+          <p className="text-sm text-gray-600 mb-4">
+            Ya has respondido esta encuesta. Gracias por tu participación.
+          </p>
+        ) : (
+          <p className="text-sm text-gray-600 mb-4">
+            {poll?.title || "Evaluación de clima laboral 2025"}
+          </p>
+        )}
         <button
           onClick={() => setOpenSurvey(true)}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={hasNoActivePoll || isLoadingPoll}
+          className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            hasNoActivePoll || isLoadingPoll
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+          }`}
         >
-          Participar
+          {isLoadingPoll ? "Cargando..." : hasNoActivePoll ? "Ya participaste" : "Participar"}
         </button>
       </div>
 

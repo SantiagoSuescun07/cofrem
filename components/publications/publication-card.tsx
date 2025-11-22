@@ -25,19 +25,21 @@ export function PublicationCard({ publication }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
 
-  const openGallery = (index: number) => {
+  const openGallery = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
     setStartIndex(index);
     setIsOpen(true);
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition mt-14">
-      <Link
-        href={`/publications/${publication.id}`}
-        className="text-lg font-semibold text-gray-900 hover:underline hover:text-primary"
-      >
+    <Link
+      href={`/publications/${publication.id}`}
+      className="block bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition mt-14 cursor-pointer"
+    >
+      <h3 className="text-lg font-normal text-gray-900 hover:text-primary">
         {title}
-      </Link>
+      </h3>
 
       {/* Grid de imágenes */}
       {visibleImages.length > 0 && (
@@ -54,7 +56,7 @@ export function PublicationCard({ publication }: Props) {
               className={`relative overflow-hidden rounded-lg cursor-pointer ${
                 visibleImages.length > 1 ? "row-span-2" : "h-80"
               }`}
-              onClick={() => openGallery(0)}
+              onClick={(e) => openGallery(e, 0)}
             >
               <Image
                 src={visibleImages[0].url}
@@ -72,7 +74,7 @@ export function PublicationCard({ publication }: Props) {
               <div
                 key={img.id || globalIndex}
                 className="relative h-40 overflow-hidden rounded-lg cursor-pointer"
-                onClick={() => openGallery(globalIndex)}
+                onClick={(e) => openGallery(e, globalIndex)}
               >
                 {index === 1 && extraCount > 0 ? (
                   <div>
@@ -123,6 +125,6 @@ export function PublicationCard({ publication }: Props) {
           onClose={() => setIsOpen(false)}
         />
       )}
-    </div>
+    </Link>
   );
 }

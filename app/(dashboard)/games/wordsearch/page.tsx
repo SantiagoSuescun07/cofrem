@@ -83,13 +83,16 @@ export default function WordSearchPage() {
   const campaign = campaigns && campaigns.length > 0 ? campaigns[0] : null;
 
   useEffect(() => {
-    if (campaign?.field_game_type) {
-      // Si hay un ID en los parámetros, buscar ese juego específico
-      const targetGame = gameId
-        ? campaign.field_game_type.find((game) => game.id === gameId)
-        : campaign.field_game_type.find(
-            (game) => game.type === "paragraph--wordsearch_game"
-          );
+    if (gameId) {
+      // Si hay un ID en los parámetros, construir directamente la URL del juego
+      // Esto funciona tanto para juegos desde campañas como desde publicaciones
+      const gameUrl = `/jsonapi/paragraph/wordsearch_game/${gameId}`;
+      setGameUrl(gameUrl);
+    } else if (campaign?.field_game_type) {
+      // Si no hay ID pero hay campaña, buscar el primer juego de tipo wordsearch
+      const targetGame = campaign.field_game_type.find(
+        (game) => game.type === "paragraph--wordsearch_game"
+      );
       
       if (targetGame?.href) {
         setGameUrl(targetGame.href);
@@ -100,8 +103,10 @@ export default function WordSearchPage() {
   const { data: gameDetails, isLoading: gameLoading } = useGameDetails(gameUrl);
 
   useEffect(() => {
-    if (campaign && gameDetails) {
-      const config = gameDetailsToConfig(campaign.title, gameDetails);
+    if (gameDetails) {
+      // Usar el título de la campaña si existe, sino usar el título del juego o un título por defecto
+      const title = campaign?.title || gameDetails.field_title || "Sopa de Letras";
+      const config = gameDetailsToConfig(title, gameDetails);
       setGameConfig(config);
     }
   }, [campaign, gameDetails]);
@@ -110,7 +115,7 @@ export default function WordSearchPage() {
     return <GameLoader message="Cargando Sopa de Letras..." />;
   }
 
-  if (!campaign || !gameDetails) {
+  if (!gameDetails) {
     return (
       <div className="max-w-6xl mx-auto px-6 md:px-10 py-6">
         <div className="text-center py-12">
@@ -119,7 +124,7 @@ export default function WordSearchPage() {
             onClick={() => router.push("/games")}
             className="mt-4 px-4 py-2 bg-[#306393] text-white rounded-lg hover:bg-[#306393]/90"
           >
-            Volver a la Campaña
+            Volver a Juegos
           </button>
         </div>
       </div>

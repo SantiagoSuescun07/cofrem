@@ -21,13 +21,14 @@ export const fetchGameDetails = async (
 
     // Incluir todos los campos relacionados posibles para diferentes tipos de juegos
     // Intentamos incluir todos los campos comunes que pueden existir
-    // Nota: field_puzzle_image solo existe para memory_game, pero JSON:API debería
-    // ignorar relaciones que no existen sin causar errores
-    // Sin embargo, algunos endpoints pueden ser estrictos, así que solo incluimos
-    // field_puzzle_image para memory_game
-    const includeParams = url.includes('memory_game') 
-      ? "field_icon,field_puzzle_image" 
-      : "field_icon";
+    // Nota: field_puzzle_image existe para memory_game y puzzle_game
+    // field_original_image y field_modified_image existen para spot_differences_game
+    let includeParams = "field_icon";
+    if (url.includes('memory_game') || url.includes('puzzle_game')) {
+      includeParams = "field_icon,field_puzzle_image";
+    } else if (url.includes('spot_differences_game')) {
+      includeParams = "field_icon,field_original_image,field_modified_image";
+    }
     
     const response = await api.get(url, {
       params: {
@@ -546,6 +547,105 @@ export const fetchGameDetails = async (
           type: "paragraph--word_match_game",
           field_word_match_difficulty: allAttributes.field_word_match_difficulty || "",
           field_pairs: fieldWordMatchPairs,
+        } as GameDetails;
+        break;
+
+      case "paragraph--puzzle_game":
+        // Obtener las imágenes del rompecabezas
+        let fieldPuzzleGameImages: Array<{
+          id: string;
+          url: string;
+          alt: string;
+          title: string;
+          width: number;
+          height: number;
+        }> = [];
+
+        const puzzleGameImageData = allRelationships.field_puzzle_image?.data || [];
+        if (puzzleGameImageData.length > 0) {
+          fieldPuzzleGameImages = puzzleGameImageData.map((imgData: any) => {
+            const imgIncluded = includedById.get(imgData.id);
+            if (imgIncluded && imgIncluded.attributes?.uri?.url) {
+              return {
+                id: imgIncluded.id,
+                url: apiBaseUrl + imgIncluded.attributes.uri.url,
+                alt: imgData.meta?.alt || "",
+                title: imgData.meta?.title || "",
+                width: imgData.meta?.width || 0,
+                height: imgData.meta?.height || 0,
+              };
+            }
+            return null;
+          }).filter((img: any) => img !== null);
+        }
+
+        gameDetails = {
+          ...baseGame,
+          type: "paragraph--puzzle_game",
+          field_puzzle_difficulty: allAttributes.field_puzzle_difficulty || "",
+          field_puzzle_image: fieldPuzzleGameImages.length > 0 ? fieldPuzzleGameImages : undefined,
+        } as GameDetails;
+        break;
+
+      case "paragraph--spot_differences_game":
+        // Obtener las imágenes original y modificada
+        let fieldOriginalImage: {
+          id: string;
+          url: string;
+          alt: string;
+          title: string;
+          width: number;
+          height: number;
+        } | undefined = undefined;
+
+        let fieldModifiedImage: {
+          id: string;
+          url: string;
+          alt: string;
+          title: string;
+          width: number;
+          height: number;
+        } | undefined = undefined;
+
+        const originalImageData = allRelationships.field_original_image?.data;
+        if (originalImageData) {
+          const originalIncluded = includedById.get(originalImageData.id);
+          if (originalIncluded && originalIncluded.attributes?.uri?.url) {
+            fieldOriginalImage = {
+              id: originalIncluded.id,
+              url: apiBaseUrl + originalIncluded.attributes.uri.url,
+              alt: originalImageData.meta?.alt || "",
+              title: originalImageData.meta?.title || "",
+              width: originalImageData.meta?.width || 0,
+              height: originalImageData.meta?.height || 0,
+            };
+          }
+        }
+
+        const modifiedImageData = allRelationships.field_modified_image?.data;
+        if (modifiedImageData) {
+          const modifiedIncluded = includedById.get(modifiedImageData.id);
+          if (modifiedIncluded && modifiedIncluded.attributes?.uri?.url) {
+            fieldModifiedImage = {
+              id: modifiedIncluded.id,
+              url: apiBaseUrl + modifiedIncluded.attributes.uri.url,
+              alt: modifiedImageData.meta?.alt || "",
+              title: modifiedImageData.meta?.title || "",
+              width: modifiedImageData.meta?.width || 0,
+              height: modifiedImageData.meta?.height || 0,
+            };
+          }
+        }
+
+        gameDetails = {
+          ...baseGame,
+          type: "paragraph--spot_differences_game",
+          field_spot_difficulty: allAttributes.field_spot_difficulty || "",
+          field_num_differences: allAttributes.field_num_differences || 0,
+          field_original_image: fieldOriginalImage,
+          field_modified_image: fieldModifiedImage,
+          field_differences_coordinates: allAttributes.field_differences_coordinates || null,
+          field_points_per_hit: allAttributes.field_points_per_hit ?? null,
         } as GameDetails;
         break;
 

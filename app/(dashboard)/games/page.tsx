@@ -39,6 +39,8 @@ function getGameTypeName(gameType: string) {
       return "Verdadero o Falso";
     case "paragraph--word_match_game":
       return "Emparejar palabras";
+    case "paragraph--spot_differences_game":
+      return "Encuentra las diferencias";
     default:
       return "Juego";
   }
@@ -66,6 +68,8 @@ function getGameButtonColor(gameType: string) {
       return "bg-[#27ae60] hover:bg-[#27ae60]/90";
     case "paragraph--word_match_game":
       return "bg-[#d35400] hover:bg-[#d35400]/90";
+    case "paragraph--spot_differences_game":
+      return "bg-[#e67e22] hover:bg-[#e67e22]/90";
     default:
       return "bg-[#306393] hover:bg-[#306393]/90";
   }
@@ -94,6 +98,8 @@ function getGameCardHoverBgColor(gameType: string) {
       return "hover:bg-[#27ae60]/15";
     case "paragraph--word_match_game":
       return "hover:bg-[#d35400]/15";
+    case "paragraph--spot_differences_game":
+      return "hover:bg-[#e67e22]/15";
     default:
       return "hover:bg-[#09d6a6]/15";
   }
@@ -121,6 +127,8 @@ function getGameIconBg(gameType: string) {
       return "bg-[#27ae60]";
     case "paragraph--word_match_game":
       return "bg-[#d35400]";
+    case "paragraph--spot_differences_game":
+      return "bg-[#e67e22]";
     default:
       return "bg-[#306393]";
   }
@@ -149,6 +157,8 @@ function getGameButtonBorderColor(gameType: string) {
       return "border-[#27ae60]/40";
     case "paragraph--word_match_game":
       return "border-[#d35400]/40";
+    case "paragraph--spot_differences_game":
+      return "border-[#e67e22]/40";
     default:
       return "border-[#09d6a6]/40";
   }
@@ -177,6 +187,8 @@ function getGameButtonTextColor(gameType: string) {
       return "text-[#27ae60]";
     case "paragraph--word_match_game":
       return "text-[#d35400]";
+    case "paragraph--spot_differences_game":
+      return "text-[#e67e22]";
     default:
       return "text-[#09d6a6]";
   }
@@ -204,6 +216,8 @@ function getGameEmoji(gameType: string) {
       return "✔️";
     case "paragraph--word_match_game":
       return "🔗";
+    case "paragraph--spot_differences_game":
+      return "🔍";
     default:
       return "🎮";
   }
@@ -231,6 +245,8 @@ function getGameRoute(gameType: string) {
       return "/games/true-false";
     case "paragraph--word_match_game":
       return "/games/word-match";
+    case "paragraph--spot_differences_game":
+      return "/games/spot-differences";
     default:
       return null;
   }

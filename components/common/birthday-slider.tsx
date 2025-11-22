@@ -72,8 +72,18 @@ export function BirthdaySlider() {
                   }}
                   className="flex items-center gap-3 p-3 bg-[#f8fafc] rounded-lg cursor-pointer hover:bg-[#e2e8f0] transition-colors"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#2deb79]/20 flex items-center justify-center">
-                    <User className="text-[#2deb79] h-5 w-5" />
+                  <div className="w-10 h-10 rounded-full bg-[#2deb79]/20 flex items-center justify-center overflow-hidden relative flex-shrink-0">
+                    {person.profileImage ? (
+                      <Image
+                        src={person.profileImage}
+                        alt={person.name}
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    ) : (
+                      <User className="text-[#2deb79] h-5 w-5" />
+                    )}
                   </div>
                   <div>
                     <p className="font-medium text-sm text-gray-800">
