@@ -1,16 +1,17 @@
 "use client"
 
-import { Calendar, MapPin } from "lucide-react"
+import { Calendar, MapPin, Car, Clock } from "lucide-react"
 import { format, isSameDay } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarEvent } from "@/types"
+import { CalendarEvent, PicoYPlacaData } from "@/types"
 
 interface CalendarListViewProps {
   events: CalendarEvent[]
   onEventClick: (event: CalendarEvent) => void
+  picoYPlaca?: PicoYPlacaData
 }
 
-export function CalendarListView({ events, onEventClick }: CalendarListViewProps) {
+export function CalendarListView({ events, onEventClick, picoYPlaca }: CalendarListViewProps) {
   // Group events by date
   const groupedEvents = events.reduce(
     (acc, event) => {
@@ -26,6 +27,29 @@ export function CalendarListView({ events, onEventClick }: CalendarListViewProps
 
   // Sort dates
   const sortedDates = Object.keys(groupedEvents).sort()
+
+  const getPicoYPlacaForDay = (day: Date) => {
+    if (!picoYPlaca || !picoYPlaca.pico_y_placa) {
+      return null;
+    }
+    
+    const dayOfWeek = day.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+    const diasMap: Record<number, keyof typeof picoYPlaca.pico_y_placa> = {
+      1: "Lunes",
+      2: "Martes",
+      3: "Miércoles",
+      4: "Jueves",
+      5: "Viernes",
+      6: "Sábado",
+      0: "Domingo",
+    };
+    
+    const diaNombre = diasMap[dayOfWeek];
+    if (!diaNombre) return null;
+    
+    const diaData = picoYPlaca.pico_y_placa[diaNombre];
+    return diaData && diaData.placas && diaData.placas.length > 0 ? diaData : null;
+  };
 
   return (
     <div className="space-y-6">
@@ -51,6 +75,44 @@ export function CalendarListView({ events, onEventClick }: CalendarListViewProps
                   {isToday && <span className="text-xs text-primary">Hoy</span>}
                 </div>
               </div>
+
+              {/* Pico y Placa */}
+              {(() => {
+                const picoYPlacaInfo = getPicoYPlacaForDay(date);
+                return picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 ? (
+                  <div className="mb-4 pl-8">
+                    <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Car className="w-4 h-4 text-orange-600" />
+                        <span className="font-semibold text-orange-700">Pico y Placa</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {picoYPlacaInfo.placas.map((placa, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 bg-orange-600 text-white rounded font-bold text-sm"
+                          >
+                            {placa}
+                          </span>
+                        ))}
+                      </div>
+                      {picoYPlacaInfo.horarios.length > 0 && (
+                        <div className="flex items-center gap-2 text-orange-600">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm">
+                            {picoYPlacaInfo.horarios.map((h, i) => (
+                              <span key={i}>
+                                {h.inicio} - {h.fin}
+                                {i < picoYPlacaInfo.horarios.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
 
               {/* Events List */}
               <div className="space-y-2 pl-8">

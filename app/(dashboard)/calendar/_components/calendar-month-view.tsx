@@ -16,16 +16,19 @@ import {
   endOfWeek,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarEvent } from "@/types";
+import { CalendarEvent, PicoYPlacaData } from "@/types";
+import { Car, Clock } from "lucide-react";
 
 interface CalendarMonthViewProps {
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
+  picoYPlaca?: PicoYPlacaData;
 }
 
 export function CalendarMonthView({
   events,
   onEventClick,
+  picoYPlaca,
 }: CalendarMonthViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -38,6 +41,29 @@ export function CalendarMonthView({
 
   const getEventsForDay = (day: Date) => {
     return events.filter((event) => isSameDay(new Date(event.date), day));
+  };
+
+  const getPicoYPlacaForDay = (day: Date) => {
+    if (!picoYPlaca || !picoYPlaca.pico_y_placa) {
+      return null;
+    }
+    
+    const dayOfWeek = day.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+    const diasMap: Record<number, keyof typeof picoYPlaca.pico_y_placa> = {
+      1: "Lunes",
+      2: "Martes",
+      3: "Miércoles",
+      4: "Jueves",
+      5: "Viernes",
+      6: "Sábado",
+      0: "Domingo",
+    };
+    
+    const diaNombre = diasMap[dayOfWeek];
+    if (!diaNombre) return null;
+    
+    const diaData = picoYPlaca.pico_y_placa[diaNombre];
+    return diaData && diaData.placas && diaData.placas.length > 0 ? diaData : null;
   };
 
   return (
@@ -92,6 +118,16 @@ export function CalendarMonthView({
             const dayEvents = getEventsForDay(day);
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isToday = isSameDay(day, new Date());
+            const picoYPlacaInfo = getPicoYPlacaForDay(day);
+
+            // Debug: solo para el día actual
+            if (isToday && picoYPlaca) {
+              console.log("Pico y Placa para hoy:", {
+                day: format(day, "EEEE", { locale: es }),
+                picoYPlacaInfo,
+                picoYPlacaData: picoYPlaca,
+              });
+            }
 
             return (
               <div
@@ -112,6 +148,40 @@ export function CalendarMonthView({
                   {format(day, "d")}
                 </div>
                 <div className="space-y-1">
+                  {/* Pico y Placa */}
+                  {picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 && (
+                    <div className="mb-2 p-1.5 bg-orange-50 border border-orange-200 rounded text-xs">
+                      <div className="flex items-center gap-1 mb-1">
+                        <Car className="w-3 h-3 text-orange-600" />
+                        <span className="font-semibold text-orange-700">Pico y Placa</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {picoYPlacaInfo.placas.map((placa, i) => (
+                          <span
+                            key={i}
+                            className="px-1.5 py-0.5 bg-orange-600 text-white rounded font-bold text-[10px]"
+                          >
+                            {placa}
+                          </span>
+                        ))}
+                      </div>
+                      {picoYPlacaInfo.horarios.length > 0 && (
+                        <div className="flex items-center gap-1 text-orange-600">
+                          <Clock className="w-2.5 h-2.5" />
+                          <span className="text-[10px]">
+                            {picoYPlacaInfo.horarios.map((h, i) => (
+                              <span key={i}>
+                                {h.inicio}-{h.fin}
+                                {i < picoYPlacaInfo.horarios.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Eventos */}
                   {dayEvents.slice(0, 3).map((event) => (
                     <button
                       key={event.id}

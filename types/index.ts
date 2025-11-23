@@ -106,3 +106,25 @@ export interface PicoYPlacaInfo {
   date: string;
   numbers: number[];
 }
+
+export interface PicoYPlacaHorario {
+  inicio: string;
+  fin: string;
+}
+
+export interface PicoYPlacaDia {
+  placas: string[];
+  horarios: PicoYPlacaHorario[];
+}
+
+export interface PicoYPlacaData {
+  pico_y_placa: {
+    Lunes: PicoYPlacaDia;
+    Martes: PicoYPlacaDia;
+    Miércoles: PicoYPlacaDia;
+    Jueves: PicoYPlacaDia;
+    Viernes: PicoYPlacaDia;
+    Sábado: PicoYPlacaDia;
+    Domingo: PicoYPlacaDia;
+  };
+}

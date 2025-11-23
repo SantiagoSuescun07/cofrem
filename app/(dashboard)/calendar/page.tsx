@@ -10,7 +10,7 @@ import { CalendarMonthView } from "./_components/calendar-month-view";
 import { CalendarWeekView } from "./_components/calendar-week-view";
 import { CalendarViewToggle } from "./_components/calendar-view-toggle";
 import { BreadcrumbNav } from "./_components/breadcrumb-nav";
-import { useCalendarEventsQuery } from "@/queries/calendar"; // 👈 importas el hook
+import { useCalendarEventsQuery, usePicoYPlacaQuery } from "@/queries/calendar";
 
 export default function CalendarPage() {
   const router = useRouter();
@@ -20,6 +20,17 @@ export default function CalendarPage() {
 
   // 👇 Hook de React Query (sin useEffect)
   const { data: events = [], isLoading, isError } = useCalendarEventsQuery();
+  const { data: picoYPlaca, isLoading: isLoadingPicoYPlaca, isError: isErrorPicoYPlaca } = usePicoYPlacaQuery();
+
+  // Debug: verificar datos de pico y placa
+  useEffect(() => {
+    if (picoYPlaca) {
+      console.log("Pico y Placa data:", picoYPlaca);
+    }
+    if (isErrorPicoYPlaca) {
+      console.error("Error cargando pico y placa");
+    }
+  }, [picoYPlaca, isErrorPicoYPlaca]);
 
   // Abrir evento si viene en query params (desde notificaciones)
   useEffect(() => {
@@ -49,8 +60,9 @@ export default function CalendarPage() {
           <CalendarViewToggle view={view} onViewChange={setView} />
         </div>
 
+
         {/* Loading */}
-        {isLoading ? (
+        {isLoading || isLoadingPicoYPlaca ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
@@ -58,28 +70,27 @@ export default function CalendarPage() {
           <p className="text-center text-muted-foreground py-20">
             Error al cargar los eventos
           </p>
-        ) : events.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            No hay eventos programados
-          </div>
         ) : (
           <>
             {view === "month" && (
               <CalendarMonthView
                 events={events}
                 onEventClick={setSelectedEvent}
+                picoYPlaca={picoYPlaca}
               />
             )}
             {view === "week" && (
               <CalendarWeekView
                 events={events}
                 onEventClick={setSelectedEvent}
+                picoYPlaca={picoYPlaca}
               />
             )}
             {view === "list" && (
               <CalendarListView
                 events={events}
                 onEventClick={setSelectedEvent}
+                picoYPlaca={picoYPlaca}
               />
             )}
           </>

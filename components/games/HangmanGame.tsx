@@ -42,18 +42,27 @@ export default function HangmanGame({
   onClose,
   campaignNid,
 }: HangmanGameProps) {
-  const word = gameDetails.field_words_phrases.toUpperCase().trim();
+  // Dividir field_words_phrases por líneas (enter o \r)
+  const rounds = gameDetails.field_words_phrases
+    .split(/\r?\n/)
+    .map((line) => line.trim().toUpperCase())
+    .filter((line) => line.length > 0);
+  
+  const [currentRound, setCurrentRound] = useState<number>(0);
+  const word = rounds[currentRound] || "";
   const [guessedLetters, setGuessedLetters] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<number>(0);
   const [isGameWon, setIsGameWon] = useState<boolean>(false);
   const [isGameLost, setIsGameLost] = useState<boolean>(false);
   const [points, setPoints] = useState<number>(0);
-  // Cronómetro siempre de 60 segundos
+  // Cronómetro siempre de 60 segundos por ronda
   const INITIAL_TIME = 60;
   const [timeLeft, setTimeLeft] = useState<number>(INITIAL_TIME);
   const [isGameActive, setIsGameActive] = useState<boolean>(true);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [rankingUpdated, setRankingUpdated] = useState<boolean>(false);
+  const [completedRounds, setCompletedRounds] = useState<number>(0);
+  const [showRoundComplete, setShowRoundComplete] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Verificar si todas las letras han sido adivinadas (comparando letras normalizadas)
@@ -65,25 +74,54 @@ export default function HangmanGame({
       return Array.from(guessedLetters).some((guessed) => normalizeLetter(guessed) === normalizedChar);
     });
 
-  // Verificar si el juego ha terminado
+  // Avanzar a la siguiente ronda cuando se complete la palabra actual
   useEffect(() => {
-    if (allLettersGuessed && errors < MAX_ERRORS && !isGameWon) {
-      setIsGameWon(true);
-      setIsGameActive(false);
-      setPoints(gameDetails.field_points || 0);
+    if (allLettersGuessed && errors < MAX_ERRORS && word && !isGameWon && !isGameLost && !showRoundComplete) {
+      const nextRound = currentRound + 1;
+      
+      if (nextRound >= rounds.length) {
+        // Se completaron todas las rondas
+        setIsGameWon(true);
+        setIsGameActive(false);
+        setPoints(gameDetails.field_points || 0);
 
-      // Actualizar ranking si el juego se completa correctamente
-      if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
-        setRankingUpdated(true);
-        updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
-          console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
-        });
-      }
+        // Actualizar ranking si el juego se completa correctamente
+        if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+          setRankingUpdated(true);
+          updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
+            console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+          });
+        }
 
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+      } else {
+        // Mostrar mensaje de ronda completada
+        setShowRoundComplete(true);
+        setIsGameActive(false);
+        setCompletedRounds((prev) => prev + 1);
+        
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+        }
+        
+        // Avanzar a la siguiente ronda después de 2 segundos
+        setTimeout(() => {
+          setCurrentRound(nextRound);
+          setGuessedLetters(new Set());
+          setErrors(0);
+          setTimeLeft(INITIAL_TIME);
+          setShowRoundComplete(false);
+          setIsGameActive(true);
+        }, 2000);
       }
-    } else if (errors >= MAX_ERRORS && !isGameLost) {
+    }
+  }, [allLettersGuessed, errors, isGameWon, isGameLost, word, currentRound, rounds.length, gameDetails.field_points, campaignNid, rankingUpdated, showRoundComplete]);
+
+  // Verificar si el juego se perdió
+  useEffect(() => {
+    if (errors >= MAX_ERRORS && !isGameLost && !isGameWon) {
       setIsGameLost(true);
       setIsGameActive(false);
 
@@ -91,9 +129,14 @@ export default function HangmanGame({
         clearInterval(intervalRef.current);
       }
     }
-  }, [allLettersGuessed, errors, isGameWon, isGameLost, gameDetails.field_points, campaignNid, rankingUpdated]);
+  }, [errors, isGameLost, isGameWon]);
 
-  // Cronómetro siempre activo de 60 segundos
+  // Reiniciar el cronómetro cuando cambia la ronda
+  useEffect(() => {
+    setTimeLeft(INITIAL_TIME);
+  }, [currentRound]);
+
+  // Cronómetro siempre activo de 60 segundos por ronda
   useEffect(() => {
     if (timeLeft > 0 && isGameActive && !isGameWon && !isGameLost) {
       intervalRef.current = setInterval(() => {
@@ -142,6 +185,7 @@ export default function HangmanGame({
 
   // Función para reiniciar el juego
   const handleRetry = () => {
+    setCurrentRound(0);
     setGuessedLetters(new Set());
     setErrors(0);
     setIsGameWon(false);
@@ -151,6 +195,8 @@ export default function HangmanGame({
     setIsGameActive(true);
     setShowHint(false);
     setRankingUpdated(false);
+    setCompletedRounds(0);
+    setShowRoundComplete(false);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -276,6 +322,17 @@ export default function HangmanGame({
                 </div>
               </div>
               <div className="flex gap-3 sm:gap-4">
+                {rounds.length > 1 && (
+                  <div className="flex items-center gap-2 bg-blue-50 rounded-xl border-2 border-blue-300 px-4 py-2.5 shadow-sm">
+                    <span className="text-lg">🎯</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 leading-none">Ronda</span>
+                      <span className="text-lg font-bold text-blue-600 leading-none">
+                        {currentRound + 1}/{rounds.length}
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 bg-white rounded-xl border-2 px-4 py-2.5 shadow-sm">
                   <span className="text-lg">⏱️</span>
                   <div className="flex flex-col">
@@ -344,6 +401,26 @@ export default function HangmanGame({
             </div>
           </div>
 
+          {/* Mensaje de ronda completada */}
+          {showRoundComplete && (
+            <div className="text-center mb-6">
+              <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
+                <div className="text-6xl mb-3">✅</div>
+                <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
+                  ¡Ronda {currentRound + 1} Completada!
+                </h3>
+                <p className="text-gray-700 mb-2 text-lg">
+                  Has adivinado: <strong className="text-[#09d6a6]">{word}</strong>
+                </p>
+                {rounds.length > currentRound + 1 && (
+                  <p className="text-gray-600 mb-4 text-base">
+                    Preparando ronda {currentRound + 2} de {rounds.length}...
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Resultado del juego */}
           {isGameWon && (
             <div className="text-center mb-6">
@@ -353,8 +430,31 @@ export default function HangmanGame({
                   ¡Felicidades!
                 </h3>
                 <p className="text-gray-700 mb-2 text-lg">
-                  Has adivinado la palabra: <strong className="text-[#09d6a6]">{word}</strong>
+                  {rounds.length > 1 ? (
+                    <>
+                      Has completado todas las <strong className="text-[#09d6a6]">{rounds.length}</strong> rondas
+                    </>
+                  ) : (
+                    <>
+                      Has adivinado la palabra: <strong className="text-[#09d6a6]">{rounds[0]}</strong>
+                    </>
+                  )}
                 </p>
+                {rounds.length > 1 && (
+                  <div className="mb-4 p-4 bg-[#e6fff2]/50 rounded-lg">
+                    <p className="text-sm text-gray-600 mb-2">Palabras completadas:</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {rounds.map((roundWord, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-[#09d6a6] text-white rounded-full text-sm font-semibold"
+                        >
+                          {roundWord}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <p className="text-gray-700 mb-6 text-lg">
                   Has ganado <strong className="text-[#09d6a6] text-xl">{points}</strong> puntos
                 </p>
@@ -384,8 +484,13 @@ export default function HangmanGame({
                   ¡Game Over!
                 </h3>
                 <p className="text-red-600 mb-2 text-lg">
-                  La palabra era: <strong>{word}</strong>
+                  La palabra de la ronda {currentRound + 1} era: <strong>{word}</strong>
                 </p>
+                {rounds.length > 1 && completedRounds > 0 && (
+                  <p className="text-red-600 mb-2 text-base">
+                    Completaste {completedRounds} de {rounds.length} rondas
+                  </p>
+                )}
                 <p className="text-red-600 mb-6 text-lg">
                   Has alcanzado el máximo de errores
                 </p>
@@ -408,7 +513,7 @@ export default function HangmanGame({
           )}
 
           {/* Teclado de letras */}
-          {!isGameWon && !isGameLost && (
+          {!isGameWon && !isGameLost && !showRoundComplete && (
             <div className="mb-6">
               <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">
                 Selecciona una letra:
@@ -443,7 +548,7 @@ export default function HangmanGame({
           )}
 
           {/* Pista */}
-          {gameDetails.field_hint && !isGameWon && !isGameLost && (
+          {gameDetails.field_hint && !isGameWon && !isGameLost && !showRoundComplete && (
             <div className="mb-6">
               <button
                 onClick={() => setShowHint(!showHint)}
@@ -462,7 +567,7 @@ export default function HangmanGame({
           )}
 
           {/* Botón para volver - Solo cuando el juego está activo */}
-          {!isGameWon && !isGameLost && (
+          {!isGameWon && !isGameLost && !showRoundComplete && (
             <div className="text-center">
               <button
                 onClick={onClose}

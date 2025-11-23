@@ -5,14 +5,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, isSameDay, addWeeks, subWeeks } from "date-fns"
 import { es } from "date-fns/locale"
-import { CalendarEvent } from "@/types"
+import { CalendarEvent, PicoYPlacaData } from "@/types"
+import { Car, Clock } from "lucide-react"
 
 interface CalendarWeekViewProps {
   events: CalendarEvent[]
   onEventClick: (event: CalendarEvent) => void
+  picoYPlaca?: PicoYPlacaData
 }
 
-export function CalendarWeekView({ events, onEventClick }: CalendarWeekViewProps) {
+export function CalendarWeekView({ events, onEventClick, picoYPlaca }: CalendarWeekViewProps) {
   const [currentWeek, setCurrentWeek] = useState(new Date())
 
   const weekStart = startOfWeek(currentWeek, { locale: es })
@@ -23,6 +25,29 @@ export function CalendarWeekView({ events, onEventClick }: CalendarWeekViewProps
     return events
       .filter((event) => isSameDay(new Date(event.date), day))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  }
+
+  const getPicoYPlacaForDay = (day: Date) => {
+    if (!picoYPlaca || !picoYPlaca.pico_y_placa) {
+      return null;
+    }
+    
+    const dayOfWeek = day.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+    const diasMap: Record<number, keyof typeof picoYPlaca.pico_y_placa> = {
+      1: "Lunes",
+      2: "Martes",
+      3: "Miércoles",
+      4: "Jueves",
+      5: "Viernes",
+      6: "Sábado",
+      0: "Domingo",
+    };
+    
+    const diaNombre = diasMap[dayOfWeek];
+    if (!diaNombre) return null;
+    
+    const diaData = picoYPlaca.pico_y_placa[diaNombre];
+    return diaData && diaData.placas && diaData.placas.length > 0 ? diaData : null;
   }
 
   return (
@@ -51,6 +76,7 @@ export function CalendarWeekView({ events, onEventClick }: CalendarWeekViewProps
           {days.map((day, idx) => {
             const dayEvents = getEventsForDay(day)
             const isToday = isSameDay(day, new Date())
+            const picoYPlacaInfo = getPicoYPlacaForDay(day)
 
             return (
               <div key={idx} className={`min-h-[400px] p-3 border-r last:border-r-0 ${isToday ? "bg-accent/5" : ""}`}>
@@ -67,6 +93,40 @@ export function CalendarWeekView({ events, onEventClick }: CalendarWeekViewProps
                   </div>
                 </div>
                 <div className="space-y-2">
+                  {/* Pico y Placa */}
+                  {picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 && (
+                    <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Car className="w-4 h-4 text-orange-600" />
+                        <span className="font-semibold text-orange-700 text-xs">Pico y Placa</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {picoYPlacaInfo.placas.map((placa, i) => (
+                          <span
+                            key={i}
+                            className="px-2 py-1 bg-orange-600 text-white rounded font-bold text-xs"
+                          >
+                            {placa}
+                          </span>
+                        ))}
+                      </div>
+                      {picoYPlacaInfo.horarios.length > 0 && (
+                        <div className="flex items-center gap-1.5 text-orange-600">
+                          <Clock className="w-3 h-3" />
+                          <span className="text-xs">
+                            {picoYPlacaInfo.horarios.map((h, i) => (
+                              <span key={i}>
+                                {h.inicio}-{h.fin}
+                                {i < picoYPlacaInfo.horarios.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Eventos */}
                   {dayEvents.map((event) => (
                     <button
                       key={event.id}
