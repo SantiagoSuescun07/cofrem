@@ -136,7 +136,7 @@ export function EditProfileDialog({
         // Cargar la imagen a Drupal para obtener fid y uuid. Utilizamos el endpoint
         // estándar de archivos de Drupal para subir la foto de usuario.
         const uploadResponse = await api.post(
-          `/file/upload/user/user/user_picture?_format=json`,
+          `/file/upload/media/image/field_media_image`,
           file,
           {
             headers: {

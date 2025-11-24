@@ -1,7 +1,10 @@
+"use client"
+
 import { ProgressBar } from "@/components/common/progress-bar";
 import { Card, CardContent } from "@/components/ui/card";
-import { ThumbsUp, User, Star } from "lucide-react";
+import { useUserProfile } from "@/queries/profile";
 import Image from "next/image";
+import { useUserId } from "./profile-header";
 
 export function AchievementCards() {
   const achievements = [
@@ -28,6 +31,11 @@ export function AchievementCards() {
     },
   ];
 
+  const userId = useUserId()
+  const { data: profile, isLoading } = useUserProfile(userId!)
+
+  console.log(profile)
+
   return (
     <div className="mt-20">
       <h2 className="text-xl mb-6 flex items-center gap-2">
@@ -44,19 +52,18 @@ export function AchievementCards() {
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {achievements.map((achievement, index) => {
-          const IconComponent = achievement.icon;
+        {profile?.badges.map((badge, index) => {
           return (
             <Card
               key={index}
-              className={`${achievement.bgColor} border border-muted hover:scale-105 transition-transform duration-200 cursor-pointer`}
+              className={`border border-muted hover:scale-105 transition-transform duration-200 cursor-pointer`}
             >
               <CardContent className="p-6 text-center">
                 <div
-                  className={`inline-flex p-4 rounded-xl ${achievement.color} mb-4`}
+                  className={`inline-flex p-4 rounded-xl mb-4`}
                 >
                   <Image
-                    src={achievement.icon}
+                    src={badge.image ?? ""}
                     alt="Icon"
                     width={40}
                     height={40}
@@ -64,7 +71,7 @@ export function AchievementCards() {
                     className="size-[40px] object-cover"
                   />
                 </div>
-                <h3 className="text-2xl mb-2">{achievement.title}</h3>
+                <h3 className="text-2xl mb-2">{badge.name}</h3>
               </CardContent>
             </Card>
           );
