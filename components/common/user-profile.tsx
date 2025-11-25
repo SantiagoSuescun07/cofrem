@@ -5,12 +5,9 @@ import { useUserId } from "@/app/(dashboard)/profile/_components/profile-header"
 import { useUserProfile } from "@/queries/profile";
 
 export function UserProfile() {
-  const userId = useUserId()
+  const userId = useUserId();
   const user = useCurrentUser();
-
-  
-  const { data: profile, isLoading } = useUserProfile(userId!)
-  console.log(profile)
+  const { data: profile } = useUserProfile(userId!);
 
   const initials = user?.name
     ? user.name
@@ -22,10 +19,9 @@ export function UserProfile() {
 
   return (
     <div className="flex items-center space-x-3 w-full">
-      {/* Avatar */}
       {profile?.picture || user?.image ? (
         <Image
-          src={profile?.picture || user?.image!}
+          src={profile?.picture! || user?.image!}
           alt={profile?.name ?? "user profile image"}
           width={40}
           height={40}
@@ -42,7 +38,7 @@ export function UserProfile() {
         <p className="text-sm font-medium text-gray-900 truncate">
           {user?.name}
         </p>
-        <p className="text-xs text-gray-500 truncate">{profile?.position}</p>
+        <p className="text-xs text-gray-500 truncate">{user?.position}</p>
       </div>
     </div>
   );

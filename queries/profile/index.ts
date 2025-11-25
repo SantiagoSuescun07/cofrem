@@ -7,5 +7,6 @@ export const useUserProfile = (userId: string) => {
     queryFn: () => getUserProfile(userId),
     enabled: !!userId,
     staleTime: 1000 * 60 * 5, // 5 min
+    retry: 2
   });
 };

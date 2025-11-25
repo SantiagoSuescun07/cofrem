@@ -147,7 +147,7 @@ export function EditProfileDialog({
           }
         );
 
-        console.log(uploadResponse)
+        console.log("UPLOAD RESPONSE: ", uploadResponse)
 
         if (uploadResponse.status === 201) {
           const imageData = uploadResponse.data;

@@ -6,13 +6,9 @@ export type ExtendedUser = DefaultSession["user"] & {
   name: string | null;
   image: string | null;
   phone: string | null;
+  position?: string;
 };
 
-// declare module "next-auth" {
-//   interface Session {
-//     user: ExtendedUser
-//   }
-// }
 declare module "next-auth" {
   interface Session {
     user: ExtendedUser;
@@ -28,6 +24,8 @@ declare module "next-auth" {
   }
 
   interface JWT {
+    phone?: string; 
+    position?: string; 
     drupalAccessToken?: string;
     drupalUser?: {
       uid: string;

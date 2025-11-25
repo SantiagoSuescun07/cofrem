@@ -4,7 +4,7 @@
 // import { db } from "@/lib/db";
 // import authConfig from "@/auth.config";
 // import { getUserById } from "@/actions/auth";
-// // import { UserRole } from "@prisma/client";
+// import axios from "axios";
 
 // export const { handlers, signIn, signOut, auth } = NextAuth({
 //   trustHost: true,
@@ -14,11 +14,13 @@
 //   },
 //   callbacks: {
 //     async signIn({ user, account }) {
-//       console.log("Google SignIn user:", user);
-//       console.log("Google SignIn account:", account);
-
 //       // Validar dominios permitidos para todos los proveedores
-//       const allowedDomains = ["gmail.com", "factoryai.io", "factoryim.co", "cofrem.com.co"];
+//       const allowedDomains = [
+//         "gmail.com",
+//         "factoryai.io",
+//         "factoryim.co",
+//         "cofrem.com.co",
+//       ];
 
 //       if (user.email) {
 //         const emailDomain = user.email.split("@")[1];
@@ -37,44 +39,101 @@
 
 //       return true;
 //     },
-//     async session({ token, session }) {
-//       console.log("Session before return:", session);
-
-//       if (token.sub && session.user) {
+//     async session({ session, token }) {
+//       if (session.user && token.sub) {
 //         session.user.id = token.sub;
-//       }
-
-//       // if (token.role && session.user) {
-//       //   session.user.role = token.role as UserRole;
-//       // }
-
-//       if (token.phone && session.user) {
+//         session.user.name = token.name as string;
+//         session.user.image = token.image as string;
 //         session.user.phone = token.phone as string;
 //       }
 
-//       if (session.user) {
-//         session.user.name = token.name as string;
-//         session.user.image = token.image as string;
-//       }
+//       const drupalAccessToken = (token as any).drupalAccessToken as
+//         | string
+//         | undefined;
+//       const drupalUser = (token as any).drupalUser as
+//         | { uid: string; name: string; email: string }
+//         | undefined;
+//       const drupalTokenExpires = (token as any).drupalTokenExpires as
+//         | number
+//         | undefined;
+
+//       session.drupal = {
+//         accessToken: drupalAccessToken,
+//         user: drupalUser,
+//         expiresAt: drupalTokenExpires,
+//       };
 
 //       return session;
 //     },
 //     async jwt({ token, user, account }) {
-//       console.log("JWT callback:", { token, user, account });
 
-//       if (!token.sub) return token;
+//       // ⚡ Si llega un usuario nuevo (primer login), guardar la imagen SOLO si el token aún no tiene una
+//       if (user && !token.image) {
+//         token.image = user.image ?? null;
+//       }
 
-//       const existingUser = await getUserById(token.sub);
+//       // 🔄 Si ya existe token.image, NO reemplazarla aunque Google envíe una nueva
+//       if (token.image && user?.image) {
+//         // NO reemplazar la imagen existente
+//       }
 
-//       if (!existingUser) return token;
+//       // === Tu lógica original permanece intacta ===
+//       if (user) {
+//         token.name = user.name ?? token.name;
+//         token.email = user.email ?? token.email;
+//         // ⚠ Aquí NO seteamos token.image = user.image
+//         // porque queremos mantener la foto fija
+//       }
 
-//       // token.role = existingUser.role;
-//       token.name = existingUser.name;
-//       token.image = existingUser.image;
-//       token.phone = existingUser.phone;
+//       if (account?.provider === "google" && account.id_token) {
+//         try {
+//           const { data } = await axios.post(
+//             "https://backoffice.cofrem.com.co/api/auth/google",
+//             { id_token: account.id_token },
+//             { headers: { "Content-Type": "application/json" } }
+//           );
+
+//           token.drupalAccessToken = data.access_token;
+//           token.drupalUser = data.user;
+//           token.drupalTokenExpires =
+//             Date.now() + (data.expires_in || 3600) * 1000;
+//         } catch (error) {
+//           console.error("❌ Error al obtener access_token de Drupal:", error);
+//         }
+//       }
 
 //       return token;
 //     },
+//     // async jwt({ token, user, account }) {
+//     //   console.log("JWT callback:", { token, user, account });
+
+//     //   if (user) {
+//     //     token.name = user.name ?? token.name;
+//     //     token.image = user.image ?? token.image;
+//     //     token.email = user.email ?? token.email;
+//     //   }
+
+//     //   if (account?.provider === "google" && account.id_token) {
+//     //     try {
+//     //       const { data } = await axios.post(
+//     //         "https://backoffice.cofrem.com.co/api/auth/google",
+//     //         { id_token: account.id_token },
+//     //         { headers: { "Content-Type": "application/json" } }
+//     //       );
+
+//     //       console.log("✅ Access token obtenido de Drupal:", data);
+
+//     //       token.drupalAccessToken = data.access_token;
+//     //       token.drupalUser = data.user;
+//     //       token.drupalTokenExpires =
+//     //         Date.now() + (data.expires_in || 3600) * 1000;
+//     //     } catch (error: any) {
+//     //       console.error("❌ Error al obtener access_token de Drupal:", error);
+//     //     }
+//     //   }
+
+//     //   return token;
+//     // },
 //     async redirect({ url, baseUrl }) {
 //       return baseUrl;
 //     },
@@ -83,6 +142,208 @@
 //   session: { strategy: "jwt" },
 //   ...authConfig,
 // });
+
+
+// import NextAuth from "next-auth";
+// import { PrismaAdapter } from "@auth/prisma-adapter";
+
+// import { db } from "@/lib/db";
+// import authConfig from "@/auth.config";
+// import { getUserById } from "@/actions/auth";
+// import axios from "axios";
+// import { getUserProfile } from "./services/profile/get-user-profile";
+
+// // Función auxiliar para obtener el perfil con token explícito
+// async function fetchDrupalUserProfile(userId: string, accessToken: string) {
+//   try {
+//     const { data } = await axios.get(
+//       `https://backoffice.cofrem.com.co/user/${userId}?_format=json`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//           "Content-Type": "application/json",
+//         },
+//       }
+//     );
+
+//     // Retornar solo la URL de la imagen si existe
+//     return data.user_picture?.[0]?.url ?? null;
+//   } catch (error) {
+//     console.error("⚠️ Error al obtener perfil de Drupal:", error);
+//     return null;
+//   }
+// }
+
+// export const { handlers, signIn, signOut, auth } = NextAuth({
+//   trustHost: true,
+//   pages: {
+//     signIn: "/auth/login",
+//     error: "/error",
+//   },
+//   callbacks: {
+//     async signIn({ user, account }) {
+//       // Validar dominios permitidos para todos los proveedores
+//       const allowedDomains = [
+//         "gmail.com",
+//         "factoryai.io",
+//         "factoryim.co",
+//         "cofrem.com.co",
+//       ];
+
+//       if (user.email) {
+//         const emailDomain = user.email.split("@")[1];
+//         if (!allowedDomains.includes(emailDomain)) {
+//           return false;
+//         }
+//       }
+
+//       // Para proveedores OAuth (Google, etc.) permitir login directo
+//       if (account?.provider !== "credentials") return true;
+
+//       // Para credentials, verificar que el usuario exista en la base de datos
+//       const existingUser = await getUserById(user.id);
+
+//       if (!existingUser) return false;
+
+//       return true;
+//     },
+//     async session({ session, token }) {
+//       if (session.user && token.sub) {
+//         session.user.id = token.sub;
+//         session.user.name = token.name as string;
+//         session.user.image = token.image as string;
+//         session.user.phone = token.phone as string;
+//       }
+
+//       const drupalAccessToken = (token as any).drupalAccessToken as
+//         | string
+//         | undefined;
+//       const drupalUser = (token as any).drupalUser as
+//         | { uid: string; name: string; email: string }
+//         | undefined;
+//       const drupalTokenExpires = (token as any).drupalTokenExpires as
+//         | number
+//         | undefined;
+
+//       session.drupal = {
+//         accessToken: drupalAccessToken,
+//         user: drupalUser,
+//         expiresAt: drupalTokenExpires,
+//       };
+
+//       return session;
+//     },
+//     async jwt({ token, user, account }) {
+//       // Actualizar información básica del usuario
+//       if (user) {
+//         token.name = user.name ?? token.name;
+//         token.email = user.email ?? token.email;
+//       }
+
+//       // Procesar login con Google
+//       if (account?.provider === "google" && account.id_token) {
+//         try {
+//           const { data } = await axios.post(
+//             "https://backoffice.cofrem.com.co/api/auth/google",
+//             { id_token: account.id_token },
+//             { headers: { "Content-Type": "application/json" } }
+//           );
+
+//           console.log("✅ Access token obtenido de Drupal:", data);
+
+//           token.drupalAccessToken = data.access_token;
+//           token.drupalUser = data.user;
+//           token.drupalTokenExpires =
+//             Date.now() + (data.expires_in || 3600) * 1000;
+
+//           // 🎯 LÓGICA MEJORADA: Obtener imagen de Drupal con el token recién obtenido
+//           const drupalPicture = await fetchDrupalUserProfile(
+//             data.user.uid,
+//             data.access_token
+//           );
+
+//           // Prioridad de imágenes:
+//           // 1. Imagen personalizada de Drupal
+//           // 2. Imagen existente en token (preservar entre sesiones)
+//           // 3. Imagen de Google (como fallback inicial)
+//           if (drupalPicture) {
+//             token.image = drupalPicture;
+//             console.log("🖼️ Usando imagen de Drupal:", drupalPicture);
+//           } else if (!token.image && user?.image) {
+//             token.image = user.image;
+//             console.log("🖼️ Usando imagen de Google:", user.image);
+//           } else {
+//             console.log("🖼️ Manteniendo imagen existente:", token.image);
+//           }
+//         } catch (error) {
+//           console.error("❌ Error al obtener access_token de Drupal:", error);
+//         }
+//       }
+
+//       return token;
+//     },
+//     // async jwt({ token, user, account }) {
+//     //   // Actualizar información básica del usuario
+//     //   if (user) {
+//     //     token.name = user.name ?? token.name;
+//     //     token.email = user.email ?? token.email;
+//     //   }
+
+//     //   // Procesar login con Google
+//     //   if (account?.provider === "google" && account.id_token) {
+//     //     try {
+//     //       const { data } = await axios.post(
+//     //         "https://backoffice.cofrem.com.co/api/auth/google",
+//     //         { id_token: account.id_token },
+//     //         { headers: { "Content-Type": "application/json" } }
+//     //       );
+
+//     //       console.log({"DATA": data})
+
+//     //       token.drupalAccessToken = data.access_token;
+//     //       token.drupalUser = data.user;
+//     //       token.drupalTokenExpires =
+//     //         Date.now() + (data.expires_in || 3600) * 1000;
+
+//     //       // 🎯 LÓGICA MEJORADA: Solo actualizar imagen si es necesario
+//     //       try {
+//     //         // Obtener el perfil completo del usuario desde Drupal
+//     //         const drupalProfile = await getUserProfile(data.user.uid);
+            
+//     //         // Si el usuario tiene una imagen personalizada en Drupal, usarla
+//     //         if (drupalProfile.picture) {
+//     //           token.image = drupalProfile.picture;
+//     //         } 
+//     //         // Si NO tiene imagen en Drupal pero viene de Google, usar la de Google
+//     //         else if (user?.image && !token.image) {
+//     //           token.image = user.image;
+//     //         }
+//     //         // Si ya existe una imagen en el token, mantenerla
+//     //         // (esto evita que se sobrescriba en logins posteriores)
+            
+//     //       } catch (profileError) {
+//     //         console.error("⚠️ Error al obtener perfil de Drupal:", profileError);
+//     //         // Si falla la consulta a Drupal, mantener la imagen existente o usar la de Google
+//     //         if (!token.image && user?.image) {
+//     //           token.image = user.image;
+//     //         }
+//     //       }
+//     //     } catch (error) {
+//     //       console.error("❌ Error al obtener access_token de Drupal:", error);
+//     //     }
+//     //   }
+
+//     //   return token;
+//     // },
+//     async redirect({ url, baseUrl }) {
+//       return baseUrl;
+//     },
+//   },
+//   adapter: PrismaAdapter(db),
+//   session: { strategy: "jwt" },
+//   ...authConfig,
+// });
+
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 
@@ -90,6 +351,30 @@ import { db } from "@/lib/db";
 import authConfig from "@/auth.config";
 import { getUserById } from "@/actions/auth";
 import axios from "axios";
+
+// Función auxiliar para obtener el perfil con token explícito
+async function fetchDrupalUserProfile(userId: string, accessToken: string) {
+  try {
+    const { data } = await axios.get(
+      `https://backoffice.cofrem.com.co/user/${userId}?_format=json`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Retornar imagen y cargo del usuario
+    return {
+      picture: data.user_picture?.[0]?.url ?? null,
+      position: data.field_charge?.[0]?.value ?? null,
+    };
+  } catch (error) {
+    console.error("⚠️ Error al obtener perfil de Drupal:", error);
+    return { picture: null, position: null };
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -124,77 +409,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       return true;
     },
-    // async session({ token, session }) {
-    //   if (token.sub && session.user) {
-    //     session.user.id = token.sub;
-    //   }
-
-    //   // if (token.role && session.user) {
-    //   //   session.user.role = token.role as UserRole;
-    //   // }
-
-    //   if (token.phone && session.user) {
-    //     session.user.phone = token.phone as string;
-    //   }
-
-    //   if (session.user) {
-    //     session.user.name = token.name as string;
-    //     session.user.image = token.image as string;
-    //   }
-
-    //   return session;
-    // },
-    // async session({ session, token }) {
-    //   if (token.sub && session.user) {
-    //     session.user.id = token.sub;
-    //   }
-
-    //   if (token.phone && session.user) {
-    //     session.user.phone = token.phone as string;
-    //   }
-
-    //   if (session.user) {
-    //     session.user.name = token.name as string;
-    //     session.user.image = token.image as string;
-    //   }
-
-    //   if (session.user && token.sub) {
-    //     session.user.id = token.sub;
-    //     session.user.name = token.name as string;
-    //     session.user.image = token.image as string;
-    //     session.user.phone = token.phone as string;
-    //   }
-
-    //   // 🧠 Type assertion para evitar 'unknown'
-    //   const drupalAccessToken = (token as any).drupalAccessToken as
-    //     | string
-    //     | undefined;
-    //   const drupalUser = (token as any).drupalUser as
-    //     | {
-    //         uid: string;
-    //         name: string;
-    //         email: string;
-    //       }
-    //     | undefined;
-    //   const drupalTokenExpires = (token as any).drupalTokenExpires as
-    //     | number
-    //     | undefined;
-
-    //   // 🔹 Añadimos los datos de Drupal
-    //   session.drupal = {
-    //     accessToken: drupalAccessToken,
-    //     user: drupalUser,
-    //     expiresAt: drupalTokenExpires,
-    //   };
-
-    //   return session;
-    // },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.name = token.name as string;
         session.user.image = token.image as string;
         session.user.phone = token.phone as string;
+        session.user.position = token.position as string; // 👈 CARGO DEL USUARIO
       }
 
       const drupalAccessToken = (token as any).drupalAccessToken as
@@ -216,14 +437,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
     async jwt({ token, user, account }) {
-      console.log("JWT callback:", { token, user, account });
-
+      // Actualizar información básica del usuario
       if (user) {
         token.name = user.name ?? token.name;
-        token.image = user.image ?? token.image;
         token.email = user.email ?? token.email;
       }
 
+      // Procesar login con Google
       if (account?.provider === "google" && account.id_token) {
         try {
           const { data } = await axios.post(
@@ -238,91 +458,39 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.drupalUser = data.user;
           token.drupalTokenExpires =
             Date.now() + (data.expires_in || 3600) * 1000;
-        } catch (error: any) {
+
+          // 🎯 LÓGICA MEJORADA: Obtener imagen y cargo de Drupal
+          const drupalProfile = await fetchDrupalUserProfile(
+            data.user.uid,
+            data.access_token
+          );
+
+          // Guardar cargo en el token
+          if (drupalProfile.position) {
+            token.position = drupalProfile.position;
+            console.log("💼 Cargo obtenido:", drupalProfile.position);
+          }
+
+          // Prioridad de imágenes:
+          // 1. Imagen personalizada de Drupal
+          // 2. Imagen existente en token (preservar entre sesiones)
+          // 3. Imagen de Google (como fallback inicial)
+          if (drupalProfile.picture) {
+            token.image = drupalProfile.picture;
+            console.log("🖼️ Usando imagen de Drupal:", drupalProfile.picture);
+          } else if (!token.image && user?.image) {
+            token.image = user.image;
+            console.log("🖼️ Usando imagen de Google:", user.image);
+          } else {
+            console.log("🖼️ Manteniendo imagen existente:", token.image);
+          }
+        } catch (error) {
           console.error("❌ Error al obtener access_token de Drupal:", error);
         }
       }
 
       return token;
     },
-    // async jwt({ token, user, account }) {
-    //   console.log("JWT callback:", { token, user, account });
-
-    //   if (account?.provider === "google" && account.id_token) {
-    //     try {
-    //       const { data } = await axios.post(
-    //         "https://backoffice.cofrem.com.co/api/auth/google",
-    //         { id_token: account.id_token },
-    //         { headers: { "Content-Type": "application/json" } }
-    //       );
-
-    //       console.log("✅ Access token obtenido de Drupal:", data);
-
-    //       // Guardar la información en el JWT
-    //       token.drupalAccessToken = data.access_token;
-    //       token.drupalUser = data.user;
-    //       token.drupalTokenExpires =
-    //         Date.now() + (data.expires_in || 3600) * 1000;
-    //     } catch (error: any) {
-    //       console.error("❌ Error al obtener access_token de Drupal:", error);
-    //     }
-    //   }
-
-    //   return token;
-    // },
-    // async jwt({ token, user, account }) {
-    //   console.log("JWT callback:", { token, user, account });
-
-    //   // 🔹 Cuando el usuario inicia sesión con Google
-    //   if (account?.provider === "google" && account.id_token) {
-    //     try {
-    //       // ✅ Solicitamos el access_token de Drupal con Axios
-    //       console.log("ACCOUNT ID TOKEN: ", account.id_token)
-    //       const { data } = await axios.post(
-    //         "https://backoffice.cofrem.com.co/api/auth/google",
-    //         { id_token: account.id_token },
-    //         { headers: { "Content-Type": "application/json" } }
-    //       );
-
-    //       console.log("✅ Access token obtenido de Drupal:", data);
-
-    //       // ✅ Guardamos el token y expiración en localStorage (solo si estamos en cliente)
-    //       // if (typeof window !== "undefined" && data.access_token) {
-    //       //   localStorage.setItem("cofrem.access_token", data.access_token);
-    //       //   localStorage.setItem(
-    //       //     "cofrem.expires_at",
-    //       //     String(Date.now() + (data.expires_in || 3600) * 1000)
-    //       //   );
-    //       // }
-
-    //       // Guardamos también en el JWT (útil si usas SSR o middleware)
-    //       // token.accessToken = data.access_token;
-    //       // token.expires_at = Date.now() + (data.expires_in || 3600) * 1000;
-    //     } catch (error: any) {
-    //       if (axios.isAxiosError(error)) {
-    //         console.error(
-    //           "❌ Error de Axios:",
-    //           error.response
-    //         );
-    //       } else {
-    //         console.error("❌ Error al obtener access_token de Drupal:", error);
-    //       }
-    //     }
-    //   }
-
-    //   if (!token.sub) return token;
-
-    //   const existingUser = await getUserById(token.sub);
-
-    //   if (!existingUser) return token;
-
-    //   // token.role = existingUser.role;
-    //   token.name = existingUser.name;
-    //   token.image = existingUser.image;
-    //   token.phone = existingUser.phone;
-
-    //   return token;
-    // },
     async redirect({ url, baseUrl }) {
       return baseUrl;
     },
