@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -29,6 +30,7 @@ export function GalleryModal({
 }: GalleryModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const nextImage = () =>
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -46,16 +48,19 @@ export function GalleryModal({
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  if (!images || images.length === 0) return null;
+  useEffect(() => setIsMounted(true), []);
+
+  if (!images || images.length === 0 || !isMounted) return null;
 
   const currentImage = images[currentIndex];
 
-  return (
+  const modalContent = (
     <motion.div
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      onClick={(event) => event.stopPropagation()}
     >
       {/* Botón cerrar */}
       <button
@@ -135,4 +140,6 @@ export function GalleryModal({
       )}
     </motion.div>
   );
+
+  return createPortal(modalContent, document.body);
 }

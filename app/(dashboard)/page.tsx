@@ -20,7 +20,9 @@ export default function HomePage() {
           <NewsSection />
           <PublicationsSection />
         </div>
-        <RightSidebar onPlayGames={() => router.push("/games")} />
+        <div className="lg:sticky lg:top-6 lg:self-start lg:h-[calc(100vh-3rem)] lg:overflow-y-auto">
+          <RightSidebar onPlayGames={() => router.push("/games")} />
+        </div>
       </div>
     </div>
   );

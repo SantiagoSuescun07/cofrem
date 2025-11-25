@@ -7,6 +7,7 @@ export const fetchDocuments = async (): Promise<Document[]> => {
     const response = await api.get("/jsonapi/node/documents", {
       params: {
         include: "field_file,field_icon,field_module_category,field_modulo",
+        "page[limit]": 500,
       },
     });
 
