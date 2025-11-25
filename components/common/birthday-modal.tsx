@@ -117,7 +117,7 @@ export function BirthdayModal({ birthday, open, onClose }: BirthdayModalProps) {
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white text-2xl font-bold">
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white text-2xl ">
                   {birthday.name.charAt(0).toUpperCase()}
                 </div>
               )}

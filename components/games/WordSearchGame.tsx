@@ -179,7 +179,7 @@ export default function WordSearchGame({
                   🎯
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {config.title}
                   </h1>
                 </div>
@@ -193,7 +193,7 @@ export default function WordSearchGame({
                         Tiempo
                       </span>
                       <span
-                        className={`text-lg font-bold leading-none ${
+                        className={`text-lg  leading-none ${
                           timeLeft <= 30
                             ? "text-red-600 animate-pulse"
                             : timeLeft <= 60
@@ -212,7 +212,7 @@ export default function WordSearchGame({
                     <span className="text-xs text-gray-500 leading-none">
                       Puntos
                     </span>
-                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                    <span className="text-lg  text-[#09d6a6] leading-none">
                       {points}
                     </span>
                   </div>
@@ -223,11 +223,11 @@ export default function WordSearchGame({
             {/* Instrucciones */}
             {config.description && config.description.trim() !== "" && (
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-md">
+                <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-lg flex items-center justify-center text-white text-xl  shadow-md">
                   <InfoIcon className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">
@@ -243,7 +243,7 @@ export default function WordSearchGame({
           <div className="mt-6">
             <div className="bg-white rounded-2xl shadow-xl border-2 border-[#09d6a6] p-8 sm:p-12 text-center max-w-2xl mx-auto">
               <div className="text-6xl mb-6">🎉</div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-[#09d6a6] mb-4">
+              <h2 className="text-3xl sm:text-4xl  text-[#09d6a6] mb-4">
                 {completionData.title}
               </h2>
               <p className="text-lg text-gray-700 mb-8">
@@ -254,13 +254,13 @@ export default function WordSearchGame({
                   <div className="text-sm text-gray-600 mb-2">
                     Puntaje Final
                   </div>
-                  <div className="text-3xl font-bold text-[#09d6a6]">
+                  <div className="text-3xl  text-[#09d6a6]">
                     {points}
                   </div>
                 </div>
                 <div className="bg-gradient-to-br from-[#e6fff2] to-white p-6 rounded-xl border-2 border-[#09d6a6]/30">
                   <div className="text-sm text-gray-600 mb-2">Palabras</div>
-                  <div className="text-3xl font-bold text-[#09d6a6]">
+                  <div className="text-3xl  text-[#09d6a6]">
                     {foundWordsSet.size}/{config.words.length}
                   </div>
                 </div>
@@ -303,7 +303,7 @@ export default function WordSearchGame({
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6 sticky top-6">
                 <div className="mb-4 pb-4 border-b border-gray-200">
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <h3 className="text-lg  text-gray-900 flex items-center gap-2">
                     <span className="text-[#09d6a6]">📝</span>
                     Palabras a encontrar
                   </h3>

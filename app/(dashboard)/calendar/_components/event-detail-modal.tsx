@@ -134,7 +134,7 @@ export function EventDetailModal({
               <p className="text-sm text-muted-foreground">
                 Para la fecha de este evento, el Pico y Placa en Villavicencio
                 aplica para vehículos con placas terminadas en:{" "}
-                <span className="font-bold text-foreground">
+                <span className="text-foreground">
                   {picoYPlaca.join(" y ")}
                 </span>
               </p>

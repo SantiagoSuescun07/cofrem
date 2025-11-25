@@ -205,7 +205,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Bell size={20} />
               {displayCount > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs  rounded-full w-5 h-5 flex items-center justify-center">
                   {displayCount > 9 ? "9+" : displayCount}
                 </span>
               )}

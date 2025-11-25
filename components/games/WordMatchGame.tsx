@@ -244,7 +244,7 @@ export default function WordMatchGame({
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="bg-white rounded-2xl border-2 border-red-400 shadow-xl p-8 max-w-md w-full text-center">
           <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-700 mb-2">Error</h2>
+          <h2 className="text-2xl  text-red-700 mb-2">Error</h2>
           <p className="text-red-600 mb-6">No hay pares disponibles para este juego.</p>
           <button
             onClick={onClose}
@@ -270,7 +270,7 @@ export default function WordMatchGame({
                   🔗
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Emparejar Palabras</p>
@@ -283,7 +283,7 @@ export default function WordMatchGame({
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Tiempo</span>
                       <span
-                        className={`text-lg font-bold leading-none ${
+                        className={`text-lg  leading-none ${
                           timeLeft <= 30
                             ? "text-red-600 animate-pulse"
                             : timeLeft <= 60
@@ -300,7 +300,7 @@ export default function WordMatchGame({
                   <span className="text-lg">✅</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Pares</span>
-                    <span className="text-lg font-bold text-green-600 leading-none">
+                    <span className="text-lg  text-green-600 leading-none">
                       {matchedPairs.size}/{totalPairs}
                     </span>
                   </div>
@@ -310,7 +310,7 @@ export default function WordMatchGame({
                     <span className="text-lg">🌟</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                      <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                      <span className="text-lg  text-[#09d6a6] leading-none">
                         {points}
                       </span>
                     </div>
@@ -326,7 +326,7 @@ export default function WordMatchGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
@@ -344,13 +344,13 @@ export default function WordMatchGame({
             <div className="text-center mb-8">
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-8 mb-4">
                 <div className="text-6xl mb-3">🎉</div>
-                <h3 className="text-3xl font-bold text-green-700 mb-2">
+                <h3 className="text-3xl  text-green-700 mb-2">
                   ¡Felicidades!
                 </h3>
                 <p className="text-green-600 text-lg mb-2">
                   Has emparejado todas las palabras con sus imágenes
                 </p>
-                <p className="text-green-700 font-bold text-xl mb-4">
+                <p className="text-green-700  text-xl mb-4">
                   Has ganado {points} puntos
                 </p>
                 <div className="flex gap-4 justify-center mt-6">
@@ -392,10 +392,10 @@ export default function WordMatchGame({
             {/* Columna de palabras - LADO IZQUIERDO */}
             <div className="bg-gradient-to-br from-[#e6fff2] to-white rounded-2xl p-6 border-2 border-[#09d6a6]/30">
               <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-full flex items-center justify-center text-white text-2xl ">
                   A
                 </div>
-                <h3 className="text-2xl font-bold text-[#09d6a6]">
+                <h3 className="text-2xl  text-[#09d6a6]">
                   Palabras
                 </h3>
               </div>
@@ -421,11 +421,11 @@ export default function WordMatchGame({
                       `}
                     >
                       {isMatched && (
-                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl font-bold">
+                        <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-xl ">
                           ✓
                         </div>
                       )}
-                      <span className={`text-xl font-bold ${isMatched ? "text-green-800 line-through" : isSelected ? "text-[#09d6a6]" : "text-gray-800"}`}>
+                      <span className={`text-xl  ${isMatched ? "text-green-800 line-through" : isSelected ? "text-[#09d6a6]" : "text-gray-800"}`}>
                         {word.text}
                       </span>
                     </button>
@@ -437,10 +437,10 @@ export default function WordMatchGame({
             {/* Columna de imágenes - LADO DERECHO */}
             <div className="bg-gradient-to-br from-[#e6fff2] to-white rounded-2xl p-6 border-2 border-[#09d6a6]/30">
               <div className="flex items-center justify-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#09d6a6] to-[#0bc9a0] rounded-full flex items-center justify-center text-white text-2xl ">
                   B
                 </div>
-                <h3 className="text-2xl font-bold text-[#09d6a6]">
+                <h3 className="text-2xl  text-[#09d6a6]">
                   Imágenes
                 </h3>
               </div>
@@ -477,7 +477,7 @@ export default function WordMatchGame({
                           {isMatched && (
                             <div className="absolute inset-0 bg-green-500 bg-opacity-70 flex items-center justify-center">
                               <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center">
-                                <span className="text-3xl font-bold text-green-600">✓</span>
+                                <span className="text-3xl  text-green-600">✓</span>
                               </div>
                             </div>
                           )}
@@ -505,7 +505,7 @@ export default function WordMatchGame({
           <div className="mt-8 mb-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-gray-700">Progreso</span>
-              <span className="text-sm font-bold text-[#09d6a6]">
+              <span className="text-sm  text-[#09d6a6]">
                 {matchedPairs.size} de {totalPairs} pares completados
               </span>
             </div>
@@ -515,7 +515,7 @@ export default function WordMatchGame({
                 style={{ width: `${(matchedPairs.size / totalPairs) * 100}%` }}
               >
                 {matchedPairs.size > 0 && (
-                  <span className="text-xs font-bold text-white">
+                  <span className="text-xs  text-white">
                     {Math.round((matchedPairs.size / totalPairs) * 100)}%
                   </span>
                 )}

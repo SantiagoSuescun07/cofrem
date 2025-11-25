@@ -70,7 +70,7 @@ export function CalendarMonthView({
     <div className="space-y-4">
       {/* Month Navigation */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-2xl">
           {format(currentMonth, "MMMM yyyy", { locale: es })}
         </h2>
         <div className="flex gap-2">
@@ -159,7 +159,7 @@ export function CalendarMonthView({
                         {picoYPlacaInfo.placas.map((placa, i) => (
                           <span
                             key={i}
-                            className="px-1.5 py-0.5 bg-orange-600 text-white rounded font-bold text-[10px]"
+                            className="px-1.5 py-0.5 bg-orange-600 text-white rounded text-[10px]"
                           >
                             {placa}
                           </span>

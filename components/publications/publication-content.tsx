@@ -170,7 +170,7 @@ export function PublicationContentRenderer({ content }: Props) {
       return (
         <div className="mb-6">
           <div className="p-6 border rounded-lg bg-gradient-to-r from-blue-50 to-purple-50">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg text-gray-900 mb-2">
               🎮 Juego Disponible
             </h3>
             {content.field_game.title && (

@@ -282,7 +282,7 @@ export default function PuzzleGame({
                   🧩
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Rompecabezas</p>
@@ -294,7 +294,7 @@ export default function PuzzleGame({
                     <span className="text-lg">⏱️</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Tiempo</span>
-                      <span className={`text-lg font-bold leading-none ${
+                      <span className={`text-lg  leading-none ${
                         timeLeft < 30 ? "text-red-500" : "text-gray-700"
                       }`}>
                         {formatTime(timeLeft)}
@@ -306,7 +306,7 @@ export default function PuzzleGame({
                   <span className="text-lg">🔄</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Movimientos</span>
-                    <span className="text-lg font-bold text-gray-700 leading-none">
+                    <span className="text-lg  text-gray-700 leading-none">
                       {moves}
                     </span>
                   </div>
@@ -316,7 +316,7 @@ export default function PuzzleGame({
                     <span className="text-lg">🌟</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                      <span className="text-lg font-bold text-[#2da2eb] leading-none">
+                      <span className="text-lg  text-[#2da2eb] leading-none">
                         {points}
                       </span>
                     </div>
@@ -332,7 +332,7 @@ export default function PuzzleGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#2da2eb] mb-1.5">
+                  <h3 className="text-base  text-[#2da2eb] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">
@@ -356,7 +356,7 @@ export default function PuzzleGame({
               <div className="text-center mb-6">
                 <div className="bg-green-50 border-2 border-green-400 rounded-xl p-6 mb-4">
                   <div className="text-5xl mb-2">🎉</div>
-                  <h3 className="text-2xl font-bold text-green-700 mb-2">
+                  <h3 className="text-2xl  text-green-700 mb-2">
                     ¡Felicidades!
                   </h3>
                   <p className="text-green-600 mb-2">
@@ -387,7 +387,7 @@ export default function PuzzleGame({
               <div className="text-center mb-6">
                 <div className="bg-red-50 border-2 border-red-400 rounded-xl p-6 mb-4">
                   <div className="text-5xl mb-2">⏱️</div>
-                  <h3 className="text-2xl font-bold text-red-700 mb-2">
+                  <h3 className="text-2xl  text-red-700 mb-2">
                     ¡Tiempo agotado!
                   </h3>
                   <p className="text-red-600 mb-4">

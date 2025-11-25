@@ -248,7 +248,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Puntos totales</span>
-            <span className="font-bold text-purple-600">
+            <span className=" text-purple-600">
               {userPoints.toLocaleString("es-ES")}
             </span>
           </div>

@@ -26,7 +26,7 @@ export default function GameLoader({ message = "Cargando juego..." }: GameLoader
 
         {/* Texto de carga con animación */}
         <div className="space-y-2">
-          <h3 className="text-xl font-bold text-gray-800 animate-pulse">
+          <h3 className="text-xl  text-gray-800 animate-pulse">
             {message}
           </h3>
           <p className="text-sm text-gray-500">

@@ -54,7 +54,7 @@ export function CalendarWeekView({ events, onEventClick, picoYPlaca }: CalendarW
     <div className="space-y-4">
       {/* Week Navigation */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-2xl">
           {format(weekStart, "d MMM", { locale: es })} - {format(weekEnd, "d MMM yyyy", { locale: es })}
         </h2>
         <div className="flex gap-2">
@@ -104,7 +104,7 @@ export function CalendarWeekView({ events, onEventClick, picoYPlaca }: CalendarW
                         {picoYPlacaInfo.placas.map((placa, i) => (
                           <span
                             key={i}
-                            className="px-2 py-1 bg-orange-600 text-white rounded font-bold text-xs"
+                            className="px-2 py-1 bg-orange-600 text-white rounded text-xs"
                           >
                             {placa}
                           </span>

@@ -140,7 +140,7 @@ export default function TrueFalseGame({
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="bg-white rounded-2xl border-2 border-red-400 shadow-xl p-8 max-w-md w-full text-center">
           <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-700 mb-2">Error</h2>
+          <h2 className="text-2xl  text-red-700 mb-2">Error</h2>
           <p className="text-red-600 mb-6">No hay afirmaciones disponibles para este juego.</p>
           <button
             onClick={onClose}
@@ -166,7 +166,7 @@ export default function TrueFalseGame({
                   ✔️
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Verdadero o Falso</p>
@@ -178,7 +178,7 @@ export default function TrueFalseGame({
                   <span className="text-lg">📊</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Progreso</span>
-                    <span className="text-lg font-bold text-gray-700 leading-none">
+                    <span className="text-lg  text-gray-700 leading-none">
                       {currentStatementIndex + 1}/{totalStatements}
                     </span>
                   </div>
@@ -188,7 +188,7 @@ export default function TrueFalseGame({
                     <span className="text-lg">🌟</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                      <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                      <span className="text-lg  text-[#09d6a6] leading-none">
                         {points}
                       </span>
                     </div>
@@ -204,7 +204,7 @@ export default function TrueFalseGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
@@ -222,7 +222,7 @@ export default function TrueFalseGame({
             <div className="text-center">
               <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-400 rounded-xl p-8 mb-6">
                 <div className="text-6xl mb-4">🎉</div>
-                <h2 className="text-3xl font-bold text-green-700 mb-4">
+                <h2 className="text-3xl  text-green-700 mb-4">
                   ¡Juego Completado!
                 </h2>
                 <div className="space-y-3 text-lg">
@@ -233,7 +233,7 @@ export default function TrueFalseGame({
                     <strong>Porcentaje:</strong> {Math.round((correctAnswers / totalStatements) * 100)}%
                   </p>
                   {points > 0 && (
-                    <p className="text-purple-600 font-bold text-xl mt-4">
+                    <p className="text-purple-600  text-xl mt-4">
                       Puntos obtenidos: {points}
                     </p>
                   )}
@@ -259,7 +259,7 @@ export default function TrueFalseGame({
               {/* Afirmación actual */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white px-4 py-2 rounded-lg font-bold text-lg">
+                  <span className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white px-4 py-2 rounded-lg  text-lg">
                     Afirmación {currentStatementIndex + 1}
                   </span>
                   {gameDetails.field_hint && (
@@ -273,7 +273,7 @@ export default function TrueFalseGame({
                 </div>
                 
                 <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6 mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center">
+                  <h2 className="text-2xl md:text-3xl  text-gray-800 text-center">
                     {currentStatement.field_statement_text}
                   </h2>
                 </div>
@@ -307,7 +307,7 @@ export default function TrueFalseGame({
                   >
                     <div className="flex flex-col items-center gap-3">
                       <span className="text-5xl">✅</span>
-                      <span className="text-2xl font-bold">VERDADERO</span>
+                      <span className="text-2xl ">VERDADERO</span>
                       {isAnswered && selectedAnswer === "true" && (
                         <span className="text-xl mt-2">
                           {currentStatement.field_correct_tf.toLowerCase().trim() === "true" ? "✓ Correcto" : "✗ Incorrecto"}
@@ -335,7 +335,7 @@ export default function TrueFalseGame({
                   >
                     <div className="flex flex-col items-center gap-3">
                       <span className="text-5xl">❌</span>
-                      <span className="text-2xl font-bold">FALSO</span>
+                      <span className="text-2xl ">FALSO</span>
                       {isAnswered && selectedAnswer === "false" && (
                         <span className="text-xl mt-2">
                           {currentStatement.field_correct_tf.toLowerCase().trim() === "false" ? "✓ Correcto" : "✗ Incorrecto"}

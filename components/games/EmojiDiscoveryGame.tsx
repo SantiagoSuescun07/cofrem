@@ -113,7 +113,7 @@ export default function EmojiDiscoveryGame({
                   😊
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title.replace(/[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "") || "Descubrir Emoji"}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Descubrir Emoji</p>
@@ -126,7 +126,7 @@ export default function EmojiDiscoveryGame({
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Tiempo</span>
                       <span
-                        className={`text-lg font-bold leading-none ${
+                        className={`text-lg  leading-none ${
                           timeLeft <= 30
                             ? "text-red-600 animate-pulse"
                             : timeLeft <= 60
@@ -143,7 +143,7 @@ export default function EmojiDiscoveryGame({
                   <span className="text-lg">🌟</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                    <span className="text-lg  text-[#09d6a6] leading-none">
                       {points}
                     </span>
                   </div>
@@ -158,7 +158,7 @@ export default function EmojiDiscoveryGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
@@ -227,7 +227,7 @@ export default function EmojiDiscoveryGame({
                 {isCorrect ? (
                   <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
                     <div className="text-6xl mb-3">🎉</div>
-                    <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
+                    <h3 className="text-3xl  text-[#09d6a6] mb-3">
                       ¡Correcto!
                     </h3>
                     <p className="text-lg text-gray-700 mb-2">
@@ -254,7 +254,7 @@ export default function EmojiDiscoveryGame({
                 ) : (
                   <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
                     <div className="text-6xl mb-3">❌</div>
-                    <h3 className="text-3xl font-bold text-red-700 mb-3">
+                    <h3 className="text-3xl  text-red-700 mb-3">
                       Inténtalo de nuevo
                     </h3>
                     <p className="text-lg text-red-600 mb-6">

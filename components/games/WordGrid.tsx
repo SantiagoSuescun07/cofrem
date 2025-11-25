@@ -311,7 +311,7 @@ export default function WordGrid({
                 key={`${i}-${j}`}
                 onMouseDown={() => handleMouseDown(i, j)}
                 onMouseEnter={() => handleMouseEnter(i, j)}
-                className="flex items-center justify-center rounded-lg cursor-pointer font-bold transition-all duration-200 box-border border-2 hover:border-[#09d6a6]/60 hover:shadow-md aspect-square"
+                className="flex items-center justify-center rounded-lg cursor-pointer  transition-all duration-200 box-border border-2 hover:border-[#09d6a6]/60 hover:shadow-md aspect-square"
                 style={{
                   backgroundColor: bgColor,
                   color: textColor,

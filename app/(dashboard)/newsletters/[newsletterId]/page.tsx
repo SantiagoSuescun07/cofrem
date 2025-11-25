@@ -104,7 +104,7 @@ export default function NewsletterPage({
               <div className="flex flex-col md:flex-row items-center justify-between border rounded-2xl p-6 bg-gradient-to-r from-red-50 to-red-100 shadow-sm hover:shadow-md transition">
                 {/* Icono PDF grande */}
                 <div className="flex items-center gap-4 w-full md:w-auto mb-4 md:mb-0">
-                  <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-red-600 text-white text-lg font-bold shadow">
+                  <div className="w-14 h-14 flex items-center justify-center rounded-xl bg-red-600 text-white text-lg shadow">
                     PDF
                   </div>
                   <div>

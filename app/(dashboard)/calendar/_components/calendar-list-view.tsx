@@ -53,7 +53,7 @@ export function CalendarListView({ events, onEventClick, picoYPlaca }: CalendarL
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Agenda de Eventos</h2>
+      <h2 className="text-2xl">Agenda de Eventos</h2>
 
       <div className="space-y-6">
         {sortedDates.map((dateKey) => {
@@ -90,7 +90,7 @@ export function CalendarListView({ events, onEventClick, picoYPlaca }: CalendarL
                         {picoYPlacaInfo.placas.map((placa, i) => (
                           <span
                             key={i}
-                            className="px-2.5 py-1 bg-orange-600 text-white rounded font-bold text-sm"
+                            className="px-2.5 py-1 bg-orange-600 text-white rounded text-sm"
                           >
                             {placa}
                           </span>

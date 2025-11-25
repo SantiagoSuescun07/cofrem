@@ -404,14 +404,14 @@ export default function GamesPage() {
               className="object-cover"
             />
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <h1 className="text-4xl font-bold !text-white text-center px-4">
+              <h1 className="text-4xl !text-white text-center px-4">
                 {campaign.title}
               </h1>
             </div>
           </>
         ) : (
           <div className="w-full h-full bg-[#306393]/10 flex items-center justify-center">
-            <h1 className="text-4xl font-bold text-gray-900 text-center px-4">
+            <h1 className="text-4xl text-gray-900 text-center px-4">
               {campaign.title}
             </h1>
           </div>
@@ -422,7 +422,7 @@ export default function GamesPage() {
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold text-[#306393] mb-4">
+            <h2 className="text-2xl text-[#306393] mb-4">
               {campaign.title}
             </h2>
             <div
@@ -567,13 +567,13 @@ export default function GamesPage() {
                             {positionStyle.icon ? (
                               <div className="flex items-center gap-1">
                                 {positionStyle.icon}
-                                <span className={`text-lg font-bold ${positionStyle.textColor}`}>
+                                <span className={`text-lg ${positionStyle.textColor}`}>
                                   {entry.position}
                                 </span>
                               </div>
                             ) : (
                               <span
-                                className={`text-lg font-bold ${
+                                className={`text-lg ${
                                   isCurrentUser ? "text-[#306393]" : positionStyle.textColor
                                 }`}
                               >
@@ -608,7 +608,7 @@ export default function GamesPage() {
                           {/* Puntos */}
                           <div className="col-span-2 text-center">
                             <p
-                              className={`font-bold ${
+                              className={`${
                                 isCurrentUser ? "text-[#306393]" : "text-gray-900"
                               }`}
                             >

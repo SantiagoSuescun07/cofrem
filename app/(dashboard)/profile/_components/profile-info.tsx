@@ -107,7 +107,7 @@ export function ProfileInfo() {
             <div className="relative">
               <Avatar className="size-24 sm:size-28 md:size-32 rounded-2xl shadow-lg ring-4 ring-background">
                 <AvatarImage src={profile?.picture || user?.image || ""} className="object-cover" />
-                <AvatarFallback className="text-2xl md:text-3xl font-bold bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-2xl">
+                <AvatarFallback className="text-2xl md:text-3xl  bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-2xl">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -118,7 +118,7 @@ export function ProfileInfo() {
                 <h1 className="text-2xl md:text-3xl text-foreground leading-tight">
                   {profile?.name || user?.name || "Usuario"}
                 </h1>
-                {/* <Badge className="rounded-full bg-gradient-to-r from-emerald-400 to-emerald-100 text-emerald-950 px-3 py-2 text-sm font-bold shadow-lg border-2 border-background">
+                {/* <Badge className="rounded-full bg-gradient-to-r from-emerald-400 to-emerald-100 text-emerald-950 px-3 py-2 text-sm  shadow-lg border-2 border-background">
                   +550
                 </Badge> */}
                 <EditProfileDialog
@@ -156,7 +156,7 @@ export function ProfileInfo() {
                 <span className="font-semibold text-muted-foreground uppercase tracking-wide px-1">
                   Tus puntos: 
                 </span>
-                <Badge className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 px-6 py-1.5 text-sm font-bold shadow-lg border-2 border-background">
+                <Badge className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 px-6 py-1.5 text-sm  shadow-lg border-2 border-background">
                   +550
                 </Badge>
               </div>

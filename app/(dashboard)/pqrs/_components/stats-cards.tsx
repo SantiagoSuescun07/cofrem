@@ -57,7 +57,7 @@ export function StatsCards() {
               <p className="text-sm font-medium text-muted-foreground">
                 Total PQRs
               </p>
-              <p className="text-2xl font-bold text-primary">{total}</p>
+              <p className="text-2xl text-primary">{total}</p>
             </div>
             <FileText className="h-8 w-8 text-primary" />
           </div>
@@ -72,7 +72,7 @@ export function StatsCards() {
               <p className="text-sm font-medium text-muted-foreground">
                 En Proceso
               </p>
-              <p className="text-2xl font-bold text-yellow-700">{enProceso}</p>
+              <p className="text-2xl text-yellow-700">{enProceso}</p>
             </div>
             <Clock className="h-8 w-8 text-yellow-500" />
           </div>
@@ -87,7 +87,7 @@ export function StatsCards() {
               <p className="text-sm font-medium text-muted-foreground">
                 Resueltas
               </p>
-              <p className="text-2xl font-bold text-green-700">{resueltas}</p>
+              <p className="text-2xl text-green-700">{resueltas}</p>
             </div>
             <CheckCircle className="h-8 w-8 text-green-500" />
           </div>
@@ -102,7 +102,7 @@ export function StatsCards() {
               <p className="text-sm font-medium text-muted-foreground">
                 Pendientes
               </p>
-              <p className="text-2xl font-bold text-orange-700">{pendientes}</p>
+              <p className="text-2xl text-orange-700">{pendientes}</p>
             </div>
             <AlertCircle className="h-8 w-8 text-orange-500" />
           </div>

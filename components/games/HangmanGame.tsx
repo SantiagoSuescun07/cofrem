@@ -211,7 +211,7 @@ export default function HangmanGame({
       const letters = wordPart.split("").map((char, charIndex) => {
         if (!/[A-ZÑÁÉÍÓÚÜ]/.test(char)) {
           return (
-            <span key={`${wordIndex}-${charIndex}`} className="text-xl font-bold text-gray-800 mx-0.5">
+            <span key={`${wordIndex}-${charIndex}`} className="text-xl  text-gray-800 mx-0.5">
               {char}
             </span>
           );
@@ -224,7 +224,7 @@ export default function HangmanGame({
           return (
             <span
               key={`${wordIndex}-${charIndex}`}
-              className={`text-2xl sm:text-3xl font-bold mx-0.5 min-w-[28px] sm:min-w-[32px] inline-flex items-center justify-center border-b-3 sm:border-b-4 leading-none ${
+              className={`text-2xl sm:text-3xl  mx-0.5 min-w-[28px] sm:min-w-[32px] inline-flex items-center justify-center border-b-3 sm:border-b-4 leading-none ${
                 isGuessed
                   ? "text-[#09d6a6] border-[#09d6a6]"
                   : "text-transparent border-gray-400"
@@ -315,7 +315,7 @@ export default function HangmanGame({
                   ✏️
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Ahorcado</p>
@@ -327,7 +327,7 @@ export default function HangmanGame({
                     <span className="text-lg">🎯</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Ronda</span>
-                      <span className="text-lg font-bold text-blue-600 leading-none">
+                      <span className="text-lg  text-blue-600 leading-none">
                         {currentRound + 1}/{rounds.length}
                       </span>
                     </div>
@@ -338,7 +338,7 @@ export default function HangmanGame({
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Tiempo</span>
                     <span
-                      className={`text-lg font-bold leading-none ${
+                      className={`text-lg  leading-none ${
                         timeLeft <= 30
                           ? "text-red-600 animate-pulse"
                           : timeLeft <= 60
@@ -354,7 +354,7 @@ export default function HangmanGame({
                   <span className="text-lg">🌟</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                    <span className="text-lg  text-[#09d6a6] leading-none">
                       {points}
                     </span>
                   </div>
@@ -363,7 +363,7 @@ export default function HangmanGame({
                   <span className="text-lg">❌</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Errores</span>
-                    <span className="text-lg font-bold text-red-600 leading-none">
+                    <span className="text-lg  text-red-600 leading-none">
                       {errors}/{MAX_ERRORS}
                     </span>
                   </div>
@@ -378,7 +378,7 @@ export default function HangmanGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
@@ -406,7 +406,7 @@ export default function HangmanGame({
             <div className="text-center mb-6">
               <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
                 <div className="text-6xl mb-3">✅</div>
-                <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
+                <h3 className="text-3xl  text-[#09d6a6] mb-3">
                   ¡Ronda {currentRound + 1} Completada!
                 </h3>
                 <p className="text-gray-700 mb-2 text-lg">
@@ -426,7 +426,7 @@ export default function HangmanGame({
             <div className="text-center mb-6">
               <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
                 <div className="text-6xl mb-3">🎉</div>
-                <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
+                <h3 className="text-3xl  text-[#09d6a6] mb-3">
                   ¡Felicidades!
                 </h3>
                 <p className="text-gray-700 mb-2 text-lg">
@@ -480,7 +480,7 @@ export default function HangmanGame({
             <div className="text-center mb-6">
               <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
                 <div className="text-6xl mb-3">💀</div>
-                <h3 className="text-3xl font-bold text-red-700 mb-3">
+                <h3 className="text-3xl  text-red-700 mb-3">
                   ¡Game Over!
                 </h3>
                 <p className="text-red-600 mb-2 text-lg">
@@ -529,7 +529,7 @@ export default function HangmanGame({
                       key={letter}
                       onClick={() => handleLetterClick(letter)}
                       disabled={isDisabled}
-                      className={`px-4 py-3 text-lg font-bold rounded-lg transition-all duration-200 ${
+                      className={`px-4 py-3 text-lg  rounded-lg transition-all duration-200 ${
                         isGuessed && isCorrect
                           ? "bg-green-500 text-white cursor-default"
                           : isGuessed && !isCorrect

@@ -145,7 +145,7 @@ export default function QuizGame({
       <div className="min-h-screen flex flex-col items-center justify-center">
         <div className="bg-white rounded-2xl border-2 border-red-400 shadow-xl p-8 max-w-md w-full text-center">
           <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-700 mb-2">Error</h2>
+          <h2 className="text-2xl  text-red-700 mb-2">Error</h2>
           <p className="text-red-600 mb-6">No hay preguntas disponibles para este quiz.</p>
           <button
             onClick={onClose}
@@ -171,7 +171,7 @@ export default function QuizGame({
                   ❓
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Quiz</p>
@@ -183,7 +183,7 @@ export default function QuizGame({
                   <span className="text-lg">📊</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Progreso</span>
-                    <span className="text-lg font-bold text-gray-700 leading-none">
+                    <span className="text-lg  text-gray-700 leading-none">
                       {currentQuestionIndex + 1}/{totalQuestions}
                     </span>
                   </div>
@@ -193,7 +193,7 @@ export default function QuizGame({
                     <span className="text-lg">🌟</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                      <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                      <span className="text-lg  text-[#09d6a6] leading-none">
                         {points}
                       </span>
                     </div>
@@ -209,7 +209,7 @@ export default function QuizGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
@@ -227,7 +227,7 @@ export default function QuizGame({
             <div className="text-center">
               <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-400 rounded-xl p-8 mb-6">
                 <div className="text-6xl mb-4">🎉</div>
-                <h2 className="text-3xl font-bold text-green-700 mb-4">
+                <h2 className="text-3xl  text-green-700 mb-4">
                   ¡Quiz Completado!
                 </h2>
                 <div className="space-y-3 text-lg">
@@ -237,7 +237,7 @@ export default function QuizGame({
                   <p className="text-gray-700">
                     <strong>Porcentaje:</strong> {Math.round((correctAnswers / totalQuestions) * 100)}%
                   </p>
-                  <p className="text-purple-600 font-bold text-xl mt-4">
+                  <p className="text-purple-600  text-xl mt-4">
                     Puntos obtenidos: {points}
                   </p>
                 </div>
@@ -262,7 +262,7 @@ export default function QuizGame({
               {/* Pregunta actual */}
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white px-4 py-2 rounded-lg font-bold text-lg">
+                  <span className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white px-4 py-2 rounded-lg  text-lg">
                     Pregunta {currentQuestion.field_question_number || currentQuestionIndex + 1}
                   </span>
                   {currentQuestion.field_hint && (
@@ -275,7 +275,7 @@ export default function QuizGame({
                   )}
                 </div>
                 
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">
+                <h2 className="text-2xl md:text-3xl  text-gray-800 mb-6">
                   {currentQuestion.field_question_text}
                 </h2>
 
@@ -319,7 +319,7 @@ export default function QuizGame({
                         `}
                       >
                         <div className="flex items-center gap-4">
-                          <span className="bg-white text-[#09d6a6] px-4 py-2 rounded-lg font-bold text-lg min-w-[50px] text-center">
+                          <span className="bg-white text-[#09d6a6] px-4 py-2 rounded-lg  text-lg min-w-[50px] text-center">
                             {getOptionLabel(optionNum)}
                           </span>
                           <span className="text-lg font-semibold flex-1">{optionValue}</span>

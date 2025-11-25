@@ -26,7 +26,7 @@ export function ArticleHeader({ news }: ArticleHeaderProps) {
       </div>
 
       {/* Title */}
-      <h1 className="text-4xl font-bold text-foreground mb-4 text-balance">
+      <h1 className="text-4xl text-foreground mb-4 text-balance">
         {news?.title}
       </h1>
 

@@ -10,7 +10,7 @@ export function PQRHeader({ setIsModalOpen }: PQRModalProps) {
   return (
     <div className="flex items-center justify-between mb-8">
       <div>
-        <h1 className="text-3xl font-bold text-balance">Sistema de PQR</h1>
+        <h1 className="text-3xl text-balance">Sistema de PQR</h1>
         <p className="text-muted-foreground mt-2">
           Gestiona tus Peticiones, Quejas y Reclamos de manera eficiente
         </p>

@@ -95,7 +95,7 @@ export default function DigitalServiceNodePage({
                 />
               </div>
             )}
-            <h1 className="text-2xl md:text-4xl font-bold text-[#323c45]">{node.title}</h1>
+            <h1 className="text-2xl md:text-4xl text-[#323c45]">{node.title}</h1>
           </div>
 
           {/* Metadata */}

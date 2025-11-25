@@ -232,7 +232,7 @@ export default function MemoryGame({
                   🧠
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Memoria</p>
@@ -245,7 +245,7 @@ export default function MemoryGame({
                     <span className="text-lg">⏱️</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Tiempo</span>
-                      <span className="text-lg font-bold leading-none text-gray-400">
+                      <span className="text-lg  leading-none text-gray-400">
                         ∞
                       </span>
                     </div>
@@ -255,7 +255,7 @@ export default function MemoryGame({
                   <span className="text-lg">🎯</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Movimientos</span>
-                    <span className="text-lg font-bold text-gray-700 leading-none">
+                    <span className="text-lg  text-gray-700 leading-none">
                       {moves}
                     </span>
                   </div>
@@ -264,7 +264,7 @@ export default function MemoryGame({
                   <span className="text-lg">✅</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Parejas</span>
-                    <span className="text-lg font-bold text-green-600 leading-none">
+                    <span className="text-lg  text-green-600 leading-none">
                       {matches}/{totalCards / 2}
                     </span>
                   </div>
@@ -274,7 +274,7 @@ export default function MemoryGame({
                     <span className="text-lg">🌟</span>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                      <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                      <span className="text-lg  text-[#09d6a6] leading-none">
                         {points}
                       </span>
                     </div>
@@ -290,7 +290,7 @@ export default function MemoryGame({
                   <InfoIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                  <h3 className="text-base  text-[#09d6a6] mb-1.5">
                     Instrucciones
                   </h3>
                   <p className="text-gray-700 leading-relaxed text-sm">{gameDetails.field_description}</p>
@@ -308,7 +308,7 @@ export default function MemoryGame({
             <div className="text-center mb-6">
               <div className="bg-green-50 border-2 border-green-400 rounded-xl p-6 mb-4">
                 <div className="text-5xl mb-2">🎉</div>
-                <h3 className="text-2xl font-bold text-green-700 mb-2">
+                <h3 className="text-2xl  text-green-700 mb-2">
                   ¡Felicidades!
                 </h3>
                 <p className="text-green-600 mb-2">
@@ -325,7 +325,7 @@ export default function MemoryGame({
             <div className="text-center mb-6">
               <div className="bg-red-50 border-2 border-red-400 rounded-xl p-6 mb-4">
                 <div className="text-5xl mb-2">⏱️</div>
-                <h3 className="text-2xl font-bold text-red-700 mb-2">
+                <h3 className="text-2xl  text-red-700 mb-2">
                   ¡Tiempo agotado!
                 </h3>
                 <p className="text-red-600 mb-2">
@@ -377,7 +377,7 @@ export default function MemoryGame({
                   </div>
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-sm sm:text-base text-white font-bold">?</div>
+                    <div className="text-sm sm:text-base text-white ">?</div>
                   </div>
                 )}
               </button>

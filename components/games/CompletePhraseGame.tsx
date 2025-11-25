@@ -144,7 +144,7 @@ export default function CompletePhraseGame({
                   📝
                 </div>
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl sm:text-3xl  text-gray-900">
                     {gameDetails.field_title}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">
@@ -162,7 +162,7 @@ export default function CompletePhraseGame({
                           Tiempo
                         </span>
                         <span
-                          className={`text-lg font-bold leading-none ${
+                          className={`text-lg  leading-none ${
                             timeLeft <= 30
                               ? "text-red-600 animate-pulse"
                               : timeLeft <= 60
@@ -181,7 +181,7 @@ export default function CompletePhraseGame({
                     <span className="text-xs text-gray-500 leading-none">
                       Puntos
                     </span>
-                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
+                    <span className="text-lg  text-[#09d6a6] leading-none">
                       {points}
                     </span>
                   </div>
@@ -197,7 +197,7 @@ export default function CompletePhraseGame({
                     <InfoIcon className="w-5 h-5" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-bold text-[#09d6a6] mb-1.5">
+                    <h3 className="text-base  text-[#09d6a6] mb-1.5">
                       Instrucciones
                     </h3>
                     <p className="text-gray-700 leading-relaxed text-sm">
@@ -220,7 +220,7 @@ export default function CompletePhraseGame({
                     <span className="text-gray-900">{before.trim()}</span>
                     <span className="inline-block px-5 sm:px-7 py-4 bg-white border-2 border-[#09d6a6] rounded-xl min-w-[140px] sm:min-w-[180px] text-center shadow-lg">
                       {isAnswered && isCorrect ? (
-                        <span className="text-[#09d6a6] font-bold text-xl sm:text-2xl">
+                        <span className="text-[#09d6a6]  text-xl sm:text-2xl">
                           {gameDetails.field_correct_answer}
                         </span>
                       ) : isAnswered && !isCorrect && selectedAnswer ? (
@@ -228,12 +228,12 @@ export default function CompletePhraseGame({
                           <span className="text-red-500 line-through block text-lg">
                             {selectedAnswer}
                           </span>
-                          <span className="text-[#09d6a6] font-bold block text-xl border-t border-[#09d6a6]/30 pt-2">
+                          <span className="text-[#09d6a6]  block text-xl border-t border-[#09d6a6]/30 pt-2">
                             {gameDetails.field_correct_answer}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-gray-300 text-xl sm:text-2xl font-mono font-bold">
+                        <span className="text-gray-300 text-xl sm:text-2xl font-mono ">
                           ____
                         </span>
                       )}
@@ -277,7 +277,7 @@ export default function CompletePhraseGame({
                 {isCorrect ? (
                   <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
                     <div className="text-6xl mb-3">🎉</div>
-                    <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
+                    <h3 className="text-3xl  text-[#09d6a6] mb-3">
                       ¡Correcto!
                     </h3>
                     <p className="text-lg text-gray-700 mb-4">
@@ -305,7 +305,7 @@ export default function CompletePhraseGame({
                 ) : (
                   <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
                     <div className="text-6xl mb-3">❌</div>
-                    <h3 className="text-3xl font-bold text-red-700 mb-3">
+                    <h3 className="text-3xl  text-red-700 mb-3">
                       Incorrecto
                     </h3>
                     <p className="text-lg text-red-600 mb-6">
