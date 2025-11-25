@@ -9,6 +9,7 @@ export const usePublications = () => {
     queryFn: () => fetchPublications(),
     staleTime: 5 * 60 * 1000, // 5 minutos
     retry: 2,
+    gcTime: 10 * 60 * 1000, // 10 minutos
   });
 };
 
@@ -19,5 +20,6 @@ export const useSinglePublication = (id: string) => {
     staleTime: 5 * 60 * 1000, // 5 minutos
     retry: 2,
     enabled: !!id, // Solo si hay id
+    gcTime: 10 * 60 * 1000, // 10 minutos
   });
 };

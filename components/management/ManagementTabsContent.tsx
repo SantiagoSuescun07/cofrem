@@ -145,7 +145,7 @@ export const ManagementContent = ({
           <p>No hay documentos disponibles en esta categoría.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 w-[40%] gap-2">
+        <div className="grid grid-cols-1 w-[50%] gap-2">
           {filteredDocuments.map((doc) => {
             // Tomar el primer archivo válido del documento (que tenga URL)
             const file = doc.field_file?.find((f) => f && f.url && f.url.trim() !== "");

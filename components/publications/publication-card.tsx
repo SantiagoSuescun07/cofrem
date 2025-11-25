@@ -11,8 +11,19 @@ interface Props {
   publication: Publication;
 }
 
+const getDriveEmbedUrl = (uri: string) => {
+  const match = uri.match(/\/d\/([^/]+)/);
+  if (match?.[1]) {
+    return `https://drive.google.com/file/d/${match[1]}/preview`;
+  }
+  return uri;
+};
+
 export function PublicationCard({ publication }: Props) {
-  const { title, field_gallery = [], field_image } = publication;
+  const { title, field_gallery = [], field_image, field_options_in_publication } = publication;
+  
+  // Verificar si hay un video
+  const hasVideo = field_options_in_publication?.type === "paragraph--video_from_drive";
 
   const images = [
     ...(field_image ? [field_image] : []),
@@ -41,8 +52,21 @@ export function PublicationCard({ publication }: Props) {
         {title}
       </h3>
 
-      {/* Grid de imágenes */}
-      {visibleImages.length > 0 && (
+      {/* Video si existe */}
+      {hasVideo && field_options_in_publication?.field_video_from_drive?.uri && (
+        <div className="mt-4 relative w-full overflow-hidden rounded-lg shadow-md bg-black aspect-video">
+          <iframe
+            src={getDriveEmbedUrl(field_options_in_publication.field_video_from_drive.uri)}
+            title={field_options_in_publication.field_video_from_drive.title || "Video"}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="w-full h-full"
+          />
+        </div>
+      )}
+
+      {/* Grid de imágenes - solo mostrar si no hay video o si hay imágenes adicionales */}
+      {!hasVideo && visibleImages.length > 0 && (
         <div
           className={`mt-4 grid gap-2 ${
             visibleImages.length === 1
@@ -54,7 +78,7 @@ export function PublicationCard({ publication }: Props) {
           {visibleImages[0] && (
             <div
               className={`relative overflow-hidden rounded-lg cursor-pointer ${
-                visibleImages.length > 1 ? "row-span-2" : "h-80"
+                visibleImages.length > 1 ? "row-span-2" : "h-120"
               }`}
               onClick={(e) => openGallery(e, 0)}
             >
@@ -99,6 +123,29 @@ export function PublicationCard({ publication }: Props) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Mostrar imágenes si hay video pero también hay imágenes */}
+      {hasVideo && visibleImages.length > 0 && (
+        <div className="mt-4">
+          <p className="text-sm text-gray-500 mb-2">Imágenes relacionadas</p>
+          <div className="grid grid-cols-3 gap-2">
+            {visibleImages.slice(0, 3).map((img, index) => (
+              <div
+                key={img.id || index}
+                className="relative h-24 overflow-hidden rounded-lg cursor-pointer"
+                onClick={(e) => openGallery(e, index)}
+              >
+                <Image
+                  src={img.url}
+                  alt={img.alt || title}
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

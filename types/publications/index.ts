@@ -2,7 +2,8 @@ export type PublicationContentType =
   | "paragraph--link"
   | "paragraph--galeria_publicaciones"
   | "paragraph--enriched_text"
-  | "paragraph--game_type_publication";
+  | "paragraph--game_type_publication"
+  | "paragraph--video_from_drive";
 
 export interface PublicationContent {
   type: PublicationContentType;
@@ -30,6 +31,12 @@ export interface PublicationContent {
     title: string;
     description?: string;
     gameType: string; // Tipo de juego: paragraph--wordsearch_game, paragraph--puzzle_game, etc.
+  };
+  // Para paragraph--video_from_drive
+  field_video_from_drive?: {
+    uri: string;
+    title?: string;
+    options?: unknown[];
   };
 }
 

@@ -110,14 +110,14 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   }, [emblaApi]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Próximos eventos - Carrusel */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="bg-white p-3 rounded-xl border border-gray-200">
         <h3 className="text-gray-900 mb-4">Próximos Eventos</h3>
 
         {isLoading && (
           <div className="space-y-3">
-            {[1, 2].map((i) => (
+            {[1].map((i) => (
               <div
                 key={i}
                 className="flex items-center space-x-3 p-2 rounded-lg"

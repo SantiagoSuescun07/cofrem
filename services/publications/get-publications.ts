@@ -1,68 +1,82 @@
 import { apiBaseUrl } from "@/constants";
 import api from "@/lib/axios";
 import { Publication } from "@/types/publications";
+import {
+  extractGalleryFromContent,
+  mapParagraphContent,
+} from "./utils";
 
 export const fetchPublications = async (): Promise<Publication[]> => {
-  const response = await api.get("/jsonapi/node/publication", {
-    params: {
-      // include: "field_gallery,field_image",
-      include: "field_image",
-    },
-  });
-
-  const data = response.data;
-
-  console.log(response.statusText)
-
-  // Map de entidades incluidas
-  const includedById = new Map<string, any>();
-  if (data.included) {
-    data.included.forEach((included: any) => {
-      includedById.set(included.id, included);
+  try {
+    // Agregamos los includes necesarios para las imágenes y galerías
+    // field_gallery no existe en publication, las galerías vienen en field_options_in_publication
+    // El campo correcto dentro de paragraph--galeria_publicaciones es field_galery (con 'a')
+    const response = await api.get("/jsonapi/node/publication", {
+      params: {
+        include: "field_image,field_news_category,field_options_in_publication,field_options_in_publication.field_galery",
+      },
     });
-  }
+
+    const data = response.data;
+
+    // Map de entidades incluidas
+    const includedById = new Map<string, any>();
+    if (data.included) {
+      data.included.forEach((included: any) => {
+        includedById.set(included.id, included);
+      });
+    }
 
   // Mapear publicaciones
   const publications = data.data.map((item: any) => {
-    // field_gallery
-    const galleryData = item.relationships.field_gallery?.data || [];
-    const fieldGallery = galleryData.map((galItem: any) => {
-      const galIncluded = includedById.get(galItem.id);
-      return {
-        id: galIncluded.id,
-        url: apiBaseUrl + galIncluded.attributes.uri.url,
-        alt: galItem.meta.alt,
-        title: galItem.meta.title,
-        width: galItem.meta.width,
-        height: galItem.meta.height,
-      };
-    });
+    // field_gallery no existe en publication, se obtiene de field_options_in_publication
+    let fieldGallery: any[] = [];
+
+    // field_options_in_publication (puede ser array o objeto único)
+    const optionsData = item.relationships.field_options_in_publication?.data;
+    let fieldOptionsInPublication = null;
+    
+    if (optionsData) {
+      // Si es un array, tomar el primero; si es objeto único, usarlo directamente
+      const dataToMap = Array.isArray(optionsData) ? optionsData[0] : optionsData;
+      fieldOptionsInPublication = mapParagraphContent(dataToMap, includedById);
+    }
+    const galleryFromOptions = extractGalleryFromContent(
+      fieldOptionsInPublication
+    );
+
+    if (fieldGallery.length === 0 && galleryFromOptions.length > 0) {
+      fieldGallery = galleryFromOptions;
+    }
 
     // field_image
     const mainImageData = item.relationships.field_image?.data;
     const mainImageIncluded = mainImageData
       ? includedById.get(mainImageData.id)
       : null;
-    const fieldImage = mainImageIncluded
+    const fieldImage = mainImageIncluded?.attributes?.uri?.url
       ? {
           id: mainImageIncluded.id,
           url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
-          alt: mainImageData.meta.alt,
-          title: mainImageData.meta.title,
-          width: mainImageData.meta.width,
-          height: mainImageData.meta.height,
+          alt: mainImageData.meta?.alt || "",
+          title: mainImageData.meta?.title || "",
+          width: mainImageData.meta?.width || 0,
+          height: mainImageData.meta?.height || 0,
         }
       : null;
 
     // field_news_category
     const categoryData = item.relationships.field_news_category?.data || [];
-    const fieldNewsCategory = categoryData.map((catItem: any) => {
-      const catIncluded = includedById.get(catItem.id);
-      return {
-        id: catItem.id,
-        name: catIncluded?.attributes?.name || "",
-      };
-    });
+    const fieldNewsCategory = categoryData
+      .map((catItem: any) => {
+        const catIncluded = includedById.get(catItem.id);
+        if (!catIncluded?.attributes?.name) return null;
+        return {
+          id: catItem.id,
+          name: catIncluded.attributes.name,
+        };
+      })
+      .filter((cat: any) => cat !== null);
 
     return {
       id: item.id,
@@ -75,9 +89,24 @@ export const fetchPublications = async (): Promise<Publication[]> => {
       field_gallery: fieldGallery,
       field_image: fieldImage,
       field_news_category: fieldNewsCategory,
-      field_options_in_publication: null, // No incluimos el contenido completo en la lista
+      field_options_in_publication: fieldOptionsInPublication,
     };
   });
 
-  return publications;
+    return publications;
+  } catch (error: any) {
+    console.error("Error fetching publications:", error);
+    if (error.response) {
+      console.error("Response status:", error.response.status);
+      console.error("Response statusText:", error.response.statusText);
+      console.error("Response headers:", error.response.headers);
+      console.error("Response data:", JSON.stringify(error.response.data, null, 2));
+      console.error("Request URL:", error.config?.url);
+      console.error("Request params:", error.config?.params);
+    }
+    if (error.request) {
+      console.error("Request details:", error.request);
+    }
+    throw error;
+  }
 };

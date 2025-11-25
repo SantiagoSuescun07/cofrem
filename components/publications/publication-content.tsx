@@ -11,6 +11,14 @@ interface Props {
   content: PublicationContent;
 }
 
+const getDriveEmbedUrl = (uri: string) => {
+  const match = uri.match(/\/d\/([^/]+)/);
+  if (match?.[1]) {
+    return `https://drive.google.com/file/d/${match[1]}/preview`;
+  }
+  return uri;
+};
+
 export function PublicationContentRenderer({ content }: Props) {
   const router = useRouter();
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -46,70 +54,70 @@ export function PublicationContentRenderer({ content }: Props) {
       );
     }
 
-    case "paragraph--galeria_publicaciones": {
-      if (!content.field_gallery_images || content.field_gallery_images.length === 0)
-        return null;
+    // case "paragraph--galeria_publicaciones": {
+    //   if (!content.field_gallery_images || content.field_gallery_images.length === 0)
+    //     return null;
 
-      const images = content.field_gallery_images;
-      const visibleImages = images.slice(0, 4);
-      const extraCount = images.length > 4 ? images.length - 4 : 0;
+    //   const images = content.field_gallery_images;
+    //   const visibleImages = images.slice(0, 4);
+    //   const extraCount = images.length > 4 ? images.length - 4 : 0;
 
-      return (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Galería</h3>
-          <div
-            className={`grid gap-2 ${
-              visibleImages.length === 1
-                ? "grid-cols-1"
-                : visibleImages.length === 2
-                ? "grid-cols-2"
-                : "grid-cols-2 grid-rows-2"
-            }`}
-          >
-            {visibleImages.map((img, index) => {
-              const isMain = index === 0 && visibleImages.length > 1;
-              const hasMore = index === 3 && extraCount > 0;
+    //   return (
+    //     <div className="mb-6">
+    //       <h3 className="text-lg font-semibold text-gray-900 mb-4">Galería</h3>
+    //       <div
+    //         className={`grid gap-2 ${
+    //           visibleImages.length === 1
+    //             ? "grid-cols-1"
+    //             : visibleImages.length === 2
+    //             ? "grid-cols-2"
+    //             : "grid-cols-2 grid-rows-2"
+    //         }`}
+    //       >
+    //         {visibleImages.map((img, index) => {
+    //           const isMain = index === 0 && visibleImages.length > 1;
+    //           const hasMore = index === 3 && extraCount > 0;
 
-              return (
-                <div
-                  key={img.id || index}
-                  onClick={() => openGallery(index)}
-                  className={`relative overflow-hidden rounded-lg cursor-pointer ${
-                    isMain ? "row-span-2" : "h-40"
-                  }`}
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt || "Imagen de galería"}
-                    fill
-                    className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
-                  />
-                  {hasMore && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-2xl font-semibold">
-                      +{extraCount}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          {isGalleryOpen && (
-            <GalleryModal
-              images={images.map((img) => ({
-                id: img.id,
-                url: img.url,
-                alt: img.alt,
-                title: img.title,
-                width: img.width,
-                height: img.height,
-              }))}
-              initialIndex={startIndex}
-              onClose={() => setIsGalleryOpen(false)}
-            />
-          )}
-        </div>
-      );
-    }
+    //           return (
+    //             <div
+    //               key={img.id || index}
+    //               onClick={() => openGallery(index)}
+    //               className={`relative overflow-hidden rounded-lg cursor-pointer ${
+    //                 isMain ? "row-span-2" : "h-40"
+    //               }`}
+    //             >
+    //               <Image
+    //                 src={img.url}
+    //                 alt={img.alt || "Imagen de galería"}
+    //                 fill
+    //                 className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+    //               />
+    //               {hasMore && (
+    //                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-2xl font-semibold">
+    //                   +{extraCount}
+    //                 </div>
+    //               )}
+    //             </div>
+    //           );
+    //         })}
+    //       </div>
+    //       {isGalleryOpen && (
+    //         <GalleryModal
+    //           images={images.map((img) => ({
+    //             id: img.id,
+    //             url: img.url,
+    //             alt: img.alt,
+    //             title: img.title,
+    //             width: img.width,
+    //             height: img.height,
+    //           }))}
+    //           initialIndex={startIndex}
+    //           onClose={() => setIsGalleryOpen(false)}
+    //         />
+    //       )}
+    //     </div>
+    //   );
+    // }
 
     case "paragraph--enriched_text": {
       if (!content.field_body) return null;
@@ -188,6 +196,33 @@ export function PublicationContentRenderer({ content }: Props) {
               Jugar Ahora
             </button>
           </div>
+        </div>
+      );
+    }
+
+    case "paragraph--video_from_drive": {
+      const videoData = content.field_video_from_drive;
+      if (!videoData?.uri) return null;
+
+      const embedUrl = getDriveEmbedUrl(videoData.uri);
+
+      return (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Video relacionado
+          </h3>
+          <div className="relative w-full overflow-hidden rounded-xl shadow-lg bg-black aspect-video">
+            <iframe
+              src={embedUrl}
+              title={videoData.title || "Video"}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+          {videoData.title && (
+            <p className="mt-2 text-sm text-gray-600">{videoData.title}</p>
+          )}
         </div>
       );
     }
