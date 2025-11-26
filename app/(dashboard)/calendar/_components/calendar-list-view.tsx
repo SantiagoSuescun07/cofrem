@@ -76,10 +76,10 @@ export function CalendarListView({ events, onEventClick, picoYPlaca }: CalendarL
                 </div>
               </div>
 
-              {/* Pico y Placa */}
+              {/* Pico y Placa - Solo para el día de hoy */}
               {(() => {
                 const picoYPlacaInfo = getPicoYPlacaForDay(date);
-                return picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 ? (
+                return isToday && picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 ? (
                   <div className="mb-4 pl-8">
                     <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">

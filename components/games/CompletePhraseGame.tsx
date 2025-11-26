@@ -309,10 +309,7 @@ export default function CompletePhraseGame({
                       Incorrecto
                     </h3>
                     <p className="text-lg text-red-600 mb-6">
-                      La respuesta correcta era:{" "}
-                      <strong className="text-xl">
-                        {gameDetails.field_correct_answer}
-                      </strong>
+                      Tu respuesta no fue correcta. ¡Inténtalo de nuevo!
                     </p>
                     <div className="flex gap-4 justify-center">
                       <button

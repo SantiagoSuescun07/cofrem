@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { EmojiDiscoveryGameDetails } from "@/types/games";
 import { updateRanking } from "@/services/games/update-ranking";
 import { InfoIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 interface EmojiDiscoveryGameProps {
   gameDetails: EmojiDiscoveryGameDetails;
@@ -18,9 +16,10 @@ export default function EmojiDiscoveryGame({
   onClose,
   campaignNid,
 }: EmojiDiscoveryGameProps) {
-  const [userAnswer, setUserAnswer] = useState<string>("");
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState<boolean>(false);
-  const [isCorrect, setIsCorrect] = useState<boolean>(false);
+  const [correctAnswers, setCorrectAnswers] = useState<number>(0);
   const [points, setPoints] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(gameDetails.field_time_limit || 0);
   const [isGameActive, setIsGameActive] = useState<boolean>(true);
@@ -28,13 +27,51 @@ export default function EmojiDiscoveryGame({
   const [rankingUpdated, setRankingUpdated] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Obtener las preguntas (emoji items)
+  const questions = gameDetails.field_emojis || [];
+  const currentQuestion = questions[currentQuestionIndex] || null;
+  const totalQuestions = questions.length;
+  const isGameComplete = currentQuestionIndex >= totalQuestions;
+
+  // Mezclar las opciones de respuesta para cada pregunta
+  const getShuffledAnswers = (question: typeof currentQuestion): string[] => {
+    if (!question || !question.field_correct_answer) return [];
+    
+    const answers = [
+      question.field_correct_answer,
+      question.field_incorrect_1,
+      question.field_incorrect_2,
+      question.field_incorrect_3,
+      question.field_incorrect_4,
+    ].filter((answer): answer is string => !!answer);
+    
+    return answers.sort(() => Math.random() - 0.5);
+  };
+
+  const [shuffledAnswers, setShuffledAnswers] = useState<string[]>(() => 
+    getShuffledAnswers(currentQuestion)
+  );
+
+  // Actualizar respuestas mezcladas cuando cambia la pregunta
   useEffect(() => {
-    if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && timeLeft > 0 && isGameActive && !isAnswered) {
+    if (currentQuestion) {
+      setShuffledAnswers(getShuffledAnswers(currentQuestion));
+    }
+  }, [currentQuestionIndex, currentQuestion]);
+
+  useEffect(() => {
+    if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && timeLeft > 0 && isGameActive && !isAnswered && !isGameComplete) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
             if (intervalRef.current) clearInterval(intervalRef.current);
             setIsGameActive(false);
+            // Avanzar a la siguiente pregunta cuando se acaba el tiempo
+            if (currentQuestionIndex < totalQuestions - 1) {
+              setTimeout(() => {
+                handleNextQuestion();
+              }, 1000);
+            }
             return 0;
           }
           return prev - 1;
@@ -45,11 +82,12 @@ export default function EmojiDiscoveryGame({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [gameDetails.field_time_limit, timeLeft, isGameActive, isAnswered]);
+  }, [gameDetails.field_time_limit, timeLeft, isGameActive, isAnswered, currentQuestionIndex, totalQuestions, isGameComplete]);
 
-  const handleSubmit = async () => {
-    if (!userAnswer.trim() || isAnswered || !isGameActive) return;
+  const handleAnswerSelect = (answer: string) => {
+    if (isAnswered || !isGameActive || !currentQuestion) return;
 
+    setSelectedAnswer(answer);
     setIsAnswered(true);
     setIsGameActive(false);
 
@@ -57,22 +95,47 @@ export default function EmojiDiscoveryGame({
       clearInterval(intervalRef.current);
     }
 
-    // Por ahora, cualquier respuesta da puntos. Más adelante se puede validar con una respuesta esperada
-    const correct = userAnswer.trim().length > 0;
-    setIsCorrect(correct);
+    const isCorrect = answer.toLowerCase().trim() === (currentQuestion.field_correct_answer || "").toLowerCase().trim();
 
-    if (correct) {
-      setPoints(gameDetails.field_points || 0);
+    // Avanzar a la siguiente pregunta después de 2 segundos
+    setTimeout(() => {
+      const newCorrectAnswers = isCorrect ? correctAnswers + 1 : correctAnswers;
       
-      // Actualizar ranking si la respuesta es correcta
-      // Manejo silencioso del error - el juego continúa funcionando incluso si falla
-      if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
-        setRankingUpdated(true);
-        updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
-          // Error silencioso - solo se registra en consola, no interrumpe la experiencia
-          console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
-        });
+      if (isCorrect) {
+        setCorrectAnswers((prev) => prev + 1);
       }
+
+      if (currentQuestionIndex < totalQuestions - 1) {
+        handleNextQuestion();
+      } else {
+        // Juego completado
+        const pointsPerQuestion = gameDetails.field_points 
+          ? Math.floor(gameDetails.field_points / totalQuestions)
+          : 0;
+        const finalPoints = newCorrectAnswers * pointsPerQuestion;
+        setPoints(finalPoints);
+
+        // Actualizar ranking si se completa el juego
+        if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+          setRankingUpdated(true);
+          updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
+            console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+          });
+        }
+      }
+    }, 2000);
+  };
+
+  const handleNextQuestion = () => {
+    setCurrentQuestionIndex((prev) => prev + 1);
+    setSelectedAnswer(null);
+    setIsAnswered(false);
+    setIsGameActive(true);
+    setShowHint(false);
+    
+    // Reiniciar el temporizador si hay tiempo límite por pregunta
+    if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0) {
+      setTimeLeft(gameDetails.field_time_limit);
     }
   };
 
@@ -84,9 +147,10 @@ export default function EmojiDiscoveryGame({
 
   // Función para reiniciar el juego
   const handleRetry = () => {
-    setUserAnswer("");
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
     setIsAnswered(false);
-    setIsCorrect(false);
+    setCorrectAnswers(0);
     setPoints(0);
     setTimeLeft(gameDetails.field_time_limit || 0);
     setIsGameActive(true);
@@ -97,8 +161,17 @@ export default function EmojiDiscoveryGame({
     }
   };
 
-  // Extraer emojis del título (el título contiene los emojis)
-  const emojis = gameDetails.field_title.match(/[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu) || [];
+  // Obtener los emojis de la pregunta actual
+  const getEmojis = (): string[] => {
+    if (!currentQuestion || !currentQuestion.field_emoji) return [];
+    // Los emojis vienen como una cadena, los separamos usando regex para emojis
+    // Esto maneja correctamente emojis de múltiples caracteres (surrogate pairs)
+    const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+    const matches = currentQuestion.field_emoji.match(emojiRegex);
+    return matches || [];
+  };
+
+  const emojis = getEmojis();
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
@@ -126,7 +199,7 @@ export default function EmojiDiscoveryGame({
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 leading-none">Tiempo</span>
                       <span
-                        className={`text-lg  leading-none ${
+                        className={`text-lg font-bold leading-none ${
                           timeLeft <= 30
                             ? "text-red-600 animate-pulse"
                             : timeLeft <= 60
@@ -143,7 +216,7 @@ export default function EmojiDiscoveryGame({
                   <span className="text-lg">🌟</span>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500 leading-none">Puntos</span>
-                    <span className="text-lg  text-[#09d6a6] leading-none">
+                    <span className="text-lg font-bold text-[#09d6a6] leading-none">
                       {points}
                     </span>
                   </div>
@@ -171,144 +244,165 @@ export default function EmojiDiscoveryGame({
         {/* Contenido principal del juego */}
         <div className="flex-1 flex items-center justify-center min-h-[500px]">
           <div className="bg-white rounded-2xl border-2 border-[#09d6a6]/30 shadow-xl p-6 sm:p-8 max-w-4xl w-full">
-            {/* Emojis a descubrir - Mejorado */}
-            <div className="mb-8 text-center">
-              <div className="bg-gradient-to-br from-[#e6fff2]/50 to-white rounded-xl p-6 sm:p-8 border border-[#09d6a6]/20 mb-6">
-                <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
-                  ¿Qué palabra representan estos emojis?
-                </h3>
-                <div className="flex justify-center gap-4 sm:gap-6 flex-wrap">
-                  {emojis.length > 0 ? (
-                    emojis.map((emoji, index) => (
-                      <div
-                        key={index}
-                        className="text-5xl sm:text-6xl md:text-7xl p-5 sm:p-6 bg-white rounded-xl border-2 border-[#09d6a6] shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                      >
-                        {emoji}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-5xl sm:text-6xl md:text-7xl p-5 sm:p-6 bg-white rounded-xl border-2 border-[#09d6a6] shadow-lg">
-                      {gameDetails.field_title}
-                    </div>
+          {isGameComplete ? (
+            // Resultado final
+            <div className="text-center">
+              <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-400 rounded-xl p-8 mb-6">
+                <div className="text-6xl mb-4">🎉</div>
+                <h2 className="text-3xl font-bold text-green-700 mb-4">
+                  ¡Juego Completado!
+                </h2>
+                <div className="space-y-3 text-lg">
+                  <p className="text-gray-700">
+                    <strong>Respuestas correctas:</strong> {correctAnswers} de {totalQuestions}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Porcentaje:</strong> {Math.round((correctAnswers / totalQuestions) * 100)}%
+                  </p>
+                  {points > 0 && (
+                    <p className="text-purple-600 font-bold text-xl mt-4">
+                      Puntos obtenidos: {points}
+                    </p>
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* Input de respuesta - Mejorado */}
-            {!isAnswered && (
-              <div className="mb-6">
-                <Input
-                  type="text"
-                  placeholder="Escribe la palabra que crees que representan estos emojis..."
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleSubmit();
-                    }
-                  }}
-                  className="text-base sm:text-lg px-5 py-4 border-2 border-[#09d6a6] rounded-xl focus:ring-2 focus:ring-[#09d6a6] focus:border-[#09d6a6] mb-4"
-                />
-                <Button
-                  onClick={handleSubmit}
-                  disabled={!userAnswer.trim()}
-                  className="w-full bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-base sm:text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed py-6"
-                >
-                  Enviar Respuesta
-                </Button>
-              </div>
-            )}
-
-            {/* Resultado - Mejorado */}
-            {isAnswered && (
-              <div className="text-center mb-6">
-                {isCorrect ? (
-                  <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
-                    <div className="text-6xl mb-3">🎉</div>
-                    <h3 className="text-3xl  text-[#09d6a6] mb-3">
-                      ¡Correcto!
-                    </h3>
-                    <p className="text-lg text-gray-700 mb-2">
-                      Tu respuesta: <strong className="text-[#09d6a6]">{userAnswer}</strong>
-                    </p>
-                    <p className="text-lg text-gray-700 mb-6">
-                      Has ganado <strong className="text-[#09d6a6] text-xl">{points}</strong> puntos
-                    </p>
-                    <div className="flex gap-4 justify-center mt-6">
-                      <button
-                        onClick={handleRetry}
-                        className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-base font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
-                      >
-                        🔄 Jugar de Nuevo
-                      </button>
-                      <button
-                        onClick={onClose}
-                        className="px-6 py-3 bg-white text-gray-700 rounded-xl text-base font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
-                      >
-                        ← Volver
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
-                    <div className="text-6xl mb-3">❌</div>
-                    <h3 className="text-3xl  text-red-700 mb-3">
-                      Inténtalo de nuevo
-                    </h3>
-                    <p className="text-lg text-red-600 mb-6">
-                      Tu respuesta: <strong>{userAnswer}</strong>
-                    </p>
-                    <div className="flex gap-4 justify-center">
-                      <button
-                        onClick={handleRetry}
-                        className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-base font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
-                      >
-                        🔄 Reintentar
-                      </button>
-                      <button
-                        onClick={onClose}
-                        className="px-6 py-3 bg-white text-gray-700 rounded-xl text-base font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
-                      >
-                        ← Volver
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Pista - Mejorado */}
-            {gameDetails.field_hint && !isAnswered && (
-              <div className="mb-6">
+              <div className="flex gap-4 justify-center mt-6">
                 <button
-                  onClick={() => setShowHint(!showHint)}
-                  className="w-full px-4 py-3 bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6]/50 text-[#09d6a6] rounded-lg hover:bg-[#e6fff2] transition-colors font-medium shadow-sm"
+                  onClick={handleRetry}
+                  className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
                 >
-                  {showHint ? "Ocultar" : "Mostrar"} pista 💡
+                  🔄 Jugar de Nuevo
                 </button>
-                {showHint && (
-                  <div className="mt-4 p-5 bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6]/30 rounded-lg shadow-sm">
-                    <p className="text-gray-800 text-base">
-                      <strong className="text-[#09d6a6]">Pista:</strong> {gameDetails.field_hint}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Botón para volver - Solo si no hay respuesta */}
-            {!isAnswered && (
-              <div className="text-center">
                 <button
                   onClick={onClose}
-                  className="px-6 sm:px-8 py-3 bg-white text-gray-700 rounded-xl text-base sm:text-lg font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+                  className="px-6 py-3 bg-gray-500 text-white rounded-full text-lg font-semibold shadow-lg hover:bg-gray-600 transition-all duration-200"
                 >
                   ← Volver a la Campaña
                 </button>
               </div>
-            )}
+            </div>
+          ) : currentQuestion ? (
+            <>
+              {/* Emojis a descubrir - Mejorado */}
+              <div className="mb-8 text-center">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white px-4 py-2 rounded-lg font-bold text-lg">
+                    Pregunta {currentQuestionIndex + 1}
+                  </span>
+                </div>
+                <div className="bg-gradient-to-br from-[#e6fff2]/50 to-white rounded-xl p-6 sm:p-8 border border-[#09d6a6]/20 mb-6">
+                  {currentQuestion.field_question_phrase && (
+                    <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-6">
+                      {currentQuestion.field_question_phrase}
+                    </h3>
+                  )}
+                  <div className="flex justify-center gap-4 sm:gap-6 flex-wrap">
+                    {emojis.length > 0 ? (
+                      emojis.map((emoji, index) => (
+                        <div
+                          key={index}
+                          className="text-5xl sm:text-6xl md:text-7xl p-5 sm:p-6 bg-white rounded-xl border-2 border-[#09d6a6] shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                        >
+                          {emoji}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-500">No hay emojis disponibles</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Opciones de respuesta - Mejorado */}
+              {!isAnswered && (
+                <div className="space-y-5 mb-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-5 text-center">
+                    Selecciona la respuesta correcta:
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {shuffledAnswers.map((answer, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(answer)}
+                        disabled={isAnswered || !isGameActive}
+                        className="px-6 py-5 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-base sm:text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {answer}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Resultado - Mejorado */}
+              {isAnswered && selectedAnswer && (
+                <div className="text-center mb-6">
+                  {selectedAnswer.toLowerCase().trim() === (currentQuestion?.field_correct_answer || "").toLowerCase().trim() ? (
+                    <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
+                      <div className="text-6xl mb-3">🎉</div>
+                      <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
+                        ¡Correcto!
+                      </h3>
+                      <p className="text-lg text-gray-700 mb-2">
+                        Tu respuesta: <strong className="text-[#09d6a6]">{selectedAnswer}</strong>
+                      </p>
+                      <p className="text-lg text-gray-700 mb-6">
+                        {currentQuestionIndex < totalQuestions - 1 
+                          ? "¡Siguiente pregunta en breve!"
+                          : "¡Juego completado!"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
+                      <div className="text-6xl mb-3">❌</div>
+                      <h3 className="text-3xl font-bold text-red-700 mb-3">
+                        Inténtalo de nuevo
+                      </h3>
+                      <p className="text-lg text-red-600 mb-2">
+                        Tu respuesta: <strong>{selectedAnswer}</strong>
+                      </p>
+                      <p className="text-lg text-red-600 mb-6">
+                        {currentQuestionIndex < totalQuestions - 1 
+                          ? "Siguiente pregunta en breve..."
+                          : "¡Inténtalo de nuevo!"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Pista - Mejorado */}
+              {gameDetails.field_hint && !isGameComplete && (
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowHint(!showHint)}
+                    className="w-full px-4 py-3 bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6]/50 text-[#09d6a6] rounded-lg hover:bg-[#e6fff2] transition-colors font-medium shadow-sm"
+                  >
+                    {showHint ? "Ocultar" : "Mostrar"} pista 💡
+                  </button>
+                  {showHint && (
+                    <div className="mt-4 p-5 bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6]/30 rounded-lg shadow-sm">
+                      <p className="text-gray-800 text-base">
+                        <strong className="text-[#09d6a6]">Pista:</strong> {gameDetails.field_hint}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Botón para volver - Solo si no hay respuesta */}
+              {!isGameComplete && (
+                <div className="text-center mt-8">
+                  <button
+                    onClick={onClose}
+                    className="px-6 sm:px-8 py-3 bg-white text-gray-700 rounded-xl text-base sm:text-lg font-medium hover:bg-[#e4fef1] transition-all duration-200 border-2 border-gray-200 shadow-sm"
+                  >
+                    ← Volver a la Campaña
+                  </button>
+                </div>
+              )}
+            </>
+          ) : null}
           </div>
         </div>
       </div>

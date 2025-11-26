@@ -93,8 +93,8 @@ export function CalendarWeekView({ events, onEventClick, picoYPlaca }: CalendarW
                   </div>
                 </div>
                 <div className="space-y-2">
-                  {/* Pico y Placa */}
-                  {picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 && (
+                  {/* Pico y Placa - Solo para el día de hoy */}
+                  {isToday && picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 && (
                     <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded">
                       <div className="flex items-center gap-1.5 mb-2">
                         <Car className="w-4 h-4 text-orange-600" />

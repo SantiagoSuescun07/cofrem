@@ -298,8 +298,6 @@ export default function TrueFalseGame({
                           ? "bg-green-100 border-2 border-green-500 scale-105"
                           : selectedAnswer === "true" && currentStatement.field_correct_tf.toLowerCase().trim() !== "true"
                           ? "bg-red-100 border-2 border-red-500"
-                          : currentStatement.field_correct_tf.toLowerCase().trim() === "true"
-                          ? "bg-green-50 border-2 border-green-300"
                           : "bg-gray-100 border-2 border-gray-300 cursor-not-allowed"
                         : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:scale-105 hover:shadow-lg cursor-pointer border-2 border-transparent"
                       }
@@ -326,8 +324,6 @@ export default function TrueFalseGame({
                           ? "bg-green-100 border-2 border-green-500 scale-105"
                           : selectedAnswer === "false" && currentStatement.field_correct_tf.toLowerCase().trim() !== "false"
                           ? "bg-red-100 border-2 border-red-500"
-                          : currentStatement.field_correct_tf.toLowerCase().trim() === "false"
-                          ? "bg-green-50 border-2 border-green-300"
                           : "bg-gray-100 border-2 border-gray-300 cursor-not-allowed"
                         : "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 hover:shadow-lg cursor-pointer border-2 border-transparent"
                       }

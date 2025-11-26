@@ -74,6 +74,13 @@ export interface EmojiDiscoveryGameDetails extends BaseGameDetails {
   field_emojis?: Array<{
     id: string;
     type: string;
+    field_emoji?: string;
+    field_correct_answer?: string;
+    field_incorrect_1?: string;
+    field_incorrect_2?: string;
+    field_incorrect_3?: string;
+    field_incorrect_4?: string;
+    field_question_phrase?: string;
   }>;
 }
 

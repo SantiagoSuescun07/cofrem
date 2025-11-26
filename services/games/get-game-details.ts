@@ -23,11 +23,14 @@ export const fetchGameDetails = async (
     // Intentamos incluir todos los campos comunes que pueden existir
     // Nota: field_puzzle_image existe para memory_game y puzzle_game
     // field_original_image y field_modified_image existen para spot_differences_game
+    // field_emojis existe para emoji_discovery_game
     let includeParams = "field_icon";
     if (url.includes('memory_game') || url.includes('puzzle_game')) {
       includeParams = "field_icon,field_puzzle_image";
     } else if (url.includes('spot_differences_game')) {
       includeParams = "field_icon,field_original_image,field_modified_image";
+    } else if (url.includes('emoji_discovery_game')) {
+      includeParams = "field_icon,field_emojis";
     }
     
     const response = await api.get(url, {
@@ -119,12 +122,37 @@ export const fetchGameDetails = async (
         break;
 
       case "paragraph--emoji_discovery_game":
+        // Obtener los datos completos de los emoji items
+        const emojiItemsData = allRelationships.field_emojis?.data || [];
+        const emojiItems = emojiItemsData.map((emojiItem: any) => {
+          // Intentar obtener del included primero
+          const emojiIncluded = includedById.get(emojiItem.id);
+          if (emojiIncluded && emojiIncluded.attributes) {
+            return {
+              id: emojiIncluded.id,
+              type: emojiIncluded.type,
+              field_emoji: emojiIncluded.attributes.field_emoji || "",
+              field_correct_answer: emojiIncluded.attributes.field_correct_answer || "",
+              field_incorrect_1: emojiIncluded.attributes.field_incorrect_1 || "",
+              field_incorrect_2: emojiIncluded.attributes.field_incorrect_2 || "",
+              field_incorrect_3: emojiIncluded.attributes.field_incorrect_3 || "",
+              field_incorrect_4: emojiIncluded.attributes.field_incorrect_4 || "",
+              field_question_phrase: emojiIncluded.attributes.field_question_phrase || "",
+            };
+          }
+          // Si no está en included, devolver solo el id y type
+          return {
+            id: emojiItem.id,
+            type: emojiItem.type,
+          };
+        });
+        
         gameDetails = {
           ...baseGame,
           type: "paragraph--emoji_discovery_game",
           field_emoji_difficulty: allAttributes.field_emoji_difficulty || "",
           field_hint: allAttributes.field_hint || "",
-          field_emojis: allRelationships.field_emojis?.data || [],
+          field_emojis: emojiItems,
         } as GameDetails;
         break;
 

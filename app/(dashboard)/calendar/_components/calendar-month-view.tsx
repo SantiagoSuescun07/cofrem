@@ -148,8 +148,8 @@ export function CalendarMonthView({
                   {format(day, "d")}
                 </div>
                 <div className="space-y-1">
-                  {/* Pico y Placa */}
-                  {picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 && (
+                  {/* Pico y Placa - Solo para el día de hoy */}
+                  {isToday && picoYPlacaInfo && picoYPlacaInfo.placas.length > 0 && (
                     <div className="mb-2 p-1.5 bg-orange-50 border border-orange-200 rounded text-xs">
                       <div className="flex items-center gap-1 mb-1">
                         <Car className="w-3 h-3 text-orange-600" />

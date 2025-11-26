@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/axios";
 import { ProgressBar } from "@/components/common/progress-bar";
@@ -133,6 +133,12 @@ export default function MagazinesPage() {
     setSelectedMagazineTitle("");
   };
 
+  const handleOpenInNewWindow = () => {
+    if (selectedPdfUrl) {
+      window.open(selectedPdfUrl, "_blank", "noopener,noreferrer");
+    }
+  };
+
   if (isLoading) {
     return <MagazinesSkeleton />;
   }
@@ -238,9 +244,18 @@ export default function MagazinesPage() {
       <Dialog open={!!selectedPdfUrl} onOpenChange={handleClosePdf}>
         <DialogContent className="max-w-6xl max-h-[90vh] w-[95vw] p-0">
           <DialogHeader className="px-6 pt-6 pb-4 border-b">
-            <DialogTitle className="text-xl font-semibold">
-              {selectedMagazineTitle}
-            </DialogTitle>
+            <div className="flex items-center justify-between gap-4">
+              <DialogTitle className="text-xl font-semibold flex-1">
+                {selectedMagazineTitle}
+              </DialogTitle>
+              <Button
+                onClick={handleOpenInNewWindow}
+                className="flex items-center gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Abrir
+              </Button>
+            </div>
           </DialogHeader>
           <div className="relative w-full h-[calc(90vh-100px)]">
             {selectedPdfUrl && (

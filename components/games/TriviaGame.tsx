@@ -311,8 +311,6 @@ export default function TriviaGame({
                               ? "bg-green-100 border-2 border-green-500 scale-105"
                               : isSelected && !isCorrect
                               ? "bg-red-100 border-2 border-red-500"
-                              : isCorrect
-                              ? "bg-green-50 border-2 border-green-300"
                               : "bg-gray-100 border-2 border-gray-300 cursor-not-allowed"
                             : "bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white hover:from-[#0bc9a0] hover:to-[#0dbc9a] hover:scale-105 hover:shadow-lg cursor-pointer border-2 border-transparent"
                           }

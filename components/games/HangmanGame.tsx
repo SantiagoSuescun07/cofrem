@@ -484,7 +484,7 @@ export default function HangmanGame({
                   ¡Game Over!
                 </h3>
                 <p className="text-red-600 mb-2 text-lg">
-                  La palabra de la ronda {currentRound + 1} era: <strong>{word}</strong>
+                  No lograste adivinar la palabra de la ronda {currentRound + 1}
                 </p>
                 {rounds.length > 1 && completedRounds > 0 && (
                   <p className="text-red-600 mb-2 text-base">
