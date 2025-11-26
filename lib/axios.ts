@@ -43,57 +43,21 @@ api.interceptors.request.use(
 //   (error) => Promise.reject(error)
 // );
 
-// Función para limpiar todos los storages
-const clearAllStorages = () => {
-  try {
-    // Limpiar localStorage
-    localStorage.clear();
-    
-    // Limpiar sessionStorage
-    if (typeof window !== "undefined") {
-      sessionStorage.clear();
-    }
-  } catch (error) {
-    console.error("Error al limpiar storages:", error);
-  }
-};
-
 // Interceptor de respuesta
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const status = error.response?.status;
-    
-    // Manejar errores 401 (No autorizado)
-    if (status === 401) {
-      try {
-        clearToken();
-        clearAllStorages();
-        toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
-        }
-      } catch {
-        toast.error("Error al limpiar la sesión.");
-      }
-    }
-    
-    // Manejar errores 403 (Prohibido)
-    if (status === 403) {
-      try {
-        clearToken();
-        clearAllStorages();
-        toast.error("No tienes permisos para acceder a este recurso. Serás redirigido al login.");
-        if (typeof window !== "undefined") {
-          window.location.href = "/auth/login";
-        }
-      } catch {
-        toast.error("Error al limpiar la sesión.");
-      }
-    }
-    
-    return Promise.reject(error);
-  }
-);
+// api.interceptors.response.use(
+//   (response) => response,
+//   async (error) => {
+//     if (error.response?.status === 401) {
+//       try {
+//         clearToken();
+//         toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
+//         window.location.href = "/auth/login";
+//       } catch {
+//         toast.error("Error al limpiar la sesión.");
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default api;
