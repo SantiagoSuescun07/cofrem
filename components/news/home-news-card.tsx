@@ -75,7 +75,7 @@ export function HomeNewsCard({ news }: HomeNewsCardProps) {
               width={400}
               height={256}
               priority
-              className="w-full h-72 object-cover"
+              className="w-full h-120 object-cover"
             />
           </div>
         )}
