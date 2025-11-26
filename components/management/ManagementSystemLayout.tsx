@@ -7,7 +7,7 @@ import { BreadcrumbHeader } from "@/components/directory/breadcrumb-header";
 import { ManagementSidebar } from "@/components/management/management-sidebar";
 import { ManagementSidebarMobile } from "@/components/management/ManagementSidebarMobile";
 import { ManagementContent } from "@/components/management/ManagementTabsContent";
-import { useDocuments } from "@/queries/management";
+import { useDocuments, useModules } from "@/queries/management";
 
 interface ManagementSystemLayoutProps {
   openCollapser: string | null;
@@ -43,43 +43,35 @@ export const ManagementSystemLayout = ({
   setActiveModule,
 }: ManagementSystemLayoutProps) => {
   const { data: documents, isLoading } = useDocuments();
+  const { data: modules } = useModules();
 
-  // Auto-seleccionar el primer módulo y su primera categoría cuando se cargan los documentos por primera vez
+  // Auto-seleccionar el primer módulo y su primera categoría cuando se cargan los módulos por primera vez
   useEffect(() => {
-    if (documents && documents.length > 0 && !openCollapser && !activeCategory) {
-      // Buscar el primer documento con módulo
-      const firstDoc = documents.find((doc) => doc.field_modulo?.drupal_internal__tid);
-      if (firstDoc?.field_modulo?.drupal_internal__tid) {
-        const moduleId = firstDoc.field_modulo.drupal_internal__tid.toString();
+    if (modules && modules.length > 0 && !openCollapser && !activeCategory) {
+      // Seleccionar el primer módulo
+      const firstModule = modules[0];
+      if (firstModule && firstModule.categories.length > 0) {
+        const moduleId = firstModule.id.toString();
         setOpenCollapser(moduleId);
         
-        // Buscar la primera categoría de este módulo
-        const moduleDoc = documents.find(
-          (doc) => 
-            doc.field_modulo?.drupal_internal__tid?.toString() === moduleId &&
-            doc.field_module_category?.name
-        );
-        if (moduleDoc?.field_module_category?.name) {
-          setActiveCategory(moduleDoc.field_module_category.name);
-        }
+        // Seleccionar la primera categoría del módulo
+        setActiveCategory(firstModule.categories[0].name);
       }
     }
-  }, [documents, openCollapser, setOpenCollapser, activeCategory, setActiveCategory]);
+  }, [modules, openCollapser, setOpenCollapser, activeCategory, setActiveCategory]);
 
   // Auto-seleccionar la primera categoría cuando se selecciona un módulo y no hay categoría activa
   useEffect(() => {
-    if (documents && documents.length > 0 && openCollapser && !activeCategory) {
-      // Buscar la primera categoría del módulo seleccionado
-      const moduleDoc = documents.find(
-        (doc) => 
-          doc.field_modulo?.drupal_internal__tid?.toString() === openCollapser &&
-          doc.field_module_category?.name
+    if (modules && modules.length > 0 && openCollapser && !activeCategory) {
+      // Buscar el módulo seleccionado
+      const selectedModule = modules.find(
+        (mod) => mod.id.toString() === openCollapser
       );
-      if (moduleDoc?.field_module_category?.name) {
-        setActiveCategory(moduleDoc.field_module_category.name);
+      if (selectedModule && selectedModule.categories.length > 0) {
+        setActiveCategory(selectedModule.categories[0].name);
       }
     }
-  }, [openCollapser, documents, activeCategory, setActiveCategory]);
+  }, [openCollapser, modules, activeCategory, setActiveCategory]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 relative">
