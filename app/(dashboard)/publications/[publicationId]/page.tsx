@@ -105,7 +105,7 @@ export default function SinglePublicationPage({
                           isMain ? "col-span-2 row-span-2" : ""
                         }`}
                         style={{
-                          minHeight: isMain ? "350px" : "180px",
+                          minHeight: allImages.length === 1 ? "480px" : isMain ? "350px" : "180px",
                           height: "100%",
                         }}
                       >
