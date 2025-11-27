@@ -240,6 +240,11 @@ export default function QuizGame({
                   <p className="text-purple-600  text-xl mt-4">
                     Puntos obtenidos: {points}
                   </p>
+                  {gameDetails.field_badges?.name && (
+                    <p className="text-[#09d6a6] font-bold text-xl mt-4">
+                      🏆 Insignia obtenida: <span className="text-purple-600">{gameDetails.field_badges.name}</span>
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">

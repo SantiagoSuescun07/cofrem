@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, MessageCircle } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Publication } from "@/types/publications";
 import Link from "next/link";
 import { GalleryModal } from "../common/gallery-modal";
 import Image from "next/image";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createReaction } from "@/services/news/reactions";
+import { toast } from "sonner";
+import { getPublicationsReactions } from "@/queries/publications";
 
 interface Props {
   publication: Publication;
@@ -21,7 +25,27 @@ const getDriveEmbedUrl = (uri: string) => {
 
 export function PublicationCard({ publication }: Props) {
   const { title, field_gallery = [], field_image, field_options_in_publication } = publication;
-  
+  const queryClient = useQueryClient();
+
+  // Obtener reacciones de la publicación
+  const { data } = getPublicationsReactions(publication.drupal_internal__nid.toString());
+
+  // Mutación para registrar una reacción
+  const mutation = useMutation({
+    mutationFn: (reactionType: string) =>
+      createReaction(
+        publication.drupal_internal__nid.toString(),
+        "field_reaction",
+        reactionType
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["reactions", publication.drupal_internal__nid.toString()],
+      });
+    },
+    onError: () => toast.error("No se pudo registrar tu reacción"),
+  });
+
   // Verificar si hay un video
   const hasVideo = field_options_in_publication?.type === "paragraph--video_from_drive";
 
@@ -35,6 +59,10 @@ export function PublicationCard({ publication }: Props) {
 
   const [isOpen, setIsOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
+
+  const fieldReaction = data?.fields.find(
+    (f) => f.field_name === "field_reaction"
+  );
 
   const openGallery = (e: React.MouseEvent, index: number) => {
     e.preventDefault();
@@ -155,12 +183,40 @@ export function PublicationCard({ publication }: Props) {
           Social
         </span>
         <div className="flex items-center gap-4 text-gray-500 text-sm">
-          <span className="flex items-center gap-1">
-            <Heart size={16} /> 12
-          </span>
-          <span className="flex items-center gap-1">
-            <MessageCircle size={16} /> 12
-          </span>
+          {/* 🔹 Renderizar las reacciones */}
+          {fieldReaction?.reactions.map((reaction) => {
+            const isActive = fieldReaction.user_reaction === reaction.id;
+            return (
+              <button
+                key={reaction.id}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  mutation.mutate(reaction.id);
+                }}
+                className={`flex items-center gap-1 transition ${
+                  isActive
+                    ? "opacity-100 scale-105"
+                    : "opacity-70 hover:opacity-100"
+                }`}
+              >
+                <Image
+                  src={reaction.icon_url}
+                  alt={reaction.label}
+                  width={16}
+                  height={16}
+                  className="rounded-full"
+                />
+                <span>{reaction.count}</span>
+              </button>
+            );
+          })}
+
+          {/* Comentarios */}
+          <div className="flex items-center gap-1">
+            <MessageCircle size={16} />
+            <span>0</span>
+          </div>
         </div>
       </div>
 

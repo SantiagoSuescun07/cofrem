@@ -18,6 +18,7 @@ export interface DigitalServiceData {
   icon: DigitalServiceIcon | null;
   nodeId?: string; // ID del nodo si es un enlace interno (entity:node/X)
   isInternal?: boolean; // Indica si es un enlace interno
+  weight?: number | null; // Peso para ordenar los servicios
 }
 
 export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | null> => {
@@ -117,10 +118,19 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
         icon,
         nodeId,
         isInternal,
+        weight: attributes.field_weight ?? null,
       };
     });
 
-    return services;
+    // Ordenar servicios por field_weight
+    // Los servicios con weight null o undefined van al final
+    const sortedServices = services.sort((a, b) => {
+      const weightA = a.weight ?? 9999; // Los null van al final
+      const weightB = b.weight ?? 9999;
+      return weightA - weightB;
+    });
+
+    return sortedServices;
   } catch (error) {
     console.error("Error fetching digital services:", error);
     return null;

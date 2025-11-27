@@ -156,7 +156,7 @@ export default function WordSearchGame({
   const gridSize = config.gridSize;
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
+    <div className="min-h-screen w-full  py-6">
       {showWarning && (
         <div className="fixed top-0 left-0 right-0 z-[2000] bg-[#09d6a6] text-white text-center py-3 px-4 rounded-b-2xl animate-bounce shadow-lg font-semibold">
           ¡Atención! Quedan solo <strong>30 segundos</strong> para encontrar más
@@ -282,7 +282,7 @@ export default function WordSearchGame({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6 h-full">
             {/* Grilla principal */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-4 sm:p-6">
@@ -301,7 +301,7 @@ export default function WordSearchGame({
 
             {/* Panel de palabras */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6 sticky top-6">
+              <div className="bg-white rounded-2xl shadow-lg border border-[#09d6a6]/20 p-6   h-full top-6">
                 <div className="mb-4 pb-4 border-b border-gray-200">
                   <h3 className="text-lg  text-gray-900 flex items-center gap-2">
                     <span className="text-[#09d6a6]">📝</span>
@@ -311,7 +311,7 @@ export default function WordSearchGame({
                     {foundWordsSet.size} de {config.words.length} encontradas
                   </p>
                 </div>
-                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
                   {currentWords.map((word) => (
                     <div
                       key={word}

@@ -287,6 +287,11 @@ export default function CompletePhraseGame({
                       </strong>{" "}
                       puntos
                     </p>
+                    {gameDetails.field_badges?.name && (
+                      <p className="text-[#09d6a6] font-bold text-xl mb-4">
+                        🏆 Insignia obtenida: <span className="text-purple-600">{gameDetails.field_badges.name}</span>
+                      </p>
+                    )}
                     <div className="flex gap-4 justify-center mt-6">
                       <button
                         onClick={handleRetry}

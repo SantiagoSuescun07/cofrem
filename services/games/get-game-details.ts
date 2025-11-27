@@ -24,13 +24,14 @@ export const fetchGameDetails = async (
     // Nota: field_puzzle_image existe para memory_game y puzzle_game
     // field_original_image y field_modified_image existen para spot_differences_game
     // field_emojis existe para emoji_discovery_game
-    let includeParams = "field_icon";
+    // field_badges existe para todos los juegos
+    let includeParams = "field_icon,field_badges";
     if (url.includes('memory_game') || url.includes('puzzle_game')) {
-      includeParams = "field_icon,field_puzzle_image";
+      includeParams = "field_icon,field_badges,field_puzzle_image";
     } else if (url.includes('spot_differences_game')) {
-      includeParams = "field_icon,field_original_image,field_modified_image";
+      includeParams = "field_icon,field_badges,field_original_image,field_modified_image";
     } else if (url.includes('emoji_discovery_game')) {
-      includeParams = "field_icon,field_emojis";
+      includeParams = "field_icon,field_badges,field_emojis";
     }
     
     const response = await api.get(url, {
@@ -73,6 +74,18 @@ export const fetchGameDetails = async (
         }
       : null;
 
+    // Resolver field_badges
+    const badgesData = data.data.relationships?.field_badges?.data;
+    const badgesIncluded = badgesData
+      ? includedById.get(badgesData.id)
+      : null;
+    const fieldBadges = badgesIncluded
+      ? {
+          id: badgesIncluded.id,
+          name: badgesIncluded.attributes.name || "",
+        }
+      : null;
+
     // Obtener todos los atributos disponibles
     const allAttributes = data.data.attributes;
     const allRelationships = data.data.relationships;
@@ -92,6 +105,7 @@ export const fetchGameDetails = async (
       field_time_limit: allAttributes.field_time_limit ?? null,
       field_points: allAttributes.field_points ?? allAttributes.field_points_per_word ?? null,
       field_icon: fieldIcon,
+      field_badges: fieldBadges,
     };
 
     // Construir el objeto específico según el tipo de juego

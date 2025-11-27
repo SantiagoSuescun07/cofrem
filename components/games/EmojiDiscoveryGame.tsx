@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { EmojiDiscoveryGameDetails } from "@/types/games";
 import { updateRanking } from "@/services/games/update-ranking";
 import { InfoIcon } from "lucide-react";
@@ -25,13 +25,43 @@ export default function EmojiDiscoveryGame({
   const [isGameActive, setIsGameActive] = useState<boolean>(true);
   const [showHint, setShowHint] = useState<boolean>(false);
   const [rankingUpdated, setRankingUpdated] = useState<boolean>(false);
+  const [hasClaimedPoints, setHasClaimedPoints] = useState<boolean>(false);
+  const [finishedThisSession, setFinishedThisSession] = useState<boolean>(false);
+  const [lastEarnedPoints, setLastEarnedPoints] = useState<number>(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pointsRef = useRef<number>(0);
+
+  useEffect(() => {
+    pointsRef.current = points;
+  }, [points]);
 
   // Obtener las preguntas (emoji items)
   const questions = gameDetails.field_emojis || [];
   const currentQuestion = questions[currentQuestionIndex] || null;
   const totalQuestions = questions.length;
   const isGameComplete = currentQuestionIndex >= totalQuestions;
+  const completionStorageKey = useMemo(() => {
+    if (!campaignNid || !gameDetails.drupal_internal__id) return null;
+    return `emoji_discovery_${campaignNid}_${gameDetails.drupal_internal__id}_completed`;
+  }, [campaignNid, gameDetails.drupal_internal__id]);
+  const isGameLocked = hasClaimedPoints && !finishedThisSession;
+  const totalPointsAvailable = gameDetails.field_points ?? 0;
+  const { basePointsPerQuestion, remainderPoints } = useMemo(() => {
+    if (!totalPointsAvailable || totalQuestions === 0) {
+      return { basePointsPerQuestion: 0, remainderPoints: 0 };
+    }
+    return {
+      basePointsPerQuestion: Math.floor(totalPointsAvailable / totalQuestions),
+      remainderPoints: totalPointsAvailable % totalQuestions,
+    };
+  }, [totalPointsAvailable, totalQuestions]);
+  const getPointsForQuestion = useCallback(
+    (index: number) => {
+      if (!totalPointsAvailable || totalQuestions === 0) return 0;
+      return basePointsPerQuestion + (index < remainderPoints ? 1 : 0);
+    },
+    [basePointsPerQuestion, remainderPoints, totalPointsAvailable, totalQuestions]
+  );
 
   // Mezclar las opciones de respuesta para cada pregunta
   const getShuffledAnswers = (question: typeof currentQuestion): string[] => {
@@ -60,6 +90,7 @@ export default function EmojiDiscoveryGame({
   }, [currentQuestionIndex, currentQuestion]);
 
   useEffect(() => {
+    if (isGameLocked) return;
     if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && timeLeft > 0 && isGameActive && !isAnswered && !isGameComplete) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((prev) => {
@@ -82,10 +113,19 @@ export default function EmojiDiscoveryGame({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [gameDetails.field_time_limit, timeLeft, isGameActive, isAnswered, currentQuestionIndex, totalQuestions, isGameComplete]);
+  }, [gameDetails.field_time_limit, timeLeft, isGameActive, isAnswered, currentQuestionIndex, totalQuestions, isGameComplete, isGameLocked]);
+
+  useEffect(() => {
+    if (!completionStorageKey || typeof window === "undefined") return;
+    const storedValue = window.localStorage.getItem(completionStorageKey);
+    if (storedValue === "claimed") {
+      setHasClaimedPoints(true);
+      setIsGameActive(false);
+    }
+  }, [completionStorageKey]);
 
   const handleAnswerSelect = (answer: string) => {
-    if (isAnswered || !isGameActive || !currentQuestion) return;
+    if (isAnswered || !isGameActive || !currentQuestion || isGameLocked) return;
 
     setSelectedAnswer(answer);
     setIsAnswered(true);
@@ -96,11 +136,17 @@ export default function EmojiDiscoveryGame({
     }
 
     const isCorrect = answer.toLowerCase().trim() === (currentQuestion.field_correct_answer || "").toLowerCase().trim();
+    const questionPoints = isCorrect ? getPointsForQuestion(currentQuestionIndex) : 0;
+
+    if (isCorrect) {
+      setPoints((prev) => prev + questionPoints);
+      setLastEarnedPoints(questionPoints);
+    } else {
+      setLastEarnedPoints(0);
+    }
 
     // Avanzar a la siguiente pregunta después de 2 segundos
     setTimeout(() => {
-      const newCorrectAnswers = isCorrect ? correctAnswers + 1 : correctAnswers;
-      
       if (isCorrect) {
         setCorrectAnswers((prev) => prev + 1);
       }
@@ -108,20 +154,7 @@ export default function EmojiDiscoveryGame({
       if (currentQuestionIndex < totalQuestions - 1) {
         handleNextQuestion();
       } else {
-        // Juego completado
-        const pointsPerQuestion = gameDetails.field_points 
-          ? Math.floor(gameDetails.field_points / totalQuestions)
-          : 0;
-        const finalPoints = newCorrectAnswers * pointsPerQuestion;
-        setPoints(finalPoints);
-
-        // Actualizar ranking si se completa el juego
-        if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
-          setRankingUpdated(true);
-          updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
-            console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
-          });
-        }
+        handleGameCompletion();
       }
     }, 2000);
   };
@@ -132,12 +165,46 @@ export default function EmojiDiscoveryGame({
     setIsAnswered(false);
     setIsGameActive(true);
     setShowHint(false);
+    setLastEarnedPoints(0);
     
     // Reiniciar el temporizador si hay tiempo límite por pregunta
     if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0) {
       setTimeLeft(gameDetails.field_time_limit);
     }
   };
+
+  const handleGameCompletion = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    setFinishedThisSession(true);
+    setIsGameActive(false);
+    setIsAnswered(false);
+    setSelectedAnswer(null);
+    setShowHint(false);
+    setCurrentQuestionIndex(totalQuestions);
+
+    const earnedPoints = pointsRef.current;
+
+    if (earnedPoints > 0 && completionStorageKey && typeof window !== "undefined") {
+      window.localStorage.setItem(completionStorageKey, "claimed");
+      setHasClaimedPoints(true);
+    }
+
+    if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+      setRankingUpdated(true);
+      updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
+        console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+      });
+    }
+  }, [
+    campaignNid,
+    completionStorageKey,
+    gameDetails.drupal_internal__id,
+    rankingUpdated,
+    totalQuestions,
+  ]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -147,15 +214,19 @@ export default function EmojiDiscoveryGame({
 
   // Función para reiniciar el juego
   const handleRetry = () => {
+    if (isGameLocked) return;
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
     setIsAnswered(false);
     setCorrectAnswers(0);
     setPoints(0);
+    pointsRef.current = 0;
     setTimeLeft(gameDetails.field_time_limit || 0);
     setIsGameActive(true);
     setShowHint(false);
     setRankingUpdated(false);
+    setFinishedThisSession(false);
+    setLastEarnedPoints(0);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -187,7 +258,7 @@ export default function EmojiDiscoveryGame({
                 </div>
                 <div>
                   <h1 className="text-2xl sm:text-3xl  text-gray-900">
-                    {gameDetails.field_title.replace(/[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, "") || "Descubrir Emoji"}
+                    {gameDetails.field_title?.trim() || "Descubrir Emoji"}
                   </h1>
                   <p className="text-sm text-gray-500 mt-1">Descubrir Emoji</p>
                 </div>
@@ -244,7 +315,23 @@ export default function EmojiDiscoveryGame({
         {/* Contenido principal del juego */}
         <div className="flex-1 flex items-center justify-center min-h-[500px]">
           <div className="bg-white rounded-2xl border-2 border-[#09d6a6]/30 shadow-xl p-6 sm:p-8 max-w-4xl w-full">
-          {isGameComplete ? (
+          {isGameLocked ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🔒</div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                Ya reclamaste tus puntos
+              </h2>
+              <p className="text-lg text-gray-600 mb-8">
+                Solo puedes sumar puntos en este reto una vez por persona. Explora otros juegos para seguir acumulando.
+              </p>
+              <button
+                onClick={onClose}
+                className="px-6 py-3 bg-gray-500 text-white rounded-full text-lg font-semibold shadow-lg hover:bg-gray-600 transition-all duration-200"
+              >
+                ← Volver a la Campaña
+              </button>
+            </div>
+          ) : isGameComplete ? (
             // Resultado final
             <div className="text-center">
               <div className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-400 rounded-xl p-8 mb-6">
@@ -261,18 +348,30 @@ export default function EmojiDiscoveryGame({
                   </p>
                   {points > 0 && (
                     <p className="text-purple-600 font-bold text-xl mt-4">
-                      Puntos obtenidos: {points}
+                      Has ganado {points} {points === 1 ? "punto" : "puntos"}
+                    </p>
+                  )}
+                  {gameDetails.field_badges?.name && (
+                    <p className="text-[#09d6a6] font-bold text-xl mt-4">
+                      🏆 Insignia obtenida: <span className="text-purple-600">{gameDetails.field_badges.name}</span>
+                    </p>
+                  )}
+                  {hasClaimedPoints && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      Ya no podrás volver a jugar este reto para sumar más puntos.
                     </p>
                   )}
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button
-                  onClick={handleRetry}
-                  className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
-                >
-                  🔄 Jugar de Nuevo
-                </button>
+                {!hasClaimedPoints && (
+                  <button
+                    onClick={handleRetry}
+                    className="px-6 py-3 bg-gradient-to-r from-[#09d6a6] to-[#0bc9a0] text-white rounded-xl text-lg font-semibold shadow-lg hover:from-[#0bc9a0] hover:to-[#0dbc9a] transition-all duration-200 transform hover:scale-105"
+                  >
+                    🔄 Jugar de Nuevo
+                  </button>
+                )}
                 <button
                   onClick={onClose}
                   className="px-6 py-3 bg-gray-500 text-white rounded-full text-lg font-semibold shadow-lg hover:bg-gray-600 transition-all duration-200"
@@ -346,6 +445,12 @@ export default function EmojiDiscoveryGame({
                       <p className="text-lg text-gray-700 mb-2">
                         Tu respuesta: <strong className="text-[#09d6a6]">{selectedAnswer}</strong>
                       </p>
+                      {lastEarnedPoints > 0 && (
+                        <p className="text-lg text-[#09d6a6] font-semibold mb-2">
+                          Ganaste {lastEarnedPoints}{" "}
+                          {lastEarnedPoints === 1 ? "punto" : "puntos"} en esta pregunta.
+                        </p>
+                      )}
                       <p className="text-lg text-gray-700 mb-6">
                         {currentQuestionIndex < totalQuestions - 1 
                           ? "¡Siguiente pregunta en breve!"

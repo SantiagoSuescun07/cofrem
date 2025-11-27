@@ -121,11 +121,70 @@ export function PublicationContentRenderer({ content }: Props) {
 
     case "paragraph--enriched_text": {
       if (!content.field_body) return null;
+      
+      // Función para limpiar el HTML de estilos inline de Facebook
+      const cleanHtml = (html: string): string => {
+        if (typeof window === 'undefined') return html;
+        
+        // Crear un elemento temporal para parsear el HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Reemplazar imágenes de emojis de Facebook con emojis reales primero
+        const emojiImages = tempDiv.querySelectorAll('img[src*="emoji.php"]');
+        emojiImages.forEach((img) => {
+          const alt = img.getAttribute('alt');
+          if (alt) {
+            const emojiSpan = document.createElement('span');
+            emojiSpan.textContent = alt;
+            emojiSpan.className = 'inline-block mr-1';
+            img.parentNode?.replaceChild(emojiSpan, img);
+          } else {
+            img.remove();
+          }
+        });
+        
+        // Remover todos los estilos inline y clases de Facebook
+        const allElements = tempDiv.querySelectorAll('*');
+        allElements.forEach((el) => {
+          // Remover estilos inline
+          el.removeAttribute('style');
+          // Remover clases de Facebook (que empiezan con 'x' y tienen más de 5 caracteres)
+          const classes = Array.from(el.classList);
+          classes.forEach((cls) => {
+            if (cls.startsWith('x') && cls.length > 5) {
+              el.classList.remove(cls);
+            }
+          });
+          // Remover atributos innecesarios
+          el.removeAttribute('dir');
+          el.removeAttribute('referrerpolicy');
+          el.removeAttribute('loading');
+        });
+        
+        // Limpiar divs vacíos o con solo espacios
+        const emptyDivs = tempDiv.querySelectorAll('div');
+        emptyDivs.forEach((div) => {
+          if (div.textContent?.trim() === '' && div.children.length === 0) {
+            div.remove();
+          }
+        });
+        
+        return tempDiv.innerHTML;
+      };
+      
+      // Limpiar el HTML
+      const cleanedHtml = cleanHtml(content.field_body);
+      
       return (
         <div className="mb-6">
           <div
-            className="prose prose-sm md:prose-base max-w-none text-gray-800 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: content.field_body }}
+            className="prose prose-sm md:prose-base max-w-none text-gray-800 leading-relaxed [&_div]:my-2 [&_div]:text-base [&_span]:inline-block [&_span]:mr-1 [&_*]:text-gray-800"
+            style={{
+              // Sobrescribir estilos inline que puedan quedar
+              fontFamily: 'inherit',
+            }}
+            dangerouslySetInnerHTML={{ __html: cleanedHtml }}
           />
         </div>
       );

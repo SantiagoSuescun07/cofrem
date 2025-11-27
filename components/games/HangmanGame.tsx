@@ -303,7 +303,7 @@ export default function HangmanGame({
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#e6fff2]/40 via-white to-[#e6fff2]/20 py-6">
+    <div className="min-h-screen w-full  py-6">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
         {/* Card unificada con header e instrucciones */}
         <div className="mb-6">
@@ -458,6 +458,11 @@ export default function HangmanGame({
                 <p className="text-gray-700 mb-6 text-lg">
                   Has ganado <strong className="text-[#09d6a6] text-xl">{points}</strong> puntos
                 </p>
+                {gameDetails.field_badges?.name && (
+                  <p className="text-[#09d6a6] font-bold text-xl mb-6">
+                    🏆 Insignia obtenida: <span className="text-purple-600">{gameDetails.field_badges.name}</span>
+                  </p>
+                )}
                 <div className="flex gap-4 justify-center">
                   <button
                     onClick={handleRetry}

@@ -107,15 +107,17 @@ export default function DigitalServiceNodePage({
 
           {/* Imagen principal si existe */}
           {node.field_main_image_optional && (
-            <div className="mb-8">
-              <Image
-                src={node.field_main_image_optional.url}
-                alt={node.field_main_image_optional.alt || node.title}
-                width={node.field_main_image_optional.width || 1200}
-                height={node.field_main_image_optional.height || 600}
-                className="w-full rounded-3xl shadow-md object-cover"
-                priority
-              />
+            <div className="mb-8 flex justify-center">
+              <div className="max-w-2xl w-full">
+                <Image
+                  src={node.field_main_image_optional.url}
+                  alt={node.field_main_image_optional.alt || node.title}
+                  width={node.field_main_image_optional.width || 800}
+                  height={node.field_main_image_optional.height || 450}
+                  className="w-full h-auto rounded-3xl shadow-md object-contain"
+                  priority
+                />
+              </div>
             </div>
           )}
 
@@ -126,30 +128,41 @@ export default function DigitalServiceNodePage({
             </div>
           )}
 
-          {/* Galería de imágenes */}
-          {node.field_gallery && node.field_gallery.length > 0 && (
-            <div className="mb-12 md:mt-20">
-              <h3 className="flex items-center text-2xl mb-4">
-                <Image
-                  src="/icons/blue-image.png"
-                  alt="Image icon"
-                  width={40}
-                  height={40}
-                  priority
-                  className="size-[23px] mr-2"
-                />{" "}
-                <span className="mr-3">Galería</span>
-                <ProgressBar />
-              </h3>
-              <ArticleCarousel
-                images={node.field_gallery.map((img) => ({
-                  id: String(img.target_id),
-                  url: img.url,
-                  alt: img.alt || node.title,
-                }))}
-              />
-            </div>
-          )}
+          {/* Galería de imágenes - Filtrar la imagen principal si está duplicada */}
+          {node.field_gallery && node.field_gallery.length > 0 && (() => {
+            // Filtrar la galería para excluir la imagen principal si es la misma
+            const mainImageId = node.field_main_image_optional?.target_id;
+            const filteredGallery = mainImageId
+              ? node.field_gallery.filter((img) => img.target_id !== mainImageId)
+              : node.field_gallery;
+
+            // Solo mostrar la galería si hay imágenes después de filtrar
+            if (filteredGallery.length === 0) return null;
+
+            return (
+              <div className="mb-12 md:mt-20">
+                <h3 className="flex items-center text-2xl mb-4">
+                  <Image
+                    src="/icons/blue-image.png"
+                    alt="Image icon"
+                    width={40}
+                    height={40}
+                    priority
+                    className="size-[23px] mr-2"
+                  />{" "}
+                  <span className="mr-3">Galería</span>
+                  <ProgressBar />
+                </h3>
+                <ArticleCarousel
+                  images={filteredGallery.map((img) => ({
+                    id: String(img.target_id),
+                    url: img.url,
+                    alt: img.alt || node.title,
+                  }))}
+                />
+              </div>
+            );
+          })()}
 
           {/* Archivo adjunto */}
           {node.field_file && node.field_file.display && (

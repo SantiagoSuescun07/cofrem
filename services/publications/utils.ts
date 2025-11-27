@@ -70,10 +70,16 @@ export const mapParagraphContent = (
     }
 
     case "paragraph--enriched_text": {
+      // El campo puede venir como field_enriched_text o field_body
+      const enrichedText = optionsIncluded.attributes?.field_enriched_text?.processed || 
+                          optionsIncluded.attributes?.field_enriched_text?.value ||
+                          optionsIncluded.attributes?.field_body?.processed || 
+                          optionsIncluded.attributes?.field_body?.value ||
+                          "";
       return {
         type: contentType,
         id: optionsIncluded.id,
-        field_body: optionsIncluded.attributes?.field_body?.processed || "",
+        field_body: enrichedText,
       };
     }
 

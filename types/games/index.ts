@@ -45,6 +45,10 @@ export interface BaseGameDetails {
     width: number;
     height: number;
   } | null;
+  field_badges: {
+    id: string;
+    name: string;
+  } | null;
 }
 
 // Juego: Sopa de letras

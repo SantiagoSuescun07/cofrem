@@ -1,7 +1,7 @@
 "use client";
 import React, { useMemo, useEffect } from "react";
 import { FileText, Download } from "lucide-react";
-import { useDocuments } from "@/queries/management";
+import { useDocuments, useModules } from "@/queries/management";
 
 interface ManagementContentProps {
   activeModule: string | null;
@@ -15,6 +15,7 @@ export const ManagementContent = ({
   setActiveCategory,
 }: ManagementContentProps) => {
   const { data: documents, isLoading, error } = useDocuments();
+  const { data: modules } = useModules();
 
   // Debug: mostrar información de los documentos
   useEffect(() => {
@@ -62,22 +63,121 @@ export const ManagementContent = ({
 
     // Filtrar por módulo si está seleccionado (usar el ID del módulo)
     if (activeModule) {
+      const beforeModuleFilter = filtered.length;
       filtered = filtered.filter((doc) => {
         const moduleId = doc.field_modulo?.drupal_internal__tid?.toString();
         return moduleId === activeModule;
       });
+      console.log(`Filtro por módulo ${activeModule}: ${beforeModuleFilter} -> ${filtered.length} documentos`);
     }
 
-    // Si hay categoría activa, filtrar por categoría
+    // Si hay categoría activa, filtrar por categoría usando el ID (más confiable que el nombre)
     if (activeCategory) {
+      const beforeCategoryFilter = filtered.length;
+      
+      // Primero intentar obtener el ID de la categoría desde los módulos
+      let categoryId: number | null = null;
+      let categoryInfo: { id: number; parentId: number | null; subareaIds: number[] } | null = null;
+      
+      if (modules) {
+        // Buscar la categoría en todos los módulos y sus subáreas
+        const findCategoryRecursive = (cats: any[], parentId: number | null = null): any => {
+          for (const cat of cats) {
+            if (cat.name === activeCategory) {
+              // Recopilar todos los IDs de subáreas
+              const getAllSubareaIds = (subareas: any[]): number[] => {
+                let ids: number[] = [];
+                for (const subarea of subareas) {
+                  ids.push(subarea.drupal_internal__tid);
+                  if (subarea.subareas && subarea.subareas.length > 0) {
+                    ids = ids.concat(getAllSubareaIds(subarea.subareas));
+                  }
+                }
+                return ids;
+              };
+              
+              return {
+                id: cat.drupal_internal__tid,
+                parentId: parentId,
+                subareaIds: cat.subareas && cat.subareas.length > 0 
+                  ? getAllSubareaIds(cat.subareas) 
+                  : []
+              };
+            }
+            if (cat.subareas && cat.subareas.length > 0) {
+              const found = findCategoryRecursive(cat.subareas, cat.drupal_internal__tid);
+              if (found) return found;
+            }
+          }
+          return null;
+        };
+        
+        for (const module of modules) {
+          const found = findCategoryRecursive(module.categories);
+          if (found) {
+            categoryInfo = found;
+            categoryId = found.id;
+            break;
+          }
+        }
+      }
+      
+      // Filtrar por categoría usando el ID si está disponible, sino usar el nombre
       filtered = filtered.filter((doc) => {
-        const categoryName = doc.field_module_category?.name;
-        return categoryName === activeCategory;
+        const docCategoryId = doc.field_module_category?.drupal_internal__tid;
+        
+        if (categoryId !== null && docCategoryId !== undefined) {
+          // Si encontramos la categoría en los módulos, usar el ID
+          if (categoryInfo) {
+            // Si la categoría seleccionada tiene subáreas (es una categoría padre)
+            if (categoryInfo.subareaIds.length > 0) {
+              // Incluir documentos de la categoría padre Y de todas sus subáreas
+              return docCategoryId === categoryId || categoryInfo.subareaIds.includes(docCategoryId);
+            } else {
+              // Si la categoría seleccionada es una subárea (no tiene subáreas propias)
+              // Solo incluir documentos de esa subárea específica
+              return docCategoryId === categoryId;
+            }
+          }
+          // Fallback: comparación directa por ID
+          return docCategoryId === categoryId;
+        } else {
+          // Fallback a comparación por nombre
+          const categoryName = doc.field_module_category?.name;
+          return categoryName === activeCategory;
+        }
       });
+      
+      console.log(`Filtro por categoría "${activeCategory}" (ID: ${categoryId}, Info:`, categoryInfo, `): ${beforeCategoryFilter} -> ${filtered.length} documentos`);
+      
+      // Debug: mostrar información de los documentos filtrados
+      if (filtered.length > 0) {
+        console.log("Documentos filtrados:", filtered.map(d => ({
+          title: d.title,
+          category: d.field_module_category?.name,
+          categoryId: d.field_module_category?.drupal_internal__tid,
+          files: d.field_file?.length || 0
+        })));
+      } else {
+        const moduleDocs = documents.filter(d => {
+          const moduleId = d.field_modulo?.drupal_internal__tid?.toString();
+          return moduleId === activeModule;
+        });
+        console.warn("No se encontraron documentos. Documentos del módulo antes del filtro de categoría:", 
+          moduleDocs.map(d => ({
+            title: d.title,
+            category: d.field_module_category?.name,
+            categoryId: d.field_module_category?.drupal_internal__tid
+          }))
+        );
+        console.warn("Categorías disponibles en los documentos del módulo:", 
+          [...new Set(moduleDocs.map(d => d.field_module_category?.name).filter(Boolean))]
+        );
+      }
     }
 
     return filtered;
-  }, [documents, activeModule, activeCategory]);
+  }, [documents, activeModule, activeCategory, modules]);
 
   // Agrupar documentos por categoría para mostrar estadísticas (solo del módulo activo)
   const documentsByCategory = useMemo(() => {

@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useSinglePublication } from "@/queries/publications";
+import { useSinglePublication, getPublicationsReactions } from "@/queries/publications";
 import {
   ArrowLeft,
   Calendar,
-  Heart,
   MessageCircle,
   Share2,
 } from "lucide-react";
@@ -19,6 +18,9 @@ import { SinglePublicationSkeleton } from "@/components/skeletons/publications/s
 import { PublicationContentRenderer } from "@/components/publications/publication-content";
 import { Tag } from "lucide-react";
 import { RightSidebar } from "@/components/common/right-sidebar";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createReaction } from "@/services/news/reactions";
+import { toast } from "sonner";
 
 export default function SinglePublicationPage({
   params,
@@ -27,6 +29,7 @@ export default function SinglePublicationPage({
 }) {
   const router = useRouter();
   const { publicationId: id } = use(params);
+  const queryClient = useQueryClient();
   const {
     data: publication,
     isLoading,
@@ -34,8 +37,32 @@ export default function SinglePublicationPage({
     error,
   } = useSinglePublication(id);
 
+  // Obtener reacciones de la publicación
+  const publicationNid = publication?.drupal_internal__nid.toString();
+  const { data: reactionsData } = getPublicationsReactions(publicationNid || "");
+
+  // Mutación para registrar una reacción
+  const mutation = useMutation({
+    mutationFn: (reactionType: string) =>
+      createReaction(
+        publication?.drupal_internal__nid.toString() || "",
+        "field_reaction",
+        reactionType
+      ),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["reactions", publication?.drupal_internal__nid.toString()],
+      });
+    },
+    onError: () => toast.error("No se pudo registrar tu reacción"),
+  });
+
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
+
+  const fieldReaction = reactionsData?.fields.find(
+    (f) => f.field_name === "field_reaction"
+  );
 
   if (isLoading) return <SinglePublicationSkeleton />;
 
@@ -209,12 +236,33 @@ export default function SinglePublicationPage({
 
             {/* 🔹 Acciones sociales */}
             <div className="flex items-center justify-around border-t pt-4 text-gray-600 text-sm">
-              <button className="flex items-center gap-2 hover:text-red-600 transition">
-                <Heart className="h-5 w-5" />
-                12
-              </button>
+              {/* 🔹 Renderizar las reacciones */}
+              {fieldReaction?.reactions.map((reaction) => {
+                const isActive = fieldReaction.user_reaction === reaction.id;
+                return (
+                  <button
+                    key={reaction.id}
+                    onClick={() => mutation.mutate(reaction.id)}
+                    className={`flex items-center gap-2 transition ${
+                      isActive
+                        ? "opacity-100 scale-105"
+                        : "opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={reaction.icon_url}
+                      alt={reaction.label}
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                    <span>{reaction.count}</span>
+                  </button>
+                );
+              })}
+
               <button className="flex items-center gap-2 hover:text-blue-600 transition">
-                <MessageCircle className="h-5 w-5" /> 8
+                <MessageCircle className="h-5 w-5" /> 0
               </button>
               <button className="flex items-center gap-2 hover:text-green-600 transition">
                 <Share2 className="h-5 w-5" />
