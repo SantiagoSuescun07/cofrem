@@ -20,7 +20,7 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchTaxonomyTerms } from "@/services/taxonomies";
 import api from "@/lib/axios";
 import { toast } from "sonner";
@@ -62,6 +62,8 @@ export function EditProfileDialog({
     queryKey: ["taxonomy", "gender"],
     queryFn: () => fetchTaxonomyTerms("/jsonapi/taxonomy_term/gender"),
   });
+
+  const queryClient = useQueryClient();
 
   const form = useForm<EditProfileFormValues>({
     resolver: zodResolver(editProfileSchema),
@@ -168,7 +170,11 @@ export function EditProfileDialog({
       if (Object.keys(payload).length > 0) {
         const res = await api.patch(`/user/${userId}?_format=json`, payload);
         if (res.status === 200) {
-          // Notificar éxito al padre.
+          // Invalida la cache del perfil
+          await queryClient.invalidateQueries({
+            queryKey: ["user-profile", userId]
+          });
+
           onSuccess?.();
         }
       }
@@ -299,7 +305,7 @@ export function EditProfileDialog({
                         aria-invalid={fieldState.invalid}
                         className="bg-white"
                       />
-                      
+
                     </FormControl>
                     <FormMessage />
                   </FormItem>
