@@ -106,6 +106,14 @@ export default function SinglePublicationPage({
               </Button>
             </div>
 
+            {/* 🔹 Descripción (field_description) */}
+            {publication.field_description && (
+              <div
+                className="prose prose-sm md:prose-base max-w-none text-gray-700 mb-6 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: publication.field_description }}
+              />
+            )}
+
             {/* 🖼️ Mosaico tipo Facebook */}
             {allImages.length > 0 && (
               <div className="mt-6 w-full overflow-hidden rounded-xl">

@@ -45,6 +45,7 @@ export interface Publication {
   drupal_internal__nid: number;
   title: string;
   description: string;
+  field_description: string | null;
   created: string;
   field_any_link: string | null;
   field_video_link: string | null;

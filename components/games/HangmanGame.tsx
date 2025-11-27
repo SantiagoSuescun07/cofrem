@@ -86,9 +86,10 @@ export default function HangmanGame({
         setPoints(gameDetails.field_points || 0);
 
         // Actualizar ranking si el juego se completa correctamente
-        if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+        if (gameDetails.drupal_internal__id && !rankingUpdated) {
           setRankingUpdated(true);
-          updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
+          const finalPoints = gameDetails.field_points || 0;
+          updateRanking(gameDetails.drupal_internal__id, finalPoints).catch((error) => {
             console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
           });
         }

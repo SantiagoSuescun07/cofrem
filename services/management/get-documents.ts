@@ -4,12 +4,42 @@ import { Document, DocumentFile } from "@/types/documents";
 
 export const fetchDocuments = async (): Promise<Document[]> => {
   try {
-    const response = await api.get("/jsonapi/node/documents", {
-      params: {
-        include: "field_file,field_icon,field_module_category,field_modulo",
-        "page[limit]": 800,
-      },
-    });
+    // Intentar primero con todos los parámetros
+    let response;
+    try {
+      response = await api.get("/jsonapi/node/documents", {
+        params: {
+          include: "field_file,field_icon,field_module_category,field_modulo",
+          "page[limit]": 800,
+        },
+      });
+    } catch (firstError: any) {
+      // Si falla con page[limit], intentar sin él
+      if (firstError.response?.status === 400) {
+        console.warn("Primera petición falló con 400, intentando sin page[limit]...");
+        try {
+          response = await api.get("/jsonapi/node/documents", {
+            params: {
+              include: "field_file,field_icon,field_module_category,field_modulo",
+            },
+          });
+        } catch (secondError: any) {
+          // Si también falla sin page[limit], intentar con include más simple
+          if (secondError.response?.status === 400) {
+            console.warn("Segunda petición falló con 400, intentando con include simplificado...");
+            response = await api.get("/jsonapi/node/documents", {
+              params: {
+                include: "field_file,field_module_category,field_modulo",
+              },
+            });
+          } else {
+            throw secondError;
+          }
+        }
+      } else {
+        throw firstError;
+      }
+    }
 
     console.log("Response completa:", response.data);
     console.log("Total included items:", response.data?.included?.length || 0);
@@ -143,8 +173,36 @@ export const fetchDocuments = async (): Promise<Document[]> => {
   });
 
   return validDocuments;
-  } catch (error) {
-    console.error("Error fetching documents:", error);
+  } catch (error: any) {
+    // Manejo detallado de errores
+    if (error.response) {
+      // El servidor respondió con un código de error
+      const status = error.response.status;
+      const statusText = error.response.statusText;
+      const errorData = error.response.data;
+      
+      console.error("Error fetching documents - Respuesta del servidor:", {
+        status,
+        statusText,
+        url: error.config?.url,
+        params: error.config?.params,
+        errorData,
+      });
+
+      // Si es un error 400 (Bad Request) o 404 (Not Found), probablemente el endpoint no existe o los parámetros son inválidos
+      if (status === 400 || status === 404) {
+        console.warn("El endpoint de documentos no está disponible o los parámetros son inválidos. Retornando array vacío.");
+        return [];
+      }
+    } else if (error.request) {
+      // La petición fue hecha pero no se recibió respuesta
+      console.error("Error fetching documents - No se recibió respuesta del servidor:", error.request);
+    } else {
+      // Algo más causó el error
+      console.error("Error fetching documents - Error en la configuración:", error.message);
+    }
+    
+    // En cualquier caso, retornar array vacío para no romper la UI
     return [];
   }
 };

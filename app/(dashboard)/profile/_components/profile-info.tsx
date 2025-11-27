@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,9 +11,11 @@ import { useCurrentUser } from "@/hooks/user-current-user"
 import { useUserProfile } from "@/queries/profile"
 import { useEffect, useState } from "react"
 import { EditProfileDialog } from "./edit-profile-dialog"
+import { RankingDialog } from "./ranking-dialog"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
+import { Trophy } from "lucide-react"
 
 // Hook personalizado para obtener el userId de forma segura
 function useUserId() {
@@ -82,6 +84,7 @@ export function ProfileInfo() {
   const user = useCurrentUser()
   const queryClient = useQueryClient()
   const { data: profile, isLoading } = useUserProfile(userId!)
+  const [isRankingDialogOpen, setIsRankingDialogOpen] = React.useState(false)
 
   // Mostrar skeleton mientras carga el userId o el perfil
   if (!userId || isLoading) {
@@ -99,132 +102,160 @@ export function ProfileInfo() {
       : "U"
 
   return (
-    <Card className="bg-white overflow-hidden w-full shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-6 md:p-8">
-        <div className="flex flex-col gap-6">
-          {/* Header Section - Avatar y nombre */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="relative">
-              <Avatar className="size-24 sm:size-28 md:size-32 rounded-2xl shadow-lg ring-4 ring-background">
-                <AvatarImage src={profile?.picture || user?.image || ""} className="object-cover" />
-                <AvatarFallback className="text-2xl md:text-3xl  bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-2xl">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </div>
+    <>
+      <Card className="bg-white overflow-hidden w-full shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-6 md:p-8">
+          <div className="flex flex-col gap-6">
+            {/* Header Section - Avatar y nombre */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <div className="relative">
+                <Avatar className="size-24 sm:size-28 md:size-32 rounded-2xl shadow-lg ring-4 ring-background">
+                  <AvatarImage src={profile?.picture || user?.image || ""} className="object-cover" />
+                  <AvatarFallback className="text-2xl md:text-3xl  bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-2xl">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
 
-            <div className="relative flex-1 text-center sm:text-left space-y-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl md:text-3xl text-foreground leading-tight">
-                  {profile?.name || user?.name || "Usuario"}
-                </h1>
-                {/* <Badge className="rounded-full bg-gradient-to-r from-emerald-400 to-emerald-100 text-emerald-950 px-3 py-2 text-sm  shadow-lg border-2 border-background">
-                  +550
-                </Badge> */}
-                <EditProfileDialog
-                  className="max-sm:hidden"
-                  trigger={
+              <div className="relative flex-1 text-center sm:text-left space-y-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h1 className="text-2xl md:text-3xl text-foreground leading-tight">
+                    {profile?.name || user?.name || "Usuario"}
+                  </h1>
+                  {/* <Badge className="rounded-full bg-gradient-to-r from-emerald-400 to-emerald-100 text-emerald-950 px-3 py-2 text-sm  shadow-lg border-2 border-background">
+                    +550
+                  </Badge> */}
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       className="gap-2 bg-transparent hover:bg-muted"
+                      onClick={() => setIsRankingDialogOpen(true)}
                     >
-                      <Edit className="h-4 w-4" />
-                      Editar perfil
+                      <Trophy className="h-4 w-4" />
+                      Ver ranking
                     </Button>
-                  }
-                  userId={userId}
-                  defaultValues={{
-                    gender: profile?.genderId || "",
-                    phone: profile?.phone || "",
-                    mobile: profile?.mobile || "",
-                    profileImageUrl: profile?.picture || "",
-                  }}
-                  onSuccess={() => {
-                    queryClient.invalidateQueries({
-                      queryKey: ["user-profile", userId],
-                      exact: false
-                    });
-                    toast.success("Datos actualizados.")
-                  }}
-                />
-              </div>
-              <p className="text-base md:text-lg text-muted-foreground font-medium">
-                {profile?.position || "Sin cargo"}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-muted-foreground uppercase tracking-wide px-1">
-                  Tus puntos: 
-                </span>
-                <Badge className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 px-6 py-1.5 text-sm  shadow-lg border-2 border-background">
-                  +550
-                </Badge>
-              </div>
-              <EditProfileDialog
-                className="mt-4 sm:hidden"
-                trigger={
+                    <EditProfileDialog
+                    className="max-sm:hidden"
+                    trigger={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 bg-transparent hover:bg-muted"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Editar perfil
+                      </Button>
+                    }
+                    userId={userId}
+                    defaultValues={{
+                      gender: profile?.genderId || "",
+                      phone: profile?.phone || "",
+                      mobile: profile?.mobile || "",
+                      profileImageUrl: profile?.picture || "",
+                    }}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({
+                        queryKey: ["user-profile", userId],
+                        exact: false
+                      });
+                      toast.success("Datos actualizados.")
+                    }}
+                  />
+                  </div>
+                </div>
+                <p className="text-base md:text-lg text-muted-foreground font-medium">
+                  {profile?.position || "Sin cargo"}
+                </p>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-muted-foreground uppercase tracking-wide px-1">
+                    Tus puntos: 
+                  </span>
+                  <Badge className="rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 px-6 py-1.5 text-sm  shadow-lg border-2 border-background">
+                    +550
+                  </Badge>
+                </div>
+                <div className="flex flex-col gap-2 mt-4 sm:hidden">
                   <Button
                     variant="outline"
                     size="sm"
                     className="gap-2 bg-transparent hover:bg-muted"
+                    onClick={() => setIsRankingDialogOpen(true)}
                   >
-                    <Edit className="h-4 w-4" />
-                    Editar perfil
+                    <Trophy className="h-4 w-4" />
+                    Ver ranking
                   </Button>
-                }
-                userId={userId}
-                defaultValues={{
-                  gender: profile?.genderId || "",
-                  phone: profile?.phone || "",
-                  mobile: profile?.mobile || "",
-                  profileImageUrl: profile?.picture || "",
-                }}
-                onSuccess={() => {
-                  queryClient.invalidateQueries({
-                    queryKey: ["user-profile", userId],
-                    exact: false
-                  });
-                  toast.success("Datos actualizados.")
-                }}
+                  <EditProfileDialog
+                    trigger={
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 bg-transparent hover:bg-muted"
+                      >
+                        <Edit className="h-4 w-4" />
+                        Editar perfil
+                      </Button>
+                    }
+                    userId={userId}
+                    defaultValues={{
+                      gender: profile?.genderId || "",
+                      phone: profile?.phone || "",
+                      mobile: profile?.mobile || "",
+                      profileImageUrl: profile?.picture || "",
+                    }}
+                    onSuccess={() => {
+                      queryClient.invalidateQueries({
+                        queryKey: ["user-profile", userId],
+                        exact: false
+                      });
+                      toast.success("Datos actualizados.")
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-border" />
+
+            {/* Info Grid - Información de contacto y detalles */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              <InfoItem icon={<Briefcase className="h-5 w-5" />} label="Cargo" value={profile?.position || "Sin cargo"} />
+
+              <InfoItem icon={<Users className="h-5 w-5" />} label="Área" value={profile?.area || "Sin área"} />
+   
+              <InfoItem
+                icon={<User className="h-5 w-5" />}
+                label="Género"
+                value={profile?.genderName || "Sin especificar"}
+              />
+
+              <InfoItem icon={<MapPin className="h-5 w-5" />} label="Sede" value={profile?.location || "Sin sede"} />
+
+              <InfoItem icon={<Phone className="h-5 w-5" />} label="Teléfono" value={profile?.phone || "Sin teléfono"} />
+
+              <InfoItem
+                icon={<Smartphone className="h-5 w-5" />}
+                label="Celular"
+                value={profile?.mobile || "Sin celular"}
+              />
+
+              <InfoItem
+                icon={<Mail className="h-5 w-5" />}
+                label="Correo electrónico"
+                value={profile?.email || user?.email || "Sin correo"}
+                className="sm:col-span-2 lg:col-span-3"
               />
             </div>
           </div>
-
-          {/* Divider */}
-          <div className="h-px bg-border" />
-
-          {/* Info Grid - Información de contacto y detalles */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            <InfoItem icon={<Briefcase className="h-5 w-5" />} label="Cargo" value={profile?.position || "Sin cargo"} />
-
-            <InfoItem icon={<Users className="h-5 w-5" />} label="Área" value={profile?.area || "Sin área"} />
-
-            <InfoItem
-              icon={<User className="h-5 w-5" />}
-              label="Género"
-              value={profile?.genderName || "Sin especificar"}
-            />
-
-            <InfoItem icon={<MapPin className="h-5 w-5" />} label="Sede" value={profile?.location || "Sin sede"} />
-
-            <InfoItem icon={<Phone className="h-5 w-5" />} label="Teléfono" value={profile?.phone || "Sin teléfono"} />
-
-            <InfoItem
-              icon={<Smartphone className="h-5 w-5" />}
-              label="Celular"
-              value={profile?.mobile || "Sin celular"}
-            />
-
-            <InfoItem
-              icon={<Mail className="h-5 w-5" />}
-              label="Correo electrónico"
-              value={profile?.email || user?.email || "Sin correo"}
-              className="sm:col-span-2 lg:col-span-3"
-            />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      {/* Diálogo de ranking */}
+      <RankingDialog
+        open={isRankingDialogOpen}
+        onOpenChange={setIsRankingDialogOpen}
+      />
+    </>
   )
 }
 

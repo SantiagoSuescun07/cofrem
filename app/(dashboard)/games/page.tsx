@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { ProgressBar } from "@/components/common/progress-bar";
 import { Button } from "@/components/ui/button";
-import { Trophy, Medal, Crown, Gamepad2 } from "lucide-react";
+import { Trophy, Medal, Crown, Gamepad2, RefreshCw } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent} from "@/components/ui/tabs";
 
@@ -262,7 +262,7 @@ export default function GamesPage() {
   const campaign = campaigns && campaigns.length > 0 ? campaigns[0] : null;
 
   // Usar React Query para cargar detalles de todos los juegos en paralelo con caché
-  const { gameDetailsMap, loadingGames, isLoading: gamesDetailsLoading } = useGameDetailsBatch(
+  const { gameDetailsMap, loadingGames, errorGames, refetchMap, isLoading: gamesDetailsLoading } = useGameDetailsBatch(
     campaign?.field_game_type || null
   );
 
@@ -322,21 +322,43 @@ export default function GamesPage() {
 
   const renderGameCard = (game: typeof games[0]) => {
     const isLoading = loadingGames.has(game.id);
-    const isDisabled = !game.enabled || isLoading;
+    const hasError = errorGames.has(game.id);
+    const canRefetch = refetchMap[game.id];
+    const isDisabled = !game.enabled || (isLoading && !hasError);
     
     return (
       <div
         key={game.id}
         className={`bg-gradient-to-br from-white via-white to-gray-50/50 p-6 rounded-xl border-2 border-gray-200 transition-all duration-300 ${
-          isDisabled 
+          isDisabled && !hasError
             ? "opacity-60" 
             : `${game.cardHoverBgColor || "hover:bg-[#09d6a6]/15"} hover:shadow-xl`
-        }`}
+        } ${hasError ? "border-red-300" : ""}`}
       >
         <div className="text-center">
-          {isLoading ? (
+          {isLoading && !hasError ? (
             <div className="w-24 h-24 mx-auto mb-4 rounded-lg flex items-center justify-center bg-white/50">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#09d6a6]"></div>
+            </div>
+          ) : hasError ? (
+            <div className="w-24 h-24 mx-auto mb-4 rounded-xl flex items-center justify-center bg-red-50/80 backdrop-blur-sm border-2 border-red-200 transition-all duration-300">
+              <span className="text-5xl" role="img" aria-label="Error">
+                ⚠️
+              </span>
+            </div>
+          ) : game.details?.field_icon?.url ? (
+            <div
+              className={`w-24 h-24 mx-auto mb-4 rounded-xl flex items-center justify-center bg-white/80 backdrop-blur-sm border-2 border-gray-200 transition-all duration-300 overflow-hidden ${
+                !isDisabled ? " hover:scale-105" : ""
+              }`}
+            >
+              <Image
+                src={game.details.field_icon.url}
+                alt={game.details.field_icon.alt || game.name}
+                width={96}
+                height={96}
+                className="w-full h-full object-contain"
+              />
             </div>
           ) : (
             <div
@@ -353,24 +375,51 @@ export default function GamesPage() {
             {game.details?.field_title || game.name}
           </h3>
         
-          <button
-            onClick={() => {
-              if (game.route) {
-                // Pasar el ID del juego como parámetro
-                router.push(`${game.route}?id=${game.id}`);
-              } else {
-                alert("Este tipo de juego aún no está implementado");
-              }
-            }}
-            className={`w-full px-4 py-2.5 rounded-lg transition-all duration-300 ${
-              isDisabled
-                ? "bg-neutral-300/50 border-2 border-neutral-400/50 cursor-not-allowed text-neutral-600"
-                : `border-2 border-gray-200 bg-white/90  hover:shadow-md hover:scale-[1.02]`
-            } font-medium`}
-            disabled={isDisabled}
-          >
-            {isLoading ? "Cargando..." : isDisabled ? "Próximamente" : "Jugar →"}
-          </button>
+          {hasError ? (
+            <div className="space-y-2">
+              <p className="text-sm text-red-600 mb-2">Error al cargar el juego</p>
+              <button
+                onClick={() => {
+                  if (canRefetch) {
+                    canRefetch();
+                  }
+                }}
+                className="w-full px-4 py-2.5 rounded-lg transition-all duration-300 border-2 border-red-300 bg-red-50 hover:bg-red-100 hover:shadow-md hover:scale-[1.02] font-medium text-red-700 flex items-center justify-center gap-2"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Reintentando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Reintentar
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                if (game.route) {
+                  // Pasar el ID del juego como parámetro
+                  router.push(`${game.route}?id=${game.id}`);
+                } else {
+                  alert("Este tipo de juego aún no está implementado");
+                }
+              }}
+              className={`w-full px-4 py-2.5 rounded-lg transition-all duration-300 ${
+                isDisabled
+                  ? "bg-neutral-300/50 border-2 border-neutral-400/50 cursor-not-allowed text-neutral-600"
+                  : `border-2 border-gray-200 bg-white/90  hover:shadow-md hover:scale-[1.02]`
+              } font-medium`}
+              disabled={isDisabled}
+            >
+              {isLoading ? "Cargando..." : isDisabled ? "Próximamente" : "Jugar →"}
+            </button>
+          )}
         </div>
       </div>
     );
