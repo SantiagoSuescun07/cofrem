@@ -39,10 +39,10 @@ export const useGameDetails = (gameUrl: string | null) => {
   });
 };
 
-export const useRanking = () => {
+export const useRanking = (type: string = "general") => {
   return useQuery({
-    queryKey: [RANKING_QUERY_KEY],
-    queryFn: () => fetchRanking(),
+    queryKey: [RANKING_QUERY_KEY, type],
+    queryFn: () => fetchRanking(type),
     staleTime: 2 * 60 * 1000, // 2 minutos (más frecuente que campañas)
     retry: 2,
   });
@@ -67,6 +67,8 @@ export const useGameDetailsBatch = (gameTypes: Array<{ id: string; href: string 
   // Construir un mapa de detalles de juegos por ID
   const gameDetailsMap: Record<string, any> = {};
   const loadingGames = new Set<string>();
+  const errorGames = new Set<string>();
+  const refetchMap: Record<string, () => void> = {};
   
   validGameTypes.forEach((gameType, index) => {
     const query = queries[index];
@@ -74,8 +76,15 @@ export const useGameDetailsBatch = (gameTypes: Array<{ id: string; href: string 
       if (query.isLoading || query.isFetching) {
         loadingGames.add(gameType.id);
       }
+      if (query.isError) {
+        errorGames.add(gameType.id);
+      }
       if (query.data) {
         gameDetailsMap[gameType.id] = query.data;
+      }
+      // Guardar la función de refetch para este juego
+      if (query.refetch) {
+        refetchMap[gameType.id] = () => query.refetch();
       }
     }
   });
@@ -86,6 +95,8 @@ export const useGameDetailsBatch = (gameTypes: Array<{ id: string; href: string 
   return {
     gameDetailsMap,
     loadingGames,
+    errorGames,
+    refetchMap,
     isLoading,
     hasError,
     queries,

@@ -24,7 +24,7 @@ const getDriveEmbedUrl = (uri: string) => {
 };
 
 export function PublicationCard({ publication }: Props) {
-  const { title, field_gallery = [], field_image, field_options_in_publication } = publication;
+  const { title, field_description, field_gallery = [], field_image, field_options_in_publication } = publication;
   const queryClient = useQueryClient();
 
   // Obtener reacciones de la publicación
@@ -79,6 +79,13 @@ export function PublicationCard({ publication }: Props) {
       <h3 className="text-lg font-normal text-gray-900 hover:text-primary">
         {title}
       </h3>
+
+      {/* Descripción */}
+      {field_description && (
+        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
+          {field_description}
+        </p>
+      )}
 
       {/* Video si existe */}
       {hasVideo && field_options_in_publication?.field_video_from_drive?.uri && (

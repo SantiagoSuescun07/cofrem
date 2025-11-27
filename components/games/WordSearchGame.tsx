@@ -99,9 +99,10 @@ export default function WordSearchGame({
 
         // Actualizar ranking si se completó el juego y hay un nid de campaña
         // Manejo silencioso del error - el juego continúa funcionando incluso si falla
-        if (campaignNid && config.gameId && !rankingUpdated) {
+        if (config.gameId && !rankingUpdated) {
           setRankingUpdated(true);
-          updateRanking(campaignNid, config.gameId).catch((error) => {
+          const finalPoints = points + config.pointsPerWord;
+          updateRanking(config.gameId, finalPoints).catch((error) => {
             // Error silencioso - solo se registra en consola, no interrumpe la experiencia
             console.warn(
               "No se pudo actualizar el ranking (esto no afecta tu puntuación):",

@@ -1,15 +1,15 @@
 import api from "@/lib/axios";
 
 export const updateRanking = async (
-  campaignId: number,
-  gameId: number
+  gameId: number,
+  points: number
 ): Promise<boolean> => {
   try {
-    const response = await api.post(
+    await api.post(
       "/api/ranking/update",
       {
-        campaign_id: campaignId,
         game_id: gameId,
+        points: points,
       },
       {
         headers: {

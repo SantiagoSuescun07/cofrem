@@ -192,14 +192,13 @@ export default function EmojiDiscoveryGame({
       setHasClaimedPoints(true);
     }
 
-    if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+    if (gameDetails.drupal_internal__id && !rankingUpdated) {
       setRankingUpdated(true);
-      updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
+      updateRanking(gameDetails.drupal_internal__id, earnedPoints).catch((error) => {
         console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
       });
     }
   }, [
-    campaignNid,
     completionStorageKey,
     gameDetails.drupal_internal__id,
     rankingUpdated,

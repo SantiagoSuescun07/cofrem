@@ -81,9 +81,10 @@ export default function CompletePhraseGame({
 
       // Actualizar ranking si la respuesta es correcta
       // Manejo silencioso del error - el juego continúa funcionando incluso si falla
-      if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+      if (gameDetails.drupal_internal__id && !rankingUpdated) {
         setRankingUpdated(true);
-        updateRanking(campaignNid, gameDetails.drupal_internal__id).catch(
+        const finalPoints = gameDetails.field_points || 0;
+        updateRanking(gameDetails.drupal_internal__id, finalPoints).catch(
           (error) => {
             // Error silencioso - solo se registra en consola, no interrumpe la experiencia
             console.warn(

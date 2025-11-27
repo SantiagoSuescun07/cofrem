@@ -119,9 +119,9 @@ export default function SpotDifferencesGame({
       setPoints(finalPoints);
 
       // Actualizar ranking
-      if (campaignNid && gameDetails.drupal_internal__id && !rankingUpdated) {
+      if (gameDetails.drupal_internal__id && !rankingUpdated) {
         setRankingUpdated(true);
-        updateRanking(campaignNid, gameDetails.drupal_internal__id).catch((error) => {
+        updateRanking(gameDetails.drupal_internal__id, finalPoints).catch((error) => {
           console.warn("No se pudo actualizar el ranking:", error);
         });
       }

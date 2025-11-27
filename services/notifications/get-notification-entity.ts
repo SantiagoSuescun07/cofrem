@@ -142,6 +142,7 @@ export const fetchNotificationEntity = async (
         drupal_internal__nid: item.attributes.drupal_internal__nid,
         title: item.attributes.title,
         description: item.attributes.body?.processed || "",
+        field_description: item.attributes.field_description || null,
         created: item.attributes.created,
         field_any_link: item.attributes.field_any_link?.uri || null,
         field_video_link: item.attributes.field_video_link?.uri || null,
