@@ -200,8 +200,6 @@ export function PublicationContentRenderer({ content }: Props) {
             return `/games/wordsearch?id=${content.field_game!.id}`;
           case "paragraph--puzzle_game":
             return `/games/puzzle?id=${content.field_game!.id}`;
-          case "paragraph--spot_differences_game":
-            return `/games/spot-differences?id=${content.field_game!.id}`;
           case "paragraph--complete_phrase_game":
             return `/games/complete-phrase?id=${content.field_game!.id}`;
           case "paragraph--trivia_game":

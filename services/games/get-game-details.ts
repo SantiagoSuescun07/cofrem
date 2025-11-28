@@ -22,14 +22,11 @@ export const fetchGameDetails = async (
     // Incluir todos los campos relacionados posibles para diferentes tipos de juegos
     // Intentamos incluir todos los campos comunes que pueden existir
     // Nota: field_puzzle_image existe para memory_game y puzzle_game
-    // field_original_image y field_modified_image existen para spot_differences_game
     // field_emojis existe para emoji_discovery_game
     // field_badges existe para todos los juegos
     let includeParams = "field_icon,field_badges";
     if (url.includes('memory_game') || url.includes('puzzle_game')) {
       includeParams = "field_icon,field_badges,field_puzzle_image";
-    } else if (url.includes('spot_differences_game')) {
-      includeParams = "field_icon,field_badges,field_original_image,field_modified_image";
     } else if (url.includes('emoji_discovery_game')) {
       includeParams = "field_icon,field_badges,field_emojis";
     }
@@ -137,9 +134,22 @@ export const fetchGameDetails = async (
 
       case "paragraph--emoji_discovery_game":
         // Obtener los datos completos de los emoji items
+        let fieldEmojiItems: Array<{
+          id: string;
+          type: string;
+          field_emoji?: string;
+          field_correct_answer?: string;
+          field_incorrect_1?: string;
+          field_incorrect_2?: string;
+          field_incorrect_3?: string;
+          field_incorrect_4?: string;
+          field_question_phrase?: string;
+        }> = [];
+        
         const emojiItemsData = allRelationships.field_emojis?.data || [];
-        const emojiItems = emojiItemsData.map((emojiItem: any) => {
-          // Intentar obtener del included primero
+        
+        // Intentar obtener de included primero
+        const emojiItemsFromIncluded = emojiItemsData.map((emojiItem: any) => {
           const emojiIncluded = includedById.get(emojiItem.id);
           if (emojiIncluded && emojiIncluded.attributes) {
             return {
@@ -154,19 +164,48 @@ export const fetchGameDetails = async (
               field_question_phrase: emojiIncluded.attributes.field_question_phrase || "",
             };
           }
-          // Si no está en included, devolver solo el id y type
-          return {
-            id: emojiItem.id,
-            type: emojiItem.type,
-          };
-        });
+          return null;
+        }).filter((e: any) => e !== null);
+        
+        // Si obtuvimos todos los emojis de included, usarlos
+        if (emojiItemsFromIncluded.length === emojiItemsData.length && emojiItemsFromIncluded.length > 0) {
+          fieldEmojiItems = emojiItemsFromIncluded;
+        } else if (emojiItemsData.length > 0 && allRelationships.field_emojis?.links?.related) {
+          // Si no están todos en included, obtener del endpoint relacionado
+          try {
+            const relatedUrl = allRelationships.field_emojis.links.related.href;
+            const relatedResponse = await api.get(relatedUrl);
+            const relatedData = relatedResponse.data;
+            
+            if (relatedData.data && Array.isArray(relatedData.data)) {
+              fieldEmojiItems = relatedData.data.map((emojiItem: any) => ({
+                id: emojiItem.id,
+                type: emojiItem.type,
+                field_emoji: emojiItem.attributes.field_emoji || "",
+                field_correct_answer: emojiItem.attributes.field_correct_answer || "",
+                field_incorrect_1: emojiItem.attributes.field_incorrect_1 || "",
+                field_incorrect_2: emojiItem.attributes.field_incorrect_2 || "",
+                field_incorrect_3: emojiItem.attributes.field_incorrect_3 || "",
+                field_incorrect_4: emojiItem.attributes.field_incorrect_4 || "",
+                field_question_phrase: emojiItem.attributes.field_question_phrase || "",
+              }));
+            }
+          } catch (error) {
+            console.warn("[Game Details] Error al obtener field_emojis del endpoint relacionado:", error);
+            // Si falla, usar los que obtuvimos de included (si hay alguno)
+            fieldEmojiItems = emojiItemsFromIncluded;
+          }
+        } else {
+          // Si no hay endpoint relacionado, usar los que obtuvimos de included
+          fieldEmojiItems = emojiItemsFromIncluded;
+        }
         
         gameDetails = {
           ...baseGame,
           type: "paragraph--emoji_discovery_game",
           field_emoji_difficulty: allAttributes.field_emoji_difficulty || "",
           field_hint: allAttributes.field_hint || "",
-          field_emojis: emojiItems,
+          field_emojis: fieldEmojiItems,
         } as GameDetails;
         break;
 
@@ -626,68 +665,6 @@ export const fetchGameDetails = async (
           type: "paragraph--puzzle_game",
           field_puzzle_difficulty: allAttributes.field_puzzle_difficulty || "",
           field_puzzle_image: fieldPuzzleGameImages.length > 0 ? fieldPuzzleGameImages : undefined,
-        } as GameDetails;
-        break;
-
-      case "paragraph--spot_differences_game":
-        // Obtener las imágenes original y modificada
-        let fieldOriginalImage: {
-          id: string;
-          url: string;
-          alt: string;
-          title: string;
-          width: number;
-          height: number;
-        } | undefined = undefined;
-
-        let fieldModifiedImage: {
-          id: string;
-          url: string;
-          alt: string;
-          title: string;
-          width: number;
-          height: number;
-        } | undefined = undefined;
-
-        const originalImageData = allRelationships.field_original_image?.data;
-        if (originalImageData) {
-          const originalIncluded = includedById.get(originalImageData.id);
-          if (originalIncluded && originalIncluded.attributes?.uri?.url) {
-            fieldOriginalImage = {
-              id: originalIncluded.id,
-              url: apiBaseUrl + originalIncluded.attributes.uri.url,
-              alt: originalImageData.meta?.alt || "",
-              title: originalImageData.meta?.title || "",
-              width: originalImageData.meta?.width || 0,
-              height: originalImageData.meta?.height || 0,
-            };
-          }
-        }
-
-        const modifiedImageData = allRelationships.field_modified_image?.data;
-        if (modifiedImageData) {
-          const modifiedIncluded = includedById.get(modifiedImageData.id);
-          if (modifiedIncluded && modifiedIncluded.attributes?.uri?.url) {
-            fieldModifiedImage = {
-              id: modifiedIncluded.id,
-              url: apiBaseUrl + modifiedIncluded.attributes.uri.url,
-              alt: modifiedImageData.meta?.alt || "",
-              title: modifiedImageData.meta?.title || "",
-              width: modifiedImageData.meta?.width || 0,
-              height: modifiedImageData.meta?.height || 0,
-            };
-          }
-        }
-
-        gameDetails = {
-          ...baseGame,
-          type: "paragraph--spot_differences_game",
-          field_spot_difficulty: allAttributes.field_spot_difficulty || "",
-          field_num_differences: allAttributes.field_num_differences || 0,
-          field_original_image: fieldOriginalImage,
-          field_modified_image: fieldModifiedImage,
-          field_differences_coordinates: allAttributes.field_differences_coordinates || null,
-          field_points_per_hit: allAttributes.field_points_per_hit ?? null,
         } as GameDetails;
         break;
 

@@ -47,6 +47,20 @@ export const Header: React.FC<HeaderProps> = ({
     selectedNotification?.entity_bundle
   );
 
+  // Función para obtener el título a mostrar
+  const getDisplayTitle = (): string => {
+    if (entityData && entityData.data && entityData.type === "publication") {
+      const publication = entityData.data as import("@/types/publications").Publication;
+      return publication.title;
+    }
+    // Si no hay publicación cargada aún, extraer el título del formato "Publicación actualizada (Título)"
+    if (selectedNotification?.title) {
+      const match = selectedNotification.title.match(/\(([^)]+)\)/);
+      return match ? match[1] : selectedNotification.title;
+    }
+    return "";
+  };
+
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -344,7 +358,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <h2 className="text-2xl font-semibold text-gray-900">
-                      {selectedNotification.title}
+                      {getDisplayTitle()}
                     </h2>
                     {!selectedNotification.is_read && (
                       <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
@@ -366,11 +380,6 @@ export const Header: React.FC<HeaderProps> = ({
                     <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded">
                       {getNotificationTypeLabel(selectedNotification.type)}
                     </span>
-                    {selectedNotification.entity_bundle && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded">
-                        {selectedNotification.entity_bundle}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
@@ -397,11 +406,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Información de la entidad relacionada (Publicación o Evento) */}
               {!isLoadingEntity && entityData && entityData.data && (
-                <div className="border-t border-gray-200 pt-4 space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {entityData.type === "publication" ? "Publicación" : "Evento de Calendario"}
-                  </h3>
-
+                <div className=" border-gray-200 pt-4 space-y-4">
                   {entityData.type === "publication" && entityData.data && (
                     (() => {
                       const publication = entityData.data as import("@/types/publications").Publication;
@@ -418,11 +423,6 @@ export const Header: React.FC<HeaderProps> = ({
                               />
                             </div>
                           )}
-
-                          {/* Título de la publicación */}
-                          <h4 className="text-xl font-semibold text-gray-900">
-                            {publication.title}
-                          </h4>
 
                           {/* Descripción de la publicación */}
                           {publication.description && (
@@ -581,34 +581,48 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
 
-              {/* Botón para marcar como leída/desleída */}
+              {/* Botones de acción */}
               <div className="border-t border-gray-200 pt-4">
-                <button
-                  onClick={() => {
-                    if (!selectedNotification.is_read) {
-                      markAsReadMutation.mutate(selectedNotification.id);
-                    }
-                  }}
-                  disabled={selectedNotification.is_read}
-                  className={cn(
-                    "w-full px-4 py-2 rounded-lg font-medium transition-colors",
-                    selectedNotification.is_read
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
+                <div className="flex gap-3">
+                  {/* Botón Ver publicación (solo para publicaciones) */}
+                  {entityData && entityData.data && entityData.type === "publication" && (
+                    <Link
+                      href={`/publications/${(entityData.data as import("@/types/publications").Publication).id}`}
+                      onClick={handleCloseModal}
+                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-base"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                      Ver publicación
+                    </Link>
                   )}
-                >
-                  {selectedNotification.is_read ? (
-                    <>
-                      <Check className="h-4 w-4 inline mr-2" />
-                      Marcada como leída
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4 inline mr-2" />
-                      Marcar como leída
-                    </>
-                  )}
-                </button>
+                  {/* Botón para marcar como leída/desleída */}
+                  <button
+                    onClick={() => {
+                      if (!selectedNotification.is_read) {
+                        markAsReadMutation.mutate(selectedNotification.id);
+                      }
+                    }}
+                    disabled={selectedNotification.is_read}
+                    className={cn(
+                      "flex-1 px-6 py-3 rounded-lg font-medium transition-colors text-base",
+                      selectedNotification.is_read
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                        : "bg-green-600 text-white hover:bg-green-700"
+                    )}
+                  >
+                    {selectedNotification.is_read ? (
+                      <>
+                        <Check className="h-5 w-5 inline mr-2" />
+                        Marcada como leída
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-5 w-5 inline mr-2" />
+                        Marcar como leída
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </DialogContent>

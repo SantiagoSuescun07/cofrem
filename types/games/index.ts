@@ -189,31 +189,6 @@ export interface PuzzleGameDetails extends BaseGameDetails {
   }>;
 }
 
-// Juego: Encuentra las diferencias
-export interface SpotDifferencesGameDetails extends BaseGameDetails {
-  type: "paragraph--spot_differences_game";
-  field_spot_difficulty: string;
-  field_num_differences: number;
-  field_original_image?: {
-    id: string;
-    url: string;
-    alt: string;
-    title: string;
-    width: number;
-    height: number;
-  };
-  field_modified_image?: {
-    id: string;
-    url: string;
-    alt: string;
-    title: string;
-    width: number;
-    height: number;
-  };
-  field_differences_coordinates?: string | null;
-  field_points_per_hit?: number | null;
-}
-
 // Union type para todos los tipos de juegos
 export type GameDetails =
   | WordSearchGameDetails
@@ -225,8 +200,7 @@ export type GameDetails =
   | TriviaGameDetails
   | TrueFalseGameDetails
   | WordMatchGameDetails
-  | PuzzleGameDetails
-  | SpotDifferencesGameDetails;
+  | PuzzleGameDetails;
 
 export type GameType = "wordsearch_game" | "puzzle_game" | "trivia_game";
 

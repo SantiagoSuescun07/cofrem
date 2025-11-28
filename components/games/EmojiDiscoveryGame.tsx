@@ -28,6 +28,7 @@ export default function EmojiDiscoveryGame({
   const [hasClaimedPoints, setHasClaimedPoints] = useState<boolean>(false);
   const [finishedThisSession, setFinishedThisSession] = useState<boolean>(false);
   const [lastEarnedPoints, setLastEarnedPoints] = useState<number>(0);
+  const [timeExpired, setTimeExpired] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const pointsRef = useRef<number>(0);
 
@@ -89,6 +90,38 @@ export default function EmojiDiscoveryGame({
     }
   }, [currentQuestionIndex, currentQuestion]);
 
+  const handleGameCompletion = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    setFinishedThisSession(true);
+    setIsGameActive(false);
+    setIsAnswered(false);
+    setSelectedAnswer(null);
+    setShowHint(false);
+    setCurrentQuestionIndex(totalQuestions);
+
+    const earnedPoints = pointsRef.current;
+
+    if (earnedPoints > 0 && completionStorageKey && typeof window !== "undefined") {
+      window.localStorage.setItem(completionStorageKey, "claimed");
+      setHasClaimedPoints(true);
+    }
+
+    if (gameDetails.drupal_internal__id && !rankingUpdated) {
+      setRankingUpdated(true);
+      updateRanking(gameDetails.drupal_internal__id, earnedPoints).catch((error) => {
+        console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+      });
+    }
+  }, [
+    completionStorageKey,
+    gameDetails.drupal_internal__id,
+    rankingUpdated,
+    totalQuestions,
+  ]);
+
   useEffect(() => {
     if (isGameLocked) return;
     if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0 && timeLeft > 0 && isGameActive && !isAnswered && !isGameComplete) {
@@ -97,11 +130,18 @@ export default function EmojiDiscoveryGame({
           if (prev <= 1) {
             if (intervalRef.current) clearInterval(intervalRef.current);
             setIsGameActive(false);
-            // Avanzar a la siguiente pregunta cuando se acaba el tiempo
+            setTimeExpired(true);
+            setIsAnswered(true);
+            // Avanzar a la siguiente pregunta cuando se acaba el tiempo después de mostrar el mensaje
             if (currentQuestionIndex < totalQuestions - 1) {
               setTimeout(() => {
                 handleNextQuestion();
-              }, 1000);
+              }, 3000); // Aumentar a 3 segundos para que se vea el mensaje
+            } else {
+              // Si es la última pregunta, completar el juego después de mostrar el mensaje
+              setTimeout(() => {
+                handleGameCompletion();
+              }, 3000);
             }
             return 0;
           }
@@ -113,7 +153,7 @@ export default function EmojiDiscoveryGame({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [gameDetails.field_time_limit, timeLeft, isGameActive, isAnswered, currentQuestionIndex, totalQuestions, isGameComplete, isGameLocked]);
+  }, [gameDetails.field_time_limit, timeLeft, isGameActive, isAnswered, currentQuestionIndex, totalQuestions, isGameComplete, isGameLocked, handleGameCompletion]);
 
   useEffect(() => {
     if (!completionStorageKey || typeof window === "undefined") return;
@@ -166,44 +206,13 @@ export default function EmojiDiscoveryGame({
     setIsGameActive(true);
     setShowHint(false);
     setLastEarnedPoints(0);
+    setTimeExpired(false);
     
     // Reiniciar el temporizador si hay tiempo límite por pregunta
     if (gameDetails.field_time_limit && gameDetails.field_time_limit > 0) {
       setTimeLeft(gameDetails.field_time_limit);
     }
   };
-
-  const handleGameCompletion = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    setFinishedThisSession(true);
-    setIsGameActive(false);
-    setIsAnswered(false);
-    setSelectedAnswer(null);
-    setShowHint(false);
-    setCurrentQuestionIndex(totalQuestions);
-
-    const earnedPoints = pointsRef.current;
-
-    if (earnedPoints > 0 && completionStorageKey && typeof window !== "undefined") {
-      window.localStorage.setItem(completionStorageKey, "claimed");
-      setHasClaimedPoints(true);
-    }
-
-    if (gameDetails.drupal_internal__id && !rankingUpdated) {
-      setRankingUpdated(true);
-      updateRanking(gameDetails.drupal_internal__id, earnedPoints).catch((error) => {
-        console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
-      });
-    }
-  }, [
-    completionStorageKey,
-    gameDetails.drupal_internal__id,
-    rankingUpdated,
-    totalQuestions,
-  ]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -226,6 +235,7 @@ export default function EmojiDiscoveryGame({
     setRankingUpdated(false);
     setFinishedThisSession(false);
     setLastEarnedPoints(0);
+    setTimeExpired(false);
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
@@ -234,11 +244,52 @@ export default function EmojiDiscoveryGame({
   // Obtener los emojis de la pregunta actual
   const getEmojis = (): string[] => {
     if (!currentQuestion || !currentQuestion.field_emoji) return [];
-    // Los emojis vienen como una cadena, los separamos usando regex para emojis
-    // Esto maneja correctamente emojis de múltiples caracteres (surrogate pairs)
-    const emojiRegex = /[\u{1F300}-\u{1F9FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
-    const matches = currentQuestion.field_emoji.match(emojiRegex);
-    return matches || [];
+    
+    const text = currentQuestion.field_emoji;
+    const emojiArray: string[] = [];
+    
+    // Usar Array.from() para manejar correctamente los surrogate pairs
+    // Esto divide la cadena en caracteres Unicode completos (no en bytes)
+    const chars = Array.from(text);
+    
+    for (let i = 0; i < chars.length; i++) {
+      const char = chars[i];
+      const codePoint = char.codePointAt(0);
+      
+      if (codePoint) {
+        // Verificar si es un emoji basado en rangos Unicode conocidos
+        // Incluye el rango U+2300-U+23FF que contiene ⏰ (U+23F0)
+        const isEmoji = 
+          (codePoint >= 0x1F300 && codePoint <= 0x1F9FF) || // Emojis varios
+          (codePoint >= 0x1F600 && codePoint <= 0x1F64F) || // Emoticones
+          (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) || // Transporte y mapas
+          (codePoint >= 0x2600 && codePoint <= 0x26FF) ||   // Símbolos misceláneos
+          (codePoint >= 0x2700 && codePoint <= 0x27BF) ||   // Dingbats
+          (codePoint >= 0x2300 && codePoint <= 0x23FF) ||  // Símbolos técnicos misceláneos (incluye ⏰ U+23F0)
+          (codePoint >= 0x2190 && codePoint <= 0x21FF) ||  // Flechas
+          (codePoint >= 0x2B00 && codePoint <= 0x2BFF) ||   // Símbolos y flechas misceláneos
+          (codePoint >= 0x1F1E0 && codePoint <= 0x1F1FF);   // Banderas
+        
+        if (isEmoji) {
+          // Verificar si hay un variation selector (FE0F) después del emoji
+          if (i + 1 < chars.length) {
+            const nextChar = chars[i + 1];
+            const nextCodePoint = nextChar.codePointAt(0);
+            if (nextCodePoint === 0xFE0F) {
+              // Es un emoji con variation selector, incluir ambos
+              emojiArray.push(char + nextChar);
+              i++; // Saltar el variation selector
+            } else {
+              emojiArray.push(char);
+            }
+          } else {
+            emojiArray.push(char);
+          }
+        }
+      }
+    }
+    
+    return emojiArray;
   };
 
   const emojis = getEmojis();
@@ -433,9 +484,24 @@ export default function EmojiDiscoveryGame({
               )}
 
               {/* Resultado - Mejorado */}
-              {isAnswered && selectedAnswer && (
+              {isAnswered && (
                 <div className="text-center mb-6">
-                  {selectedAnswer.toLowerCase().trim() === (currentQuestion?.field_correct_answer || "").toLowerCase().trim() ? (
+                  {timeExpired ? (
+                    <div className="bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-400 rounded-xl p-8 mb-4 shadow-lg">
+                      <div className="text-6xl mb-3">⏰</div>
+                      <h3 className="text-3xl font-bold text-orange-700 mb-3">
+                        ¡Se te acabó el tiempo!
+                      </h3>
+                      <p className="text-lg text-gray-700 mb-2">
+                        No pudiste responder a tiempo esta pregunta.
+                      </p>
+                      <p className="text-lg text-gray-700 mb-6">
+                        {currentQuestionIndex < totalQuestions - 1 
+                          ? "Siguiente pregunta en breve..."
+                          : "El juego ha terminado."}
+                      </p>
+                    </div>
+                  ) : selectedAnswer && selectedAnswer.toLowerCase().trim() === (currentQuestion?.field_correct_answer || "").toLowerCase().trim() ? (
                     <div className="bg-gradient-to-br from-[#e6fff2] to-white border-2 border-[#09d6a6] rounded-xl p-8 mb-4 shadow-lg">
                       <div className="text-6xl mb-3">🎉</div>
                       <h3 className="text-3xl font-bold text-[#09d6a6] mb-3">
@@ -456,7 +522,7 @@ export default function EmojiDiscoveryGame({
                           : "¡Juego completado!"}
                       </p>
                     </div>
-                  ) : (
+                  ) : selectedAnswer ? (
                     <div className="bg-red-50 border-2 border-red-400 rounded-xl p-8 mb-4 shadow-lg">
                       <div className="text-6xl mb-3">❌</div>
                       <h3 className="text-3xl font-bold text-red-700 mb-3">
@@ -471,7 +537,7 @@ export default function EmojiDiscoveryGame({
                           : "¡Inténtalo de nuevo!"}
                       </p>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
 
