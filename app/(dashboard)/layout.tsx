@@ -51,7 +51,7 @@ export default function DashboardLayout({
 
   const sidebarItems = [
     { id: "dashboard", label: "Inicio", icon: "/icons/home.png", url: "/" },
-    { id: "news", label: "Noticias", icon: "/icons/news.png", url: "/news" },
+    { id: "news", label: "Noticias", icon: "/icons/news.png", url: "/noticias" },
     {
       id: "directory",
       label: "Directorio",
@@ -68,7 +68,7 @@ export default function DashboardLayout({
       id: "about",
       label: "Nosotros",
       icon: "/icons/about-us.png",
-      url: "/about-us",
+      url: "/nosotros",
     },
     {
       id: "games",

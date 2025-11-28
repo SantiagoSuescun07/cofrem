@@ -15,7 +15,7 @@ import {
 import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { ArticleCarousel } from "@/app/(dashboard)/news/[newsId]/_components/article-carousel";
+import { ArticleCarousel } from "@/app/(dashboard)/noticias/[newsId]/_components/article-carousel";
 
 export default function DigitalServiceNodePage({
   params,

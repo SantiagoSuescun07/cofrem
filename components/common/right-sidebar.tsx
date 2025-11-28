@@ -110,7 +110,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   }, [emblaApi]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {/* Próximos eventos - Carrusel */}
       <div className="bg-white p-3 rounded-xl border border-gray-200">
         <h3 className="text-gray-900 mb-4">Próximos Eventos</h3>
@@ -243,7 +243,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       <BirthdaySlider />
 
       {/* Gamificación */}
-      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-100">
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-100">
         <h3 className="text-gray-900 mb-4">🏆 Tu Progreso</h3>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
@@ -271,7 +271,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       </div>
 
       {/* Encuesta */}
-      <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="bg-white px-5 py-3 rounded-xl border border-gray-200">
         <h3 className="text-gray-900 mb-4">Encuesta Activa</h3>
         {isLoadingPoll ? (
           <p className="text-sm text-gray-500 mb-4">Cargando encuesta...</p>

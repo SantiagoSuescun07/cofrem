@@ -33,5 +33,8 @@ declare module "next-auth" {
       email: string;
     };
     drupalTokenExpires?: number;
+    googleAccessToken?: string;
+    googleRefreshToken?: string;
+    googleTokenExpires?: number;
   }
 }

@@ -2,11 +2,11 @@
 
 import React, { useState } from "react";
 import { useNews } from "@/queries/news";
-import { NewsCard } from "@/components/news/news-card";
+import { NewsCard } from "@/components/noticias/news-card";
 import { NewsPageSkeleton } from "@/components/skeletons/news/news-page-skeleton";
 import { Pagination } from "@/components/common/pagination";
 import { motion, AnimatePresence } from "framer-motion";
-import { NewsBreadcrumb } from "@/components/news/news-breadcrumb";
+import { NewsBreadcrumb } from "@/components/noticias/news-breadcrumb";
 import { containerVariants, itemVariants } from "@/constants/animation.-variants";
 
 export default function NewsPage() {

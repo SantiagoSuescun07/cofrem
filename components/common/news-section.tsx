@@ -10,8 +10,8 @@ import {
   itemVariants,
 } from "@/constants/animation.-variants";
 import { Pagination } from "./pagination";
-import { NewsCard } from "../news/news-card";
-import { HomeNewsCard } from "../news/home-news-card";
+import { NewsCard } from "../noticias/news-card";
+import { HomeNewsCard } from "../noticias/home-news-card";
 
 export function NewsSection() {
   const [page, setPage] = useState(1);
