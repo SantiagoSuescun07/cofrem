@@ -93,15 +93,22 @@ export const fetchNews = async (): Promise<{
     };
   });
 
+  // Ordenar por fecha de creación descendente (más reciente primero)
+  const sortedNewsItems = newsItems.sort((a: News, b: News) => {
+    const dateA = new Date(a.created).getTime();
+    const dateB = new Date(b.created).getTime();
+    return dateB - dateA; // Orden descendente (más reciente primero)
+  });
+
   // Client-side pagination (10 items per page)
-  const totalItems = newsItems.length;
+  const totalItems = sortedNewsItems.length;
   const limit = 10;
   const totalPages = Math.ceil(totalItems / limit);
 
   console.log("Total Items:", totalItems, "Total Pages:", totalPages);
 
   return {
-    items: newsItems,
+    items: sortedNewsItems,
     totalPages,
   };
 };

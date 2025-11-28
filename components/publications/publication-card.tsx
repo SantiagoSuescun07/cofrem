@@ -185,8 +185,8 @@ export function PublicationCard({ publication }: Props) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-4">
-        <span className="px-3 py-1 bg-gray-100 text-xs rounded-full">
+      <div className="flex flex-col  justify-between mt-4">
+        <span className="px-3 py-1 bg-gray-100 text-xs w-fit rounded-full">
           Social
         </span>
         <div className="flex items-center gap-4 text-gray-500 text-sm">

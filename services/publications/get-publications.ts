@@ -94,7 +94,14 @@ export const fetchPublications = async (): Promise<Publication[]> => {
     };
   });
 
-    return publications;
+  // Ordenar por fecha de creación descendente (más reciente primero)
+  const sortedPublications = publications.sort((a: Publication, b: Publication) => {
+    const dateA = new Date(a.created).getTime();
+    const dateB = new Date(b.created).getTime();
+    return dateB - dateA; // Orden descendente (más reciente primero)
+  });
+
+  return sortedPublications;
   } catch (error: any) {
     console.error("Error fetching publications:", error);
     if (error.response) {
