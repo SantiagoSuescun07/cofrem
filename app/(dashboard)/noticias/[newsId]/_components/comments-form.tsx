@@ -113,7 +113,7 @@ export function CommentForm({ nid }: CommentFormProps) {
               control={form.control}
               name="text"
               render={({ field }) => {
-                const length = field.value.length;
+                const length = (field.value ?? "").length;
                 const isNearLimit = length > 450 && length <= 500;
                 const isOverLimit = length > 500;
 
