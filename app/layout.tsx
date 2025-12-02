@@ -7,6 +7,7 @@ import { SessionProvider } from "next-auth/react";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/query-provider";
 import localFont from "next/font/local";
+import { FloatingChat } from "@/components/common/floating-chat";
 
 // === Humms777 BT ===
 const humms777 = localFont({
@@ -78,7 +79,9 @@ export default async function RootLayout({
       >
         <SessionProvider session={session}>
           <Toaster richColors />
-          <QueryProvider>{children}</QueryProvider>
+          <QueryProvider>{children}
+            <FloatingChat />
+          </QueryProvider>
         </SessionProvider>
       </body>
     </html>
