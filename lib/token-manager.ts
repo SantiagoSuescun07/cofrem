@@ -1,8 +1,12 @@
-import { ACCESS_TOKEN } from "@/constants";
+import { ACCESS_TOKEN, REFRESH_TOKEN } from "@/constants";
 const EXPIRES_AT_KEY = "cofrem.expires_at";
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(ACCESS_TOKEN);
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN);
 }
 
 export function isExpired(): boolean {
@@ -13,5 +17,6 @@ export function isExpired(): boolean {
 
 export function clearToken() {
   localStorage.removeItem(ACCESS_TOKEN);
+  localStorage.removeItem(REFRESH_TOKEN);
   localStorage.removeItem(EXPIRES_AT_KEY);
 }

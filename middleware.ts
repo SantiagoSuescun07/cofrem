@@ -31,10 +31,15 @@ export default auth((req) => {
     return null;
   }
 
-  // Si está en ruta de auth y ya está logueado, redirigir al dashboard
+  // Si está en ruta de auth y ya está logueado, redirigir al dashboard o callbackUrl
   if (isAuthRoute) {
     if (isLoggedIn) {
-      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+      // Si hay un callbackUrl, redirigir ahí, sino al default
+      const callbackUrl = nextUrl.searchParams.get("callbackUrl");
+      const redirectUrl = callbackUrl 
+        ? decodeURIComponent(callbackUrl)
+        : DEFAULT_LOGIN_REDIRECT;
+      return Response.redirect(new URL(redirectUrl, nextUrl));
     }
     return null; // Permitir acceso a rutas de auth si no está logueado
   }

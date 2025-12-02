@@ -80,6 +80,16 @@ export const fetchSingleNewsletter = async (id: string): Promise<Newsletter> => 
       }
     : null;
 
+  // Link - extraer el URI del campo field_any_link
+  const fieldLink = item.attributes.field_any_link?.uri || null;
+  
+  // Debug temporal
+  console.log('Newsletter link extraction:', {
+    field_any_link: item.attributes.field_any_link,
+    extracted_link: fieldLink,
+    has_link: !!fieldLink,
+  });
+
   return {
     id: item.id,
     drupal_internal__nid: item.attributes.drupal_internal__nid,
@@ -91,5 +101,6 @@ export const fetchSingleNewsletter = async (id: string): Promise<Newsletter> => 
     field_main_image: fieldMainImage,
     field_report_pdf: fieldReportPdf,
     field_type_report: fieldTypeReport,
+    field_link: fieldLink,
   };
 };

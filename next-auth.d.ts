@@ -14,6 +14,7 @@ declare module "next-auth" {
     user: ExtendedUser;
     drupal?: {
       accessToken?: string;
+      refreshToken?: string;
       user?: {
         uid: string;
         name: string;
@@ -27,6 +28,7 @@ declare module "next-auth" {
     phone?: string; 
     position?: string; 
     drupalAccessToken?: string;
+    drupalRefreshToken?: string;
     drupalUser?: {
       uid: string;
       name: string;

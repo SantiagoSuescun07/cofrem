@@ -281,7 +281,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </p>
         ) : (
           <p className="text-sm text-gray-600 mb-4">
-            {poll?.title || "Evaluación de clima laboral 2025"}
+            {poll?.fields?.field_title?.[0]?.value || poll?.title || "Evaluación de clima laboral 2025"}
           </p>
         )}
         <button

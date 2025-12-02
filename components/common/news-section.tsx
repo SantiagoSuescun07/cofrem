@@ -27,12 +27,20 @@ export function NewsSection() {
     );
   }
 
+  // Asegurar ordenamiento de más reciente a más antigua
+  const sortedItems = news?.items
+    ? [...news.items].sort((a, b) => {
+        const dateA = new Date(a.created).getTime();
+        const dateB = new Date(b.created).getTime();
+        return dateB - dateA; // Orden descendente (más reciente primero)
+      })
+    : [];
+
   const limit = 10;
-  const totalItems = news?.items.length || 0;
+  const totalItems = sortedItems.length;
   const totalPages = Math.ceil(totalItems / limit);
 
-  const paginatedItems =
-    news?.items.slice((page - 1) * limit, page * limit) || [];
+  const paginatedItems = sortedItems.slice((page - 1) * limit, page * limit);
 
   return (
     <div className="lg:col-span-2 mt-14">

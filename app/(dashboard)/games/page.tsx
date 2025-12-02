@@ -205,7 +205,7 @@ function getGameEmoji(gameType: string) {
     case "paragraph--word_match_game":
       return "🔗";
     default:
-      return "🎮";
+      return "";
   }
 }
 
