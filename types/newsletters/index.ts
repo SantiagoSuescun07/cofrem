@@ -16,4 +16,5 @@ export type Newsletter = {
   } | null;
   field_report_pdf: { id: string; url: string } | null;
   field_type_report: { id: string; tid: number; name: string } | null;
+  field_link: string | null;
 };

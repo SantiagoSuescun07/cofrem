@@ -88,14 +88,26 @@ export default function DashboardLayout({
   const { data: areas, isLoading } = useAreas();
 
   useEffect(() => {
-    if (
-      session?.drupal?.accessToken &&
-      !localStorage.getItem("cofrem.access_token")
-    ) {
-      localStorage.setItem("cofrem.access_token", session.drupal.accessToken);
-      localStorage.setItem("cofrem.user", JSON.stringify(session.drupal.user));
+    if (session?.drupal?.accessToken) {
+      const currentToken = localStorage.getItem("cofrem.access_token");
+      
+      // Sincronizar el token siempre que cambie o no exista
+      if (currentToken !== session.drupal.accessToken) {
+        localStorage.setItem("cofrem.access_token", session.drupal.accessToken);
+        localStorage.setItem("cofrem.user", JSON.stringify(session.drupal.user));
+        
+        // Guardar también la fecha de expiración si está disponible
+        if (session.drupal.expiresAt) {
+          localStorage.setItem("cofrem.expires_at", String(session.drupal.expiresAt));
+        }
+      }
+      
+      // Guardar el refresh_token siempre que esté disponible
+      if (session.drupal.refreshToken) {
+        localStorage.setItem("cofrem.refresh_token", session.drupal.refreshToken);
+      }
     }
-  }, [session?.drupal?.accessToken]);
+  }, [session?.drupal?.accessToken, session?.drupal?.refreshToken, session?.drupal?.expiresAt]);
 
   useEffect(() => {
     if (!pathname.startsWith("/directory")) setShowMainSidebar(false);

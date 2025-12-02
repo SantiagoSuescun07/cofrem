@@ -145,7 +145,7 @@ export function PQRList() {
                     </div>
                   </Badge>
                 </div>
-                <h3 className="font-semibold text-lg mb-1 text-foreground">
+                <h3 className="font-normal text-lg mb-1 text-foreground">
                   {pqr.asunto}
                 </h3>
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">

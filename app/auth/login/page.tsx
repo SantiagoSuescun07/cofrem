@@ -63,8 +63,14 @@ export default function LoginPage() {
     setIsGoogleLoading(true);
 
     try {
+      // Obtener el callbackUrl de los query params, o usar el default
+      const rawCallbackUrl = searchParams?.get("callbackUrl");
+      const callbackUrl = rawCallbackUrl 
+        ? decodeURIComponent(rawCallbackUrl)
+        : DEFAULT_LOGIN_REDIRECT;
+
       await signIn("google", {
-        callbackUrl: DEFAULT_LOGIN_REDIRECT,
+        callbackUrl: callbackUrl,
       });
     } catch (error) {
       console.error("Error al iniciar sesión con Google:", error);

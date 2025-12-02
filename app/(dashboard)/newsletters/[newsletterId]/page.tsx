@@ -34,34 +34,53 @@ export default function NewsletterPage({
         {/* Encabezado con imagen */}
         {newsletter.field_main_image?.url && (
           <div className="relative w-full h-80 md:h-[420px]">
-            <Image
-              src={newsletter.field_main_image.url}
-              alt={newsletter.field_main_image.alt || newsletter.title}
-              fill
-              priority
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-            <div className="absolute bottom-6 left-6 text-white">
-              <h1 className="text-3xl md:text-4xl mb-2 drop-shadow-lg">
+            {newsletter.field_link ? (
+              <a 
+                href={newsletter.field_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full h-full relative z-0"
+              >
+                <Image
+                  src={newsletter.field_main_image.url}
+                  alt={newsletter.field_main_image.alt || newsletter.title}
+                  fill
+                  priority
+                  className="object-cover cursor-pointer"
+                />
+              </a>
+            ) : (
+              <Image
+                src={newsletter.field_main_image.url}
+                alt={newsletter.field_main_image.alt || newsletter.title}
+                fill
+                priority
+                className="object-cover"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+            <div className="absolute bottom-6 left-6 z-10 pointer-events-none">
+              <h1 className="text-3xl md:text-4xl mb-2 drop-shadow-lg font-semibold" style={{ color: 'white' }}>
                 {newsletter.title}
               </h1>
               <div className="flex flex-wrap items-center gap-3 text-sm">
-                <span className="flex items-center gap-1">
-                  <Calendar size={16} />
-                  {new Date(newsletter.created).toLocaleDateString("es-CO", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
+                <span className="flex items-center gap-1" style={{ color: 'white' }}>
+                  <Calendar size={16} style={{ color: 'white' }} />
+                  <span style={{ color: 'white' }}>
+                    {new Date(newsletter.created).toLocaleDateString("es-CO", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </span>
                 </span>
                 {newsletter.field_category_report && (
-                  <span className="px-3 py-0.5 bg-white/20 rounded-full backdrop-blur-sm">
+                  <span className="px-3 py-0.5 bg-white/20 rounded-full backdrop-blur-sm border border-white/30" style={{ color: 'white' }}>
                     {newsletter.field_category_report.name}
                   </span>
                 )}
                 {newsletter.field_type_report && (
-                  <span className="px-3 py-0.5 bg-blue-600/80 rounded-full backdrop-blur-sm">
+                  <span className="px-3 py-0.5 bg-blue-600/80 rounded-full backdrop-blur-sm border border-white/30" style={{ color: 'white' }}>
                     {newsletter.field_type_report.name}
                   </span>
                 )}

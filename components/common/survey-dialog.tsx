@@ -65,37 +65,68 @@ export const SurveyDialog: React.FC<SurveyDialogProps> = ({
 
         {!isLoading && !hasNoActivePoll && poll && (
           <div className="space-y-3">
-            <p className="text-gray-700 font-medium">{poll.title}</p>
+            <p className="text-gray-700 font-medium">
+              {(poll as any)?.fields?.field_title?.[0]?.value || (poll as any)?.title || (poll as any)?.question}
+            </p>
 
             {Array.isArray(poll.options) &&
-              poll.options.map((option: any) => (
-                <label
-                  key={option.id}
-                  className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                    isDisabled
-                      ? "cursor-not-allowed opacity-50"
-                      : "cursor-pointer hover:bg-[#e4fef1]"
-                  } ${
-                    selectedChoice === String(option.id)
-                      ? "bg-[#e4fef1]"
-                      : ""
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="choice"
-                    value={option.id}
-                    checked={selectedChoice === String(option.id)}
-                    onChange={() => !isDisabled && setSelectedChoice(String(option.id))}
-                    disabled={isDisabled}
-                    className="w-4 h-4 text-[#2deb79] border-gray-300 focus:ring-[#2deb79] focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
-                    style={{
-                      accentColor: "#2deb79",
-                    }}
-                  />
-                  <span className="font-medium text-gray-700">{option.label}</span>
-                </label>
-              ))}
+              poll.options.map((option: any) => {
+                // Buscar el resultado correspondiente a esta opción
+                const result = (poll as any)?.results?.choices?.find(
+                  (choice: any) => choice.id === option.id
+                );
+                const votes = result ? Number(result.votes) : 0;
+                const percentage = result ? Number(result.percentage) : 0;
+                const showResults = (poll as any)?.results && (poll as any)?.allow_view_results === "1";
+
+                return (
+                  <label
+                    key={option.id}
+                    className={`flex flex-col p-3 rounded-lg transition-colors ${
+                      isDisabled
+                        ? "cursor-not-allowed opacity-50"
+                        : "cursor-pointer hover:bg-[#e4fef1]"
+                    } ${
+                      selectedChoice === String(option.id)
+                        ? "bg-[#e4fef1]"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="choice"
+                        value={option.id}
+                        checked={selectedChoice === String(option.id)}
+                        onChange={() => !isDisabled && setSelectedChoice(String(option.id))}
+                        disabled={isDisabled}
+                        className="w-4 h-4 text-[#2deb79] border-gray-300 focus:ring-[#2deb79] focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
+                        style={{
+                          accentColor: "#2deb79",
+                        }}
+                      />
+                      <span className="font-medium text-gray-700 flex-1">{option.label}</span>
+                      {showResults && (
+                        <span className="text-sm font-semibold text-gray-600">
+                          {votes} {votes === 1 ? "voto" : "votos"} ({percentage}%)
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Barra de progreso */}
+                    {showResults && (
+                      <div className="mt-2 ml-7">
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-[#2deb79] h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </label>
+                );
+              })}
           </div>
         )}
 

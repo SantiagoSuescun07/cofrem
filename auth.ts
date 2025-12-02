@@ -407,6 +407,30 @@ async function refreshGoogleToken(refreshToken: string) {
   }
 }
 
+// Función para refrescar el token de Drupal
+async function refreshDrupalToken(refreshToken: string) {
+  try {
+    const { data } = await axios.post(
+      "https://backoffice.cofrem.com.co/api/auth/refresh",
+      { refresh_token: refreshToken },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return {
+      accessToken: data.access_token,
+      expiresAt: Date.now() + (data.expires_in || 3600) * 1000,
+      refreshToken: data.refresh_token || refreshToken, // Mantener el refresh token si no viene uno nuevo
+    };
+  } catch (error) {
+    console.error("❌ Error al refrescar token de Drupal:", error);
+    return null;
+  }
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   pages: {
@@ -452,6 +476,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const drupalAccessToken = (token as any).drupalAccessToken as
         | string
         | undefined;
+      const drupalRefreshToken = (token as any).drupalRefreshToken as
+        | string
+        | undefined;
       const drupalUser = (token as any).drupalUser as
         | { uid: string; name: string; email: string }
         | undefined;
@@ -461,6 +488,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       session.drupal = {
         accessToken: drupalAccessToken,
+        refreshToken: drupalRefreshToken,
         user: drupalUser,
         expiresAt: drupalTokenExpires,
       };
@@ -501,6 +529,30 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
+      // 🔄 REFRESH TOKEN: Si el token de Drupal está próximo a expirar, refrescarlo
+      const drupalRefreshToken = (token as any).drupalRefreshToken as
+        | string
+        | undefined;
+      const drupalTokenExpires = (token as any).drupalTokenExpires as
+        | number
+        | undefined;
+
+      // Si tenemos un refresh token y el access token está próximo a expirar (menos de 5 minutos)
+      if (
+        drupalRefreshToken &&
+        drupalTokenExpires &&
+        Date.now() >= drupalTokenExpires - 5 * 60 * 1000
+      ) {
+        console.log("🔄 Refrescando token de Drupal...");
+        const refreshed = await refreshDrupalToken(drupalRefreshToken);
+        if (refreshed) {
+          token.drupalAccessToken = refreshed.accessToken;
+          token.drupalTokenExpires = refreshed.expiresAt;
+          (token as any).drupalRefreshToken = refreshed.refreshToken;
+          console.log("✅ Token de Drupal refrescado exitosamente");
+        }
+      }
+
       // Procesar login inicial con Google
       if (account?.provider === "google") {
         // Guardar tokens de Google (access_token, refresh_token, expires_at)
@@ -515,6 +567,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         // Procesar autenticación con Drupal usando id_token
+        console.log("🔄 ID token de Google:", account.id_token);
+
         if (account.id_token) {
           try {
             const { data } = await axios.post(
@@ -526,6 +580,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             console.log("✅ Access token obtenido de Drupal:", data);
 
             token.drupalAccessToken = data.access_token;
+            token.drupalRefreshToken = data.refresh_token; // Guardar refresh_token de Drupal
             token.drupalUser = data.user;
             token.drupalTokenExpires =
               Date.now() + (data.expires_in || 3600) * 1000;
