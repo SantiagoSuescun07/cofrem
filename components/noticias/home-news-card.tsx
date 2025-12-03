@@ -90,7 +90,7 @@ export function HomeNewsCard({ news }: HomeNewsCardProps) {
             )}
 
             <Link
-              href={`/news/${news.id}`}
+              href={`/noticias/${news.id}`}
               className="bg-[#00a2f1] hover:bg-[#0085c8] text-white text-sm font-medium px-5 py-2 rounded-xl transition-colors"
             >
               Ver más
