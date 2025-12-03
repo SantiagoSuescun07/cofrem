@@ -38,17 +38,9 @@ export function PublicationContentRenderer({ content }: Props) {
             href={content.field_link.uri}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-4 p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition group"
+            className="flex items-center justify-center w-[150px] ml-auto -mt-10  px-6 py-3 bg-[#35a3f2] text-white rounded-lg hover:bg-[#7dc2f4] transition-colors font-medium"
           >
-            <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-md bg-blue-100 text-blue-600">
-              🔗
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-medium text-gray-800 group-hover:text-blue-600 truncate">
-                {content.field_link.title || content.field_link.uri}
-              </p>
-              <p className="text-xs text-gray-500">Enlace relacionado</p>
-            </div>
+            Ver más
           </a>
         </div>
       );

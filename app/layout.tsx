@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/query-provider";
 import localFont from "next/font/local";
 import { FloatingChat } from "@/components/common/floating-chat";
+import { SessionGuard } from "@/components/common/session-guard";
 
 // === Humms777 BT ===
 const humms777 = localFont({
@@ -66,6 +67,10 @@ export default async function RootLayout({
 }>) {
   const session = await auth();
 
+  // No redirigir aquí - el middleware ya maneja las redirecciones
+  // Si la sesión es null, el middleware redirigirá al login
+  // Esto evita bucles infinitos cuando estamos en rutas de auth
+
   return (
     <html lang="es">
       <body
@@ -78,6 +83,7 @@ export default async function RootLayout({
         `}
       >
         <SessionProvider session={session}>
+          <SessionGuard />
           <Toaster richColors />
           <QueryProvider>{children}
             <FloatingChat />

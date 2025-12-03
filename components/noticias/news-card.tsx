@@ -97,7 +97,7 @@ export function NewsCard({ news }: NewsCardProps) {
                   alt={reaction.label}
                   width={22}
                   height={22}
-                  className="rounded-full"
+                  className="rounded-full object-center"
                 />
                 <span>{reaction.count}</span>
               </button>

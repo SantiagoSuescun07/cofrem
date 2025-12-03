@@ -33,11 +33,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onClose();
   };
 
+  // Determinar si estamos en una página que requiere el sidebar siempre visible en desktop
+  const isAlwaysVisible = !pathname.startsWith("/nosotros");
+  
   return (
     <div
       className={`fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform ${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+      } transition-transform duration-300 ease-in-out ${
+        isAlwaysVisible ? "lg:translate-x-0 lg:static lg:inset-0" : ""
+      }`}
     >
       {/* Header Cofrem */}
       <div className="flex items-center justify-between h-[74px] px-6 border-b border-gray-100">

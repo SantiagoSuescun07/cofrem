@@ -465,21 +465,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async session({ session, token }) {
-      try {
-        // Si el token no tiene sub (usuario inválido) o tiene un error, invalidar la sesión
-        if (!token || !token.sub || (token as any).error) {
-          const error = (token as any)?.error;
-          if (error) {
-            console.error(`❌ Sesión invalidada por error: ${error}`);
-          }
-          // Retornar null forzará el logout y redirección al login
-          // Esto hará que req.auth sea null en el middleware
-          return null as any;
+      // Si el token no tiene sub (usuario inválido) o tiene un error, invalidar la sesión
+      if (!token || !token.sub || (token as any).error) {
+        const error = (token as any)?.error;
+        if (error) {
+          console.error(`❌ Sesión invalidada por error: ${error}`);
         }
-      } catch (error) {
-        // Si hay cualquier error al procesar la sesión, invalidarla
-        console.error("❌ Error al procesar sesión, invalidando:", error);
-        return null as any;
+        // Retornar una sesión con user null para que el SessionGuard la detecte
+        // Esto permite que useSession() aún retorne algo pero sin usuario
+        return {
+          ...session,
+          user: null as any,
+          expires: new Date(0).toISOString(),
+        } as any;
       }
 
       if (session.user && token.sub) {
@@ -506,7 +504,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Validar que el token de Drupal no esté expirado
       if (drupalTokenExpires && Date.now() >= drupalTokenExpires) {
         console.error("❌ Token de Drupal expirado en sesión, invalidando");
-        return null as any;
+        // Retornar una sesión con user null para que el SessionGuard la detecte
+        // Esto permite que useSession() aún retorne algo pero sin usuario
+        return {
+          ...session,
+          user: null as any,
+          expires: new Date(0).toISOString(),
+        } as any;
       }
 
       session.drupal = {
@@ -568,8 +572,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             (token as any).googleRefreshToken = refreshed.refreshToken;
             console.log("✅ Token de Google refrescado exitosamente");
           } else {
-            // Si el refresh falla, invalidar la sesión completamente
-            return invalidateSession("Error al refrescar token de Google");
+            // Si el refresh falla, preservar el refresh token para intentar de nuevo
+            // Solo invalidar si el token ya está completamente expirado (más de 1 hora)
+            const isFullyExpired = Date.now() >= googleTokenExpires + 60 * 60 * 1000;
+            if (isFullyExpired) {
+              // Token completamente expirado y refresh falló, invalidar sesión
+              return invalidateSession("Error al refrescar token de Google");
+            } else {
+              // Token próximo a expirar pero refresh falló, mantener el refresh token
+              // para intentar de nuevo en la próxima solicitud
+              console.warn("⚠️ Error al refrescar token de Google, manteniendo refresh token para reintento");
+              // Mantener el refresh token en el token para intentar de nuevo
+              (token as any).googleRefreshToken = googleRefreshToken;
+            }
           }
         } else {
           // Si no hay refresh token y el token está expirado, invalidar la sesión
@@ -589,7 +604,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // Si el token de Drupal está expirado o próximo a expirar
       if (drupalTokenExpires && Date.now() >= drupalTokenExpires - 5 * 60 * 1000) {
         if (drupalRefreshToken) {
-          console.log("🔄 Refrescando token de Drupal...");
+          console.log("🔄 Refrescando token de Drupal con refresh_token...");
           const refreshed = await refreshDrupalToken(drupalRefreshToken);
           if (refreshed) {
             token.drupalAccessToken = refreshed.accessToken;
@@ -597,11 +612,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             (token as any).drupalRefreshToken = refreshed.refreshToken;
             console.log("✅ Token de Drupal refrescado exitosamente");
           } else {
-            // Si el refresh falla, invalidar la sesión completamente
+            // Si el refresh falla, invalidar la sesión y redirigir al login
             return invalidateSession("Error al refrescar token de Drupal");
           }
         } else {
-          // Si no hay refresh token y el token está expirado, invalidar la sesión
+          // Si no hay refresh token y el token está expirado, invalidar la sesión y redirigir al login
           return invalidateSession("Token de Drupal expirado sin refresh token");
         }
       }
@@ -639,7 +654,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             console.log("✅ Access token obtenido de Drupal:", data);
 
             token.drupalAccessToken = data.access_token;
-            token.drupalRefreshToken = data.refresh_token; // Guardar refresh_token de Drupal
+            // Guardar refresh_token de Drupal - es requerido para refrescar el token
+            if (data.refresh_token) {
+              token.drupalRefreshToken = data.refresh_token;
+              console.log("💾 Refresh token de Drupal guardado");
+            } else {
+              console.error("❌ El backend de Drupal no devolvió refresh_token. La sesión no podrá ser refrescada.");
+              // Si no hay refresh_token, no podemos mantener la sesión activa
+              // El token expirará y se invalidará la sesión
+            }
             token.drupalUser = data.user;
             token.drupalTokenExpires =
               Date.now() + (data.expires_in || 3600) * 1000;
@@ -678,7 +701,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return token;
     },
     async redirect({ url, baseUrl }) {
-      return baseUrl;
+      // Si hay un error en el token, redirigir al login
+      // Esto se ejecutará cuando NextAuth detecte que la sesión es inválida
+      if (url.includes("error") || url.includes("SessionInvalidated")) {
+        return `${baseUrl}/auth/login`;
+      }
+      // Si la URL es la base y no hay sesión válida, redirigir al login
+      if (url === baseUrl || url === `${baseUrl}/`) {
+        return `${baseUrl}/auth/login`;
+      }
+      return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
   adapter: PrismaAdapter(db),

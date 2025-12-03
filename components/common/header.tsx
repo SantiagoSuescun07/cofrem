@@ -168,7 +168,9 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-4">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
+            className={`p-2 rounded-lg hover:bg-gray-100 ${
+              pathname.startsWith("/nosotros") ? "" : "lg:hidden"
+            }`}
             aria-label="Abrir menú"
           >
             <Menu size={20} />

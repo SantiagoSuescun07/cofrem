@@ -18,6 +18,7 @@ import { createReaction } from "@/services/news/reactions";
 import { toast } from "sonner";
 import { getPublicationsReactions } from "@/queries/publications";
 import { useComments } from "@/queries/news";
+import { ProgressBar } from "../common/progress-bar";
 
 interface Props {
   publication: Publication;
@@ -100,15 +101,31 @@ export function PublicationCard({ publication }: Props) {
       href={`/publications/${publication.id}`}
       className="block bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition mt-14 cursor-pointer"
     >
+      <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/icons/blue-news.png"
+            alt="Publications icon"
+            width={20}
+            height={20}
+            priority
+            className="size-5 object-cover"
+          />
+          <h3 className="text-2xl">Publicaciones</h3>
+        </div>
+        <ProgressBar />
+      </div>
       <h3 className="text-lg font-normal text-gray-900 hover:text-primary">
         {title}
       </h3>
 
-      {/* Descripción */}
-      {field_description && (
-        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-          {field_description}
-        </p>
+      {publication.field_description && (
+        <div
+          className="prose prose-sm md:prose-base max-w-none text-gray-700 mb-6 leading-relaxed"
+          dangerouslySetInnerHTML={{
+            __html: publication.field_description,
+          }}
+        />
       )}
 
       {/* Video si existe */}

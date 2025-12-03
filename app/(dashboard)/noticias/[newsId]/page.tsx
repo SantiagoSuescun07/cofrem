@@ -66,10 +66,11 @@ export default function SingleNewsPage({
                 alt={news.field_main_image.alt || news.title}
                 width={400}
                 height={300}
-                className="w-full mb-6 rounded-3xl shadow-md object-cover md:float-right md:ml-6 md:mb-4 md:max-w-[45%] md:h-[300px]"
+                className="w-full mb-6 rounded-3xl  object-cover  md:float-right md:ml-6 md:mb-4 md:max-w-[45%] md:h-52"
               />
             )}
             <div dangerouslySetInnerHTML={{ __html: news.body }} />
+            <div className="clear-both" />
           </div>
 
           {/* Gallery as carousel */}

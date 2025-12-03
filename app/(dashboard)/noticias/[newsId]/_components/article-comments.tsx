@@ -53,79 +53,79 @@ export function ArticleComments({
   };
 
   return (
-    <Card className="max-md:border-0 max-md:px-0 max-md:shadow-none">
-      <CardContent className="md:p-6 p-0 py-0">
+    <Card className="max-md:border-0 max-md:px-0 max-md:shadow-none mt-6">
+      <CardContent className="md:p-4 p-0 py-0">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl">Comentarios</h3>
-          <Badge variant="outline">
+          <h3 className="text-xl font-semibold">Comentarios</h3>
+          <Badge variant="outline" className="text-sm">
             {news?.comments.comment_count} comentarios
           </Badge>
         </div>
 
-        <div className="text-center py-4">
+        <div className="mb-4">
           <CommentForm nid={news.drupal_internal__nid} />
         </div>
 
         {/* Loading Comments */}
         {commentsLoading && (
-          <div className="text-center py-8 text-muted-foreground">
-            <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Cargando comentarios...</p>
+          <div className="text-center py-6 text-muted-foreground">
+            <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Cargando comentarios...</p>
           </div>
         )}
 
         {/* Error Comments */}
         {commentsError && (
-          <div className="text-center py-8 text-red-500">
-            <p>Error al cargar los comentarios</p>
+          <div className="text-center py-6 text-red-500">
+            <p className="text-sm">Error al cargar los comentarios</p>
           </div>
         )}
 
         {/* Comments List */}
         {!commentsLoading && !commentsError && paginatedComments && (
-          <div className="space-y-4">
+          <div className="space-y-3 mb-4">
             {paginatedComments.length > 0 ? (
               paginatedComments.map((comment) => (
                 <div
                   key={comment.id}
-                  className="border-l-2 border-muted pl-4 bg-muted rounded-xl py-4"
+                  className="border-l-4 border-primary/30 pl-4 pr-3 py-3 bg-gradient-to-r from-muted/50 to-transparent rounded-r-lg hover:from-muted/70 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                    <div className="w-8 h-8 bg-primary/15 rounded-full flex items-center justify-center ring-2 ring-primary/20">
                       <User className="h-4 w-4 text-primary" />
                     </div>
 
                     <div>
-                      <p className="font-medium text-sm">
-                        {comment.user?.name}
+                      <p className="font-semibold text-sm text-foreground">
+                        {comment.user?.name || "Usuario"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatDate(comment.created)}
                       </p>
                     </div>
                   </div>
-                  <p className="text-foreground leading-relaxed mr-4 md:mx-10">
+                  <p className="text-foreground leading-relaxed text-sm ml-10">
                     {comment.body}
                   </p>
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No hay comentarios aún</p>
+              <div className="text-center py-6 text-muted-foreground border border-dashed border-muted rounded-lg">
+                <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No hay comentarios aún</p>
               </div>
             )}
           </div>
         )}
 
-        {/* Pagination and Limit Selector */}
-        <div
-          className={cn(
-            "flex flex-col md:flex-row md:items-center md:justify-between items-start mt-12",
-            commentsClassName
-          )}
-        >
-          {allComments && allComments.length > 0 && (
+        {/* Pagination and Limit Selector - Only show if there are comments */}
+        {!commentsLoading && !commentsError && totalComments > 0 && (
+          <div
+            className={cn(
+              "flex flex-col md:flex-row md:items-center md:justify-between items-start gap-4 pt-4 border-t border-muted",
+              commentsClassName
+            )}
+          >
             <Select
               onValueChange={handleLimitChange}
               defaultValue={limit.toString()}
@@ -139,15 +139,15 @@ export function ArticleComments({
                 <SelectItem value="15">15 por página</SelectItem>
               </SelectContent>
             </Select>
-          )}
-          {totalPages > 1 && (
-            <Pagination
-              currentPage={page}
-              totalPages={totalPages}
-              onPageChange={setPage}
-            />
-          )}
-        </div>
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+              />
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -87,13 +87,36 @@ export default function DashboardLayout({
 
   const { data: areas, isLoading } = useAreas();
 
+  // Verificar si hay refresh token en localStorage y redirigir al login si no hay
   useEffect(() => {
-    // Si no hay sesión o la sesión es inválida, limpiar localStorage
+    if (typeof window === "undefined") return;
+    
+    // Si no hay sesión y no hay refresh token, redirigir al login
+    if (!session) {
+      const refreshToken = localStorage.getItem("cofrem.refresh_token");
+      if (!refreshToken) {
+        // No hay sesión ni refresh token, redirigir al login
+        router.push("/auth/login");
+        return;
+      }
+    }
+  }, [session, router]);
+
+  useEffect(() => {
+    // Si no hay sesión o la sesión es inválida
     if (!session || !session.drupal?.accessToken) {
+      // Solo limpiar el access_token y expires_at, pero NO el refresh_token
+      // El refresh_token se mantiene para permitir reintentos de refresh
       localStorage.removeItem("cofrem.access_token");
-      localStorage.removeItem("cofrem.refresh_token");
       localStorage.removeItem("cofrem.expires_at");
       localStorage.removeItem("cofrem.user");
+      
+      // Solo limpiar el refresh_token si realmente no existe en la sesión
+      // y tampoco existe en localStorage (para evitar perderlo innecesariamente)
+      const storedRefreshToken = localStorage.getItem("cofrem.refresh_token");
+      if (!session?.drupal?.refreshToken && !storedRefreshToken) {
+        localStorage.removeItem("cofrem.refresh_token");
+      }
       return;
     }
 
@@ -115,6 +138,7 @@ export default function DashboardLayout({
       }
       
       // Guardar el refresh_token siempre que esté disponible
+      // Esto asegura que se mantenga actualizado si viene uno nuevo
       if (session.drupal.refreshToken) {
         localStorage.setItem("cofrem.refresh_token", session.drupal.refreshToken);
       }
@@ -123,7 +147,11 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!pathname.startsWith("/directory")) setShowMainSidebar(false);
-    if (!pathname.startsWith("/about-us")) setShowMainSidebar(false);
+    if (!pathname.startsWith("/nosotros")) setShowMainSidebar(false);
+    // Cerrar el sidebar principal cuando se abre la página de nosotros
+    if (pathname.startsWith("/nosotros")) {
+      setSidebarOpen(false);
+    }
   }, [pathname]);
 
   // 🔹 Directorio Layout
@@ -187,7 +215,7 @@ export default function DashboardLayout({
       </div>
     );
   }
-  if (pathname.startsWith("/about-us")) {
+  if (pathname.startsWith("/nosotros")) {
     if (isLoading || !areas?.length) {
       return <DirectorySkeleton />;
     }
@@ -197,18 +225,18 @@ export default function DashboardLayout({
         <AboutSidebar
           onSelectSection={setSelectedSection}
           router={router}
-          onShowMainSidebar={() => setShowMainSidebar(true)}
+          onShowMainSidebar={() => setSidebarOpen(true)}
         />
         <AboutSidebarMobile
           open={showMainSheet}
           setOpen={setShowMainSheet}
           router={router}
           onSelectSection={setSelectedSection}
-          onShowMainSidebar={() => setShowMainSidebar(true)}
+          onShowMainSidebar={() => setSidebarOpen(true)}
         />
         <main className="flex-1 flex flex-col overflow-hidden">
           <Header
-            onMenuClick={() => setShowMainSheet(true)}
+            onMenuClick={() => setSidebarOpen(true)}
             notifications={notifications}
           />
           <BreadcrumbHeader name="Nosotros" />
@@ -217,21 +245,30 @@ export default function DashboardLayout({
           </div>
         </main>
 
-        {showMainSidebar && (
-          <div className="fixed inset-0 z-50 flex">
-            <Sidebar
-              isOpen
-              onClose={() => setShowMainSidebar(false)}
-              currentUser={currentUser}
-              sidebarItems={sidebarItems}
-              activeModule={activeModule}
-              onModuleChange={(id) => {
-                setActiveModule(id);
-                setShowMainSidebar(false);
-                const item = sidebarItems.find((s) => s.id === id);
-                if (item?.url) router.push(item.url);
-              }}
+        {/* Sidebar principal - solo se muestra cuando sidebarOpen es true */}
+        {sidebarOpen && (
+          <div className="fixed inset-0 z-[60] flex">
+            {/* Overlay de fondo */}
+            <div 
+              className="fixed inset-0 z-[60]"
+              onClick={() => setSidebarOpen(false)}
             />
+            {/* Sidebar */}
+            <div className="relative z-[61]">
+              <Sidebar
+                isOpen
+                onClose={() => setSidebarOpen(false)}
+                currentUser={currentUser}
+                sidebarItems={sidebarItems}
+                activeModule={activeModule}
+                onModuleChange={(id) => {
+                  setActiveModule(id);
+                  setSidebarOpen(false);
+                  const item = sidebarItems.find((s) => s.id === id);
+                  if (item?.url) router.push(item.url);
+                }}
+              />
+            </div>
           </div>
         )}
       </div>

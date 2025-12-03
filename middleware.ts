@@ -11,7 +11,8 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
+  // Verificar si hay un usuario válido (no solo si req.auth existe, sino si tiene user)
+  const isLoggedIn = !!req.auth && !!req.auth.user;
 
   // console.log("Auth:", req.auth)
 
