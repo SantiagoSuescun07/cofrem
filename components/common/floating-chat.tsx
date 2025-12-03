@@ -16,22 +16,27 @@ interface Message {
   timestamp: Date
 }
 
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    content: "¡Hola! 👋 Bienvenido al chat de soporte de Cofrem. ¿En qué puedo ayudarte hoy?",
-    sender: "agent",
-    timestamp: new Date(),
-  },
-]
-
 export function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [messages, setMessages] = useState<Message[]>([])
   const [inputValue, setInputValue] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Inicializar mensajes solo en el cliente para evitar errores de hidratación
+  useEffect(() => {
+    setMounted(true)
+    setMessages([
+      {
+        id: "1",
+        content: "¡Hola! 👋 Bienvenido al chat de soporte de Cofrem. ¿En qué puedo ayudarte hoy?",
+        sender: "agent",
+        timestamp: new Date(),
+      },
+    ])
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -151,14 +156,16 @@ export function FloatingChat() {
                   )}
                 >
                   <p className="leading-relaxed">{message.content}</p>
-                  <p
-                    className={cn(
-                      "mt-1 text-[10px]",
-                      message.sender === "user" ? "text-primary-foreground/70 text-right" : "text-muted-foreground",
-                    )}
-                  >
-                    {formatTime(message.timestamp)}
-                  </p>
+                  {mounted && (
+                    <p
+                      className={cn(
+                        "mt-1 text-[10px]",
+                        message.sender === "user" ? "text-primary-foreground/70 text-right" : "text-muted-foreground",
+                      )}
+                    >
+                      {formatTime(message.timestamp)}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}

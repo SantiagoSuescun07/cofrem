@@ -71,84 +71,58 @@ export const ManagementContent = ({
       console.log(`Filtro por módulo ${activeModule}: ${beforeModuleFilter} -> ${filtered.length} documentos`);
     }
 
-    // Si hay categoría activa, filtrar por categoría usando el ID (más confiable que el nombre)
+    // Si hay categoría activa, filtrar por categoría usando el ID
     if (activeCategory) {
       const beforeCategoryFilter = filtered.length;
       
-      // Primero intentar obtener el ID de la categoría desde los módulos
+      // Buscar el ID de la categoría desde los módulos
       let categoryId: number | null = null;
-      let categoryInfo: { id: number; parentId: number | null; subareaIds: number[] } | null = null;
       
-      if (modules) {
-        // Buscar la categoría en todos los módulos y sus subáreas
-        const findCategoryRecursive = (cats: any[], parentId: number | null = null): any => {
-          for (const cat of cats) {
-            if (cat.name === activeCategory) {
-              // Recopilar todos los IDs de subáreas
-              const getAllSubareaIds = (subareas: any[]): number[] => {
-                let ids: number[] = [];
-                for (const subarea of subareas) {
-                  ids.push(subarea.drupal_internal__tid);
-                  if (subarea.subareas && subarea.subareas.length > 0) {
-                    ids = ids.concat(getAllSubareaIds(subarea.subareas));
-                  }
-                }
-                return ids;
-              };
-              
-              return {
-                id: cat.drupal_internal__tid,
-                parentId: parentId,
-                subareaIds: cat.subareas && cat.subareas.length > 0 
-                  ? getAllSubareaIds(cat.subareas) 
-                  : []
-              };
+      if (modules && modules.length > 0) {
+        // Función recursiva para buscar categoría en módulos y sus subáreas
+        const findCategoryRecursive = (items: any[]): number | null => {
+          for (const item of items) {
+            // Si el item tiene el nombre de la categoría y tiene id, es la categoría buscada
+            if (item.name === activeCategory && item.id) {
+              return item.id;
             }
-            if (cat.subareas && cat.subareas.length > 0) {
-              const found = findCategoryRecursive(cat.subareas, cat.drupal_internal__tid);
-              if (found) return found;
+            
+            // Buscar recursivamente en subáreas
+            if (item.subareas && item.subareas.length > 0) {
+              const found = findCategoryRecursive(item.subareas);
+              if (found !== null) return found;
             }
           }
           return null;
         };
         
+        // Buscar en todos los módulos
         for (const module of modules) {
-          const found = findCategoryRecursive(module.categories);
-          if (found) {
-            categoryInfo = found;
-            categoryId = found.id;
-            break;
+          if (module.categories && module.categories.length > 0) {
+            const foundId = findCategoryRecursive(module.categories);
+            if (foundId !== null) {
+              categoryId = foundId;
+              break;
+            }
           }
         }
       }
       
-      // Filtrar por categoría usando el ID si está disponible, sino usar el nombre
+      // Filtrar por categoría usando el ID
       filtered = filtered.filter((doc) => {
         const docCategoryId = doc.field_module_category?.drupal_internal__tid;
         
         if (categoryId !== null && docCategoryId !== undefined) {
-          // Si encontramos la categoría en los módulos, usar el ID
-          if (categoryInfo) {
-            // Si la categoría seleccionada tiene subáreas (es una categoría padre)
-            if (categoryInfo.subareaIds.length > 0) {
-              // Incluir documentos de la categoría padre Y de todas sus subáreas
-              return docCategoryId === categoryId || categoryInfo.subareaIds.includes(docCategoryId);
-            } else {
-              // Si la categoría seleccionada es una subárea (no tiene subáreas propias)
-              // Solo incluir documentos de esa subárea específica
-              return docCategoryId === categoryId;
-            }
-          }
-          // Fallback: comparación directa por ID
+          // Comparar directamente por ID
           return docCategoryId === categoryId;
         } else {
-          // Fallback a comparación por nombre
+          // Fallback a comparación por nombre si no encontramos el ID
           const categoryName = doc.field_module_category?.name;
           return categoryName === activeCategory;
         }
       });
       
-      console.log(`Filtro por categoría "${activeCategory}" (ID: ${categoryId}, Info:`, categoryInfo, `): ${beforeCategoryFilter} -> ${filtered.length} documentos`);
+      console.log(`Filtro por categoría "${activeCategory}" (ID: ${categoryId}): ${beforeCategoryFilter} -> ${filtered.length} documentos`);
       
       // Debug: mostrar información de los documentos filtrados
       if (filtered.length > 0) {

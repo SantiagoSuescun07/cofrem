@@ -46,7 +46,7 @@ export function NewsSection() {
     <div className="lg:col-span-2 mt-14">
       <div className="flex items-center justify-end mb-6">
         <Link
-          href="/news"
+          href="/noticias"
           className="text-muted-foreground transition-colors hover:underline"
         >
           Ver todas

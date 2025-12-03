@@ -27,16 +27,18 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   userPoints = 1250,
   userRanking = "top 10",
 }) => {
+  const { data: polls, isLoading: isLoadingPoll } = usePollQuery();
   const { data: events, isLoading, isError } = useCalendarEventsQuery();
-  const { data: poll, isLoading: isLoadingPoll } = usePollQuery();
   const [openSurvey, setOpenSurvey] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   
-  // Verificar si hay encuesta activa disponible
-  const hasNoActivePoll = 
-    (poll && (poll as any).message === "No active poll found.") ||
-    (!poll && !isLoadingPoll);
+  // Manejar array de encuestas
+  const pollsArray = Array.isArray(polls) ? polls : [];
+  const hasActivePolls = pollsArray.length > 0;
+  
+  // Obtener la primera encuesta para mostrar en el sidebar (si existe)
+  const firstPoll = pollsArray.length > 0 ? pollsArray[0] : null;
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, align: "start" },
     [Autoplay({ delay: 4000 })]
@@ -272,28 +274,43 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
       {/* Encuesta */}
       <div className="bg-white px-5 py-3 rounded-xl border border-gray-200">
-        <h3 className="text-gray-900 mb-4">Encuesta Activa</h3>
+        <h3 className="text-gray-900 mb-4">
+          {hasActivePolls && pollsArray.length > 1 
+            ? `Encuestas Activas (${pollsArray.length})` 
+            : "Encuesta Activa"}
+        </h3>
         {isLoadingPoll ? (
-          <p className="text-sm text-gray-500 mb-4">Cargando encuesta...</p>
-        ) : hasNoActivePoll ? (
+          <p className="text-sm text-gray-500 mb-4">Cargando encuestas...</p>
+        ) : !hasActivePolls ? (
           <p className="text-sm text-gray-600 mb-4">
-            Ya has respondido esta encuesta. Gracias por tu participación.
+            No hay encuestas activas en este momento.
           </p>
         ) : (
           <p className="text-sm text-gray-600 mb-4">
-            {poll?.fields?.field_title?.[0]?.value || poll?.title || "Evaluación de clima laboral 2025"}
+            {firstPoll?.fields?.field_title?.[0]?.value || firstPoll?.question || "Encuesta activa"}
+            {pollsArray.length > 1 && (
+              <span className="text-xs text-gray-500 block mt-1">
+                y {pollsArray.length - 1} más
+              </span>
+            )}
           </p>
         )}
         <button
           onClick={() => setOpenSurvey(true)}
-          disabled={hasNoActivePoll || isLoadingPoll}
+          disabled={!hasActivePolls || isLoadingPoll}
           className={`w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-            hasNoActivePoll || isLoadingPoll
+            !hasActivePolls || isLoadingPoll
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
               : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
           }`}
         >
-          {isLoadingPoll ? "Cargando..." : hasNoActivePoll ? "Ya participaste" : "Participar"}
+          {isLoadingPoll 
+            ? "Cargando..." 
+            : !hasActivePolls 
+            ? "No hay encuestas" 
+            : pollsArray.length > 1 
+            ? `Ver ${pollsArray.length} encuestas` 
+            : "Participar"}
         </button>
       </div>
 

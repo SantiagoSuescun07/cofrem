@@ -88,13 +88,25 @@ export default function DashboardLayout({
   const { data: areas, isLoading } = useAreas();
 
   useEffect(() => {
-    if (session?.drupal?.accessToken) {
+    // Si no hay sesión o la sesión es inválida, limpiar localStorage
+    if (!session || !session.drupal?.accessToken) {
+      localStorage.removeItem("cofrem.access_token");
+      localStorage.removeItem("cofrem.refresh_token");
+      localStorage.removeItem("cofrem.expires_at");
+      localStorage.removeItem("cofrem.user");
+      return;
+    }
+
+    // Si hay sesión válida, sincronizar tokens
+    if (session.drupal.accessToken) {
       const currentToken = localStorage.getItem("cofrem.access_token");
       
       // Sincronizar el token siempre que cambie o no exista
       if (currentToken !== session.drupal.accessToken) {
         localStorage.setItem("cofrem.access_token", session.drupal.accessToken);
-        localStorage.setItem("cofrem.user", JSON.stringify(session.drupal.user));
+        if (session.drupal.user) {
+          localStorage.setItem("cofrem.user", JSON.stringify(session.drupal.user));
+        }
         
         // Guardar también la fecha de expiración si está disponible
         if (session.drupal.expiresAt) {
@@ -107,7 +119,7 @@ export default function DashboardLayout({
         localStorage.setItem("cofrem.refresh_token", session.drupal.refreshToken);
       }
     }
-  }, [session?.drupal?.accessToken, session?.drupal?.refreshToken, session?.drupal?.expiresAt]);
+  }, [session]);
 
   useEffect(() => {
     if (!pathname.startsWith("/directory")) setShowMainSidebar(false);

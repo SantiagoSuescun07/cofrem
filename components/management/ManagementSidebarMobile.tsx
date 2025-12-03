@@ -22,9 +22,11 @@ interface ManagementSidebarMobileProps {
 
 interface CategoryWithSubareas {
   name: string;
+  id: number;
   drupal_internal__tid: number;
   count: number;
   subareas?: CategoryWithSubareas[];
+  isChild?: boolean; // true si es un child (subárea), false si es una categoría real
 }
 
 interface ModuleGroup {
@@ -79,9 +81,15 @@ export const ManagementSidebarMobile = ({
   // Función recursiva para procesar categorías con sus subáreas anidadas
   const processCategoryRecursive = (
     moduleId: string,
-    category: { name: string; drupal_internal__tid: number; subareas?: any[] }
+    category: { name: string; id?: number; drupal_internal__tid: number; subareas?: any[]; parentId?: number | null; isChild?: boolean }
   ): CategoryWithSubareas => {
-    const count = countDocuments(moduleId, category.drupal_internal__tid);
+    const categoryId = category.id || category.drupal_internal__tid;
+    
+    let count = 0;
+    // Solo contar documentos si es una categoría real (no una subárea/child)
+    if (!category.isChild) {
+      count = countDocuments(moduleId, categoryId);
+    }
     
     const processedSubareas = category.subareas?.map((subarea) =>
       processCategoryRecursive(moduleId, subarea)
@@ -89,9 +97,11 @@ export const ManagementSidebarMobile = ({
 
     return {
       name: category.name,
-      drupal_internal__tid: category.drupal_internal__tid,
+      id: categoryId,
+      drupal_internal__tid: categoryId,
       count,
       subareas: processedSubareas,
+      isChild: category.isChild,
     };
   };
 
@@ -137,7 +147,7 @@ export const ManagementSidebarMobile = ({
     baseKey: string;
     level?: number;
   }) => {
-    const categoryKey = `${baseKey}-${category.drupal_internal__tid}`;
+    const categoryKey = `${baseKey}-${category.id}`;
     const hasSubareas = category.subareas && category.subareas.length > 0;
     const isOpen = openCategories.has(categoryKey);
     
@@ -153,6 +163,10 @@ export const ManagementSidebarMobile = ({
     };
     
     const totalCount = getTotalCount(category);
+    // Solo mostrar el contador si NO es un child y NO tiene subáreas
+    // Las categorías que tienen subcategorías (children) no muestran número
+    // Las categorías sin subcategorías siempre muestran el número (incluso si es 0)
+    const shouldShowCount = !category.isChild && !hasSubareas;
 
     const textSize = level === 0 ? "text-sm" : "text-xs";
     const paddingY = level === 0 ? "py-2" : "py-1.5";
@@ -164,24 +178,30 @@ export const ManagementSidebarMobile = ({
           onClick={() => {
             if (hasSubareas) {
               toggleCategory(categoryKey);
-              // Si se abre una categoría, también seleccionarla
+            }
+            // Solo seleccionar categoría si NO es un child (solo las categorías reales son seleccionables)
+            if (!category.isChild) {
               setActiveCategory(category.name);
-            } else {
-              setActiveCategory(category.name);
-              setOpen(false);
+              if (!hasSubareas) {
+                setOpen(false);
+              }
             }
           }}
           className={`w-full flex justify-between items-center text-left ${textSize} px-3 ${paddingY} rounded-md transition-colors ${
-            activeCategory === category.name && !hasSubareas
+            activeCategory === category.name && !hasSubareas && !category.isChild
               ? "bg-[#e4fef1] text-[#11c99d] font-medium"
+              : category.isChild
+              ? "hover:bg-gray-50 text-gray-600 font-medium"
               : "hover:bg-[#e4fef1] text-gray-700"
           }`}
         >
           <span>{category.name}</span>
           <div className="flex items-center gap-2">
-            <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
-              {totalCount}
-            </span>
+            {shouldShowCount && (
+              <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                {totalCount}
+              </span>
+            )}
             {hasSubareas && (
               isOpen ? (
                 <ChevronUp className="h-3 w-3 text-gray-400" />
@@ -196,7 +216,7 @@ export const ManagementSidebarMobile = ({
           <div className={`w-full mt-1 space-y-1 pl-3 border-l ${borderColor}`}>
             {category.subareas?.map((subarea) => (
               <CategoryItem
-                key={`${categoryKey}-${subarea.drupal_internal__tid}`}
+                key={`${categoryKey}-${subarea.id}`}
                 category={subarea}
                 moduleId={moduleId}
                 baseKey={categoryKey}
@@ -286,7 +306,7 @@ export const ManagementSidebarMobile = ({
                       <div className="w-full mt-1 space-y-1 pl-3 border-l border-gray-100">
                         {mod.categories.map((cat) => (
                           <CategoryItem
-                            key={`${mod.id}-${cat.drupal_internal__tid}`}
+                            key={`${mod.id}-${cat.id}`}
                             category={cat}
                             moduleId={mod.id}
                             baseKey={mod.id}

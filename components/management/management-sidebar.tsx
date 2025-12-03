@@ -19,9 +19,11 @@ interface ManagementSidebarProps {
 
 interface CategoryWithSubareas {
   name: string;
+  id: number;
   drupal_internal__tid: number;
   count: number;
   subareas?: CategoryWithSubareas[];
+  isChild?: boolean; // true si es un child (subárea), false si es una categoría real
 }
 
 interface ModuleGroup {
@@ -53,7 +55,7 @@ export const ManagementSidebar = ({
     let count = 0;
     documents.forEach((doc) => {
       const docModuleId = doc.field_modulo?.drupal_internal__tid?.toString();
-      const docCategoryId = doc.field_module_category?.drupal_internal__tid?.toString();
+      const docCategoryId = doc.field_module_category?.drupal_internal__tid;
       const hasValidFiles =
         doc.field_file &&
         doc.field_file.length > 0 &&
@@ -61,7 +63,7 @@ export const ManagementSidebar = ({
 
       if (
         docModuleId === moduleId &&
-        docCategoryId === categoryId.toString() &&
+        docCategoryId === categoryId &&
         hasValidFiles
       ) {
         count++;
@@ -74,10 +76,21 @@ export const ManagementSidebar = ({
   // Función recursiva para contar documentos incluyendo subáreas anidadas
   const countDocumentsRecursive = (
     moduleId: string,
-    category: { drupal_internal__tid: number; subareas?: any[] }
+    category: { id?: number; drupal_internal__tid: number; subareas?: any[] }
   ): number => {
-    let count = countDocuments(moduleId, category.drupal_internal__tid);
+    // Si tiene id, es una categoría real, contar sus documentos
+    // Si no tiene id pero tiene drupal_internal__tid, también contar
+    const categoryId = category.id || category.drupal_internal__tid;
+    let count = 0;
     
+    // Solo contar si es una categoría real (tiene id o es una categoría de documento)
+    // Las subáreas (children) sin field_categories no se cuentan como categorías
+    if (category.id && category.id === category.drupal_internal__tid) {
+      // Es una categoría real, contar documentos
+      count = countDocuments(moduleId, categoryId);
+    }
+    
+    // Contar documentos de subáreas (categorías anidadas)
     if (category.subareas && category.subareas.length > 0) {
       category.subareas.forEach((subarea) => {
         count += countDocumentsRecursive(moduleId, subarea);
@@ -90,9 +103,17 @@ export const ManagementSidebar = ({
   // Función recursiva para procesar categorías con sus subáreas anidadas
   const processCategoryRecursive = (
     moduleId: string,
-    category: { name: string; drupal_internal__tid: number; subareas?: any[] }
+    category: { name: string; id?: number; drupal_internal__tid: number; subareas?: any[]; parentId?: number | null; isChild?: boolean }
   ): CategoryWithSubareas => {
-    const count = countDocuments(moduleId, category.drupal_internal__tid);
+    // Usar el id directamente, que es el mismo que drupal_internal__tid
+    const categoryId = category.id || category.drupal_internal__tid;
+    
+    let count = 0;
+    // Solo contar documentos si es una categoría real (no una subárea/child)
+    // Los children (isChild: true) no tienen documentos directamente, solo sus categorías
+    if (!category.isChild) {
+      count = countDocuments(moduleId, categoryId);
+    }
     
     const processedSubareas = category.subareas?.map((subarea) =>
       processCategoryRecursive(moduleId, subarea)
@@ -100,9 +121,11 @@ export const ManagementSidebar = ({
 
     return {
       name: category.name,
-      drupal_internal__tid: category.drupal_internal__tid,
+      id: categoryId,
+      drupal_internal__tid: categoryId,
       count,
       subareas: processedSubareas,
+      isChild: category.isChild, // Pasar la información de si es un child
     };
   };
 
@@ -148,7 +171,7 @@ export const ManagementSidebar = ({
     baseKey: string;
     level?: number;
   }) => {
-    const categoryKey = `${baseKey}-${category.drupal_internal__tid}`;
+    const categoryKey = `${baseKey}-${category.id}`;
     const hasSubareas = category.subareas && category.subareas.length > 0;
     const isOpen = openCategories.has(categoryKey);
     
@@ -164,6 +187,10 @@ export const ManagementSidebar = ({
     };
     
     const totalCount = getTotalCount(category);
+    // Solo mostrar el contador si NO es un child y NO tiene subáreas
+    // Las categorías que tienen subcategorías (children) no muestran número
+    // Las categorías sin subcategorías siempre muestran el número (incluso si es 0)
+    const shouldShowCount = !category.isChild && !hasSubareas;
 
     const textSize = level === 0 ? "text-sm" : "text-xs";
     const paddingY = level === 0 ? "py-2" : "py-1.5";
@@ -176,19 +203,27 @@ export const ManagementSidebar = ({
             if (hasSubareas) {
               toggleCategory(categoryKey);
             }
-            setActiveCategory(category.name);
+            // Solo seleccionar categoría si NO es un child (solo las categorías reales son seleccionables)
+            // Los children solo se expanden/colapsan, no se seleccionan
+            if (!category.isChild) {
+              setActiveCategory(category.name);
+            }
           }}
           className={`w-full flex justify-between items-center text-left ${textSize} px-3 ${paddingY} rounded-md transition-colors ${
-            activeCategory === category.name && !hasSubareas
+            activeCategory === category.name && !hasSubareas && !category.isChild
               ? "bg-[#e4fef1] text-[#11c99d] font-medium"
+              : category.isChild
+              ? "hover:bg-gray-50 text-gray-600 font-medium"
               : "hover:bg-[#e4fef1] text-gray-700"
           }`}
         >
           <span>{category.name}</span>
           <div className="flex items-center gap-2">
-            <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
-              {totalCount}
-            </span>
+            {shouldShowCount && (
+              <span className="text-xs bg-gray-200 px-2 py-0.5 rounded-full">
+                {totalCount}
+              </span>
+            )}
             {hasSubareas && (
               isOpen ? (
                 <ChevronUp className="h-3 w-3 text-gray-400" />
@@ -203,7 +238,7 @@ export const ManagementSidebar = ({
           <div className={`w-full mt-1 space-y-1 pl-3 border-l ${borderColor}`}>
             {category.subareas?.map((subarea) => (
               <CategoryItem
-                key={`${categoryKey}-${subarea.drupal_internal__tid}`}
+                key={`${categoryKey}-${subarea.id}`}
                 category={subarea}
                 moduleId={moduleId}
                 baseKey={categoryKey}
@@ -289,7 +324,7 @@ export const ManagementSidebar = ({
                   <div className="w-full mt-1 space-y-1 pl-3 border-l border-gray-100">
                     {mod.categories.map((cat) => (
                       <CategoryItem
-                        key={`${mod.id}-${cat.drupal_internal__tid}`}
+                        key={`${mod.id}-${cat.id}`}
                         category={cat}
                         moduleId={mod.id}
                         baseKey={mod.id}

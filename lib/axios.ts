@@ -53,6 +53,14 @@ api.interceptors.response.use(
     if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
       originalRequest._retry = true;
 
+      // Verificar si ya estamos en proceso de logout para evitar bucles
+      if (typeof window !== "undefined") {
+        const isLoggingOut = sessionStorage.getItem("cofrem.logging_out");
+        if (isLoggingOut === "true") {
+          return Promise.reject(error);
+        }
+      }
+
       try {
         // Obtener el refresh_token del localStorage
         const refreshToken = typeof window !== "undefined" 
@@ -102,14 +110,28 @@ api.interceptors.response.use(
         console.error("❌ Error al refrescar token:", refreshError);
         
         if (typeof window !== "undefined") {
+          // Marcar que estamos en proceso de logout para evitar bucles
+          sessionStorage.setItem("cofrem.logging_out", "true");
+          
+          // Limpiar todos los tokens
           clearToken();
           localStorage.removeItem(REFRESH_TOKEN);
-          toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
+          localStorage.removeItem("cofrem.user");
           
-          // Guardar la URL actual para redirigir después del login
-          const currentUrl = window.location.pathname + window.location.search;
-          const callbackUrl = encodeURIComponent(currentUrl);
-          window.location.href = `/auth/login?callbackUrl=${callbackUrl}`;
+          // Limpiar el flag después de un tiempo
+          setTimeout(() => {
+            sessionStorage.removeItem("cofrem.logging_out");
+          }, 5000);
+          
+          // Solo redirigir si no estamos ya en la página de login
+          if (!window.location.pathname.startsWith("/auth/login")) {
+            toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
+            
+            // Guardar la URL actual para redirigir después del login
+            const currentUrl = window.location.pathname + window.location.search;
+            const callbackUrl = encodeURIComponent(currentUrl);
+            window.location.href = `/auth/login?callbackUrl=${callbackUrl}`;
+          }
         }
         
         return Promise.reject(refreshError);

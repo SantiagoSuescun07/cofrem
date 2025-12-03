@@ -45,7 +45,8 @@ export default auth((req) => {
   }
 
   // Si no está logueado y la ruta no es pública, redirigir a login
-  if (!isLoggedIn && !isPublicRoute) {
+  // Evitar bucles infinitos: si ya estamos en la ruta de login, no redirigir de nuevo
+  if (!isLoggedIn && !isPublicRoute && !isAuthRoute) {
     let callbackUrl = nextUrl.pathname;
     if (nextUrl.search) {
       callbackUrl += nextUrl.search;

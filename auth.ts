@@ -465,6 +465,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
     async session({ session, token }) {
+      try {
+        // Si el token no tiene sub (usuario inválido) o tiene un error, invalidar la sesión
+        if (!token || !token.sub || (token as any).error) {
+          const error = (token as any)?.error;
+          if (error) {
+            console.error(`❌ Sesión invalidada por error: ${error}`);
+          }
+          // Retornar null forzará el logout y redirección al login
+          // Esto hará que req.auth sea null en el middleware
+          return null as any;
+        }
+      } catch (error) {
+        // Si hay cualquier error al procesar la sesión, invalidarla
+        console.error("❌ Error al procesar sesión, invalidando:", error);
+        return null as any;
+      }
+
       if (session.user && token.sub) {
         session.user.id = token.sub;
         session.user.name = token.name as string;
@@ -486,6 +503,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         | number
         | undefined;
 
+      // Validar que el token de Drupal no esté expirado
+      if (drupalTokenExpires && Date.now() >= drupalTokenExpires) {
+        console.error("❌ Token de Drupal expirado en sesión, invalidando");
+        return null as any;
+      }
+
       session.drupal = {
         accessToken: drupalAccessToken,
         refreshToken: drupalRefreshToken,
@@ -496,6 +519,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
     async jwt({ token, user, account }) {
+      // Si la sesión ya está invalidada, no intentar refrescar nada
+      if ((token as any).error || !token.sub) {
+        return {
+          sub: undefined,
+          error: (token as any).error || "SessionInvalidated",
+          invalidatedAt: (token as any).invalidatedAt || Date.now(),
+        } as any;
+      }
+
       // Actualizar información básica del usuario
       if (user) {
         token.name = user.name ?? token.name;
@@ -513,19 +545,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         | number
         | undefined;
 
-      // Si tenemos un refresh token y el access token está próximo a expirar (menos de 5 minutos)
-      if (
-        googleRefreshToken &&
-        googleTokenExpires &&
-        Date.now() >= googleTokenExpires - 5 * 60 * 1000
-      ) {
-        console.log("🔄 Refrescando token de Google...");
-        const refreshed = await refreshGoogleToken(googleRefreshToken);
-        if (refreshed) {
-          (token as any).googleAccessToken = refreshed.accessToken;
-          (token as any).googleTokenExpires = refreshed.expiresAt;
-          (token as any).googleRefreshToken = refreshed.refreshToken;
-          console.log("✅ Token de Google refrescado exitosamente");
+      // Función auxiliar para invalidar la sesión completamente
+      const invalidateSession = (reason: string) => {
+        console.error(`❌ ${reason}, invalidando sesión completamente`);
+        // Retornar un token sin sub y sin datos críticos hace que NextAuth considere la sesión como inválida
+        // Esto forzará que req.auth sea null en el middleware y redirija al login
+        return {
+          sub: undefined, // Sin sub, NextAuth no considerará que hay un usuario válido
+          error: reason,
+          invalidatedAt: Date.now(), // Timestamp para evitar reintentos
+        } as any;
+      };
+
+      // Si el token de Google está expirado o próximo a expirar
+      if (googleTokenExpires && Date.now() >= googleTokenExpires - 5 * 60 * 1000) {
+        if (googleRefreshToken) {
+          console.log("🔄 Refrescando token de Google...");
+          const refreshed = await refreshGoogleToken(googleRefreshToken);
+          if (refreshed) {
+            (token as any).googleAccessToken = refreshed.accessToken;
+            (token as any).googleTokenExpires = refreshed.expiresAt;
+            (token as any).googleRefreshToken = refreshed.refreshToken;
+            console.log("✅ Token de Google refrescado exitosamente");
+          } else {
+            // Si el refresh falla, invalidar la sesión completamente
+            return invalidateSession("Error al refrescar token de Google");
+          }
+        } else {
+          // Si no hay refresh token y el token está expirado, invalidar la sesión
+          return invalidateSession("Token de Google expirado sin refresh token");
         }
       }
 
@@ -536,21 +584,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const drupalTokenExpires = (token as any).drupalTokenExpires as
         | number
         | undefined;
+      const drupalAccessToken = token.drupalAccessToken as string | undefined;
 
-      // Si tenemos un refresh token y el access token está próximo a expirar (menos de 5 minutos)
-      if (
-        drupalRefreshToken &&
-        drupalTokenExpires &&
-        Date.now() >= drupalTokenExpires - 5 * 60 * 1000
-      ) {
-        console.log("🔄 Refrescando token de Drupal...");
-        const refreshed = await refreshDrupalToken(drupalRefreshToken);
-        if (refreshed) {
-          token.drupalAccessToken = refreshed.accessToken;
-          token.drupalTokenExpires = refreshed.expiresAt;
-          (token as any).drupalRefreshToken = refreshed.refreshToken;
-          console.log("✅ Token de Drupal refrescado exitosamente");
+      // Si el token de Drupal está expirado o próximo a expirar
+      if (drupalTokenExpires && Date.now() >= drupalTokenExpires - 5 * 60 * 1000) {
+        if (drupalRefreshToken) {
+          console.log("🔄 Refrescando token de Drupal...");
+          const refreshed = await refreshDrupalToken(drupalRefreshToken);
+          if (refreshed) {
+            token.drupalAccessToken = refreshed.accessToken;
+            token.drupalTokenExpires = refreshed.expiresAt;
+            (token as any).drupalRefreshToken = refreshed.refreshToken;
+            console.log("✅ Token de Drupal refrescado exitosamente");
+          } else {
+            // Si el refresh falla, invalidar la sesión completamente
+            return invalidateSession("Error al refrescar token de Drupal");
+          }
+        } else {
+          // Si no hay refresh token y el token está expirado, invalidar la sesión
+          return invalidateSession("Token de Drupal expirado sin refresh token");
         }
+      }
+
+      // Validar que tenemos al menos un token válido (Google o Drupal)
+      // Si no hay tokens válidos y no es un login inicial, invalidar la sesión
+      if (!user && !googleAccessToken && !drupalAccessToken) {
+        return invalidateSession("No hay tokens válidos disponibles");
       }
 
       // Procesar login inicial con Google

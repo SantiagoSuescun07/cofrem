@@ -7,6 +7,7 @@ export interface TaxonomyCategory {
   drupal_internal__tid: number;
   subareas?: TaxonomyCategory[];
   parentId?: number | null;
+  isChild?: boolean; // true si es un child (subárea), false si es una categoría real
 }
 
 export interface TaxonomyModule {
@@ -45,8 +46,8 @@ const transformChildrenToSubareas = (children: AreaSubareaItem[]): TaxonomyCateg
 
 export const fetchModules = async (): Promise<TaxonomyModule[]> => {
   try {
-    // Llamar al nuevo endpoint con autenticación básica
-    const { data } = await api.get("/factory-apis/taxonomy/area_subarea", {
+    // Llamar al endpoint de módulos del sistema de gestión
+    const { data } = await api.get("/factory-apis/taxonomy/modules_management_system", {
       auth: {
         username: "admin",
         password: "admin",
@@ -59,28 +60,85 @@ export const fetchModules = async (): Promise<TaxonomyModule[]> => {
     }
 
     // Filtrar solo items activos (status: true)
-    const activeItems = data.filter((item: AreaSubareaItem) => item.status === true);
+    const activeItems = data.filter((item: any) => item.status === true);
+
+    // Función recursiva para transformar children en subáreas con sus categorías
+    const transformChildren = (children: any[], parentModuleId: number): TaxonomyCategory[] => {
+      if (!children || children.length === 0) return [];
+      
+      return children.map((child) => {
+        // Transformar field_categories del child en categorías reales
+        const childCategories: TaxonomyCategory[] = child.field_categories && child.field_categories.length > 0
+          ? child.field_categories.map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              uuid: `cat-${cat.id}`,
+              drupal_internal__tid: cat.id,
+              parentId: parentModuleId, // El parentId es el módulo, no el child
+              isChild: false, // Es una categoría real, no un child
+            }))
+          : [];
+
+        // Procesar children anidados recursivamente
+        const nestedChildren = child.children && child.children.length > 0
+          ? transformChildren(child.children, parentModuleId)
+          : [];
+
+        // Crear la subárea (child) que contiene sus categorías y children anidados
+        return {
+          id: child.id,
+          name: child.name,
+          uuid: `area-${child.id}`,
+          drupal_internal__tid: child.id,
+          parentId: parentModuleId,
+          isChild: true, // Es un child (subárea), no una categoría real
+          // Las categorías del child van como subáreas, junto con los children anidados
+          subareas: childCategories.length > 0 || nestedChildren.length > 0
+            ? [...childCategories, ...nestedChildren]
+            : undefined,
+        };
+      });
+    };
 
     // Transformar cada item de nivel superior en un módulo
-    const modules: TaxonomyModule[] = activeItems.map((item: AreaSubareaItem) => {
-      // Los children del item se convierten en categorías
-      const categories: TaxonomyCategory[] = item.children && item.children.length > 0
-        ? transformChildrenToSubareas(item.children)
+    const modules: TaxonomyModule[] = activeItems.map((item: any) => {
+      // Las categorías vienen en field_categories del módulo principal
+      const categories: TaxonomyCategory[] = item.field_categories && item.field_categories.length > 0
+        ? item.field_categories.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            uuid: `cat-${cat.id}`,
+            drupal_internal__tid: cat.id,
+            parentId: item.id,
+            isChild: false, // Es una categoría real, no un child
+          }))
         : [];
+
+      // Los children se convierten en subáreas (que pueden tener sus propias categorías)
+      const subareas = item.children && item.children.length > 0
+        ? transformChildren(item.children, item.id)
+        : [];
+
+      // Combinar categorías del módulo con las subáreas (children)
+      // Las subáreas se muestran como categorías expandibles que contienen sus propias categorías
+      const allCategories: TaxonomyCategory[] = [
+        ...categories,
+        ...subareas,
+      ];
 
       return {
         id: item.id,
         name: item.name,
-        uuid: `area-${item.id}`,
+        uuid: `module-${item.id}`,
         drupal_internal__tid: item.id,
-        categories: categories,
+        categories: allCategories, // Categorías del módulo + subáreas (children)
       };
     });
 
     // Ordenar módulos por weight, luego por nombre
     modules.sort((a, b) => {
-      const aItem = activeItems.find((item: AreaSubareaItem) => item.id === a.id);
-      const bItem = activeItems.find((item: AreaSubareaItem) => item.id === b.id);
+      const aItem = activeItems.find((item: any) => item.id === a.id);
+      const bItem = activeItems.find((item: any) => item.id === b.id);
       const aWeight = aItem?.weight ?? 999;
       const bWeight = bItem?.weight ?? 999;
       
@@ -90,62 +148,11 @@ export const fetchModules = async (): Promise<TaxonomyModule[]> => {
       return a.name.localeCompare(b.name);
     });
 
-    // Función recursiva para establecer parentId en las categorías
-    const setParentIds = (categories: TaxonomyCategory[], parentId: number | null = null) => {
-      categories.forEach((category) => {
-        category.parentId = parentId;
-        if (category.subareas && category.subareas.length > 0) {
-          setParentIds(category.subareas, category.drupal_internal__tid);
-        }
-      });
-    };
-
-    // Establecer parentId en todas las categorías
+    // Ordenar categorías por nombre dentro de cada módulo
     modules.forEach((module) => {
-      setParentIds(module.categories);
-    });
-
-    // Ordenar categorías y subáreas por weight recursivamente
-    const sortCategoriesByWeight = (categories: TaxonomyCategory[], items: AreaSubareaItem[]): TaxonomyCategory[] => {
-      return categories
-        .map((category) => {
-          const item = items.find((i) => i.id === category.id);
-          return {
-            category,
-            weight: item?.weight ?? 999,
-          };
-        })
-        .sort((a, b) => {
-          if (a.weight !== b.weight) {
-            return a.weight - b.weight;
-          }
-          return a.category.name.localeCompare(b.category.name);
-        })
-        .map(({ category, weight }) => ({
-          ...category,
-          subareas: category.subareas 
-            ? sortCategoriesByWeight(category.subareas, items)
-            : undefined,
-        }));
-    };
-
-    // Aplanar todos los items para buscar por ID
-    const flattenItems = (items: AreaSubareaItem[]): AreaSubareaItem[] => {
-      const result: AreaSubareaItem[] = [];
-      items.forEach((item) => {
-        result.push(item);
-        if (item.children && item.children.length > 0) {
-          result.push(...flattenItems(item.children));
-        }
-      });
-      return result;
-    };
-
-    const allItems = flattenItems(activeItems);
-
-    // Ordenar categorías por weight
-    modules.forEach((module) => {
-      module.categories = sortCategoriesByWeight(module.categories, allItems);
+      if (module.categories && module.categories.length > 0) {
+        module.categories.sort((a, b) => a.name.localeCompare(b.name));
+      }
     });
 
     return modules;
