@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createReaction } from "@/services/news/reactions";
 import { toast } from "sonner";
 import { getPublicationsReactions } from "@/queries/publications";
+import { useComments } from "@/queries/news";
 
 interface Props {
   publication: Publication;
@@ -24,11 +25,27 @@ const getDriveEmbedUrl = (uri: string) => {
 };
 
 export function PublicationCard({ publication }: Props) {
-  const { title, field_description, field_gallery = [], field_image, field_options_in_publication } = publication;
+  const {
+    title,
+    field_description,
+    field_gallery = [],
+    field_image,
+    field_options_in_publication,
+  } = publication;
   const queryClient = useQueryClient();
 
+  const {
+    data: allComments,
+    isLoading: commentsLoading,
+    isError: commentsError,
+  } = useComments(publication.id);
+
+  const totalComments = allComments?.length || 0;
+
   // Obtener reacciones de la publicación
-  const { data } = getPublicationsReactions(publication.drupal_internal__nid.toString());
+  const { data } = getPublicationsReactions(
+    publication.drupal_internal__nid.toString()
+  );
 
   // Mutación para registrar una reacción
   const mutation = useMutation({
@@ -47,7 +64,8 @@ export function PublicationCard({ publication }: Props) {
   });
 
   // Verificar si hay un video
-  const hasVideo = field_options_in_publication?.type === "paragraph--video_from_drive";
+  const hasVideo =
+    field_options_in_publication?.type === "paragraph--video_from_drive";
 
   const images = [
     ...(field_image ? [field_image] : []),
@@ -88,17 +106,23 @@ export function PublicationCard({ publication }: Props) {
       )}
 
       {/* Video si existe */}
-      {hasVideo && field_options_in_publication?.field_video_from_drive?.uri && (
-        <div className="mt-4 relative w-full overflow-hidden rounded-lg shadow-md bg-black aspect-video">
-          <iframe
-            src={getDriveEmbedUrl(field_options_in_publication.field_video_from_drive.uri)}
-            title={field_options_in_publication.field_video_from_drive.title || "Video"}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-full"
-          />
-        </div>
-      )}
+      {hasVideo &&
+        field_options_in_publication?.field_video_from_drive?.uri && (
+          <div className="mt-4 relative w-full overflow-hidden rounded-lg shadow-md bg-black aspect-video">
+            <iframe
+              src={getDriveEmbedUrl(
+                field_options_in_publication.field_video_from_drive.uri
+              )}
+              title={
+                field_options_in_publication.field_video_from_drive.title ||
+                "Video"
+              }
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          </div>
+        )}
 
       {/* Grid de imágenes - solo mostrar si no hay video o si hay imágenes adicionales */}
       {!hasVideo && visibleImages.length > 0 && (
@@ -222,7 +246,7 @@ export function PublicationCard({ publication }: Props) {
           {/* Comentarios */}
           <div className="flex items-center gap-1">
             <MessageCircle size={16} />
-            <span>0</span>
+            <span>{totalComments}</span>
           </div>
         </div>
       </div>

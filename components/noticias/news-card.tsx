@@ -39,7 +39,7 @@ export function NewsCard({ news }: NewsCardProps) {
 
   return (
     <div
-      onClick={() => router.push(`/news/${news.id}`)}
+      onClick={() => router.push(`/noticias/${news.id}`)}
       className="relative w-full border rounded-2xl p-4 shadow-sm hover:shadow-md transition cursor-pointer bg-white"
     >
       {/* Header */}
