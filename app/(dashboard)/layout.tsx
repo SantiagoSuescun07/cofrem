@@ -60,7 +60,7 @@ export default function DashboardLayout({
     },
     {
       id: "management-system",
-      label: "Sistema de Gestión",
+      label: "Sistema de Gestión de Calidad",
       icon: "/icons/management-system.png",
       url: "/management-system",
     },

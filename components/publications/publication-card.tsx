@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PublicationComments } from "@/app/(dashboard)/publications/[publicationId]/_components/publication-comments";
 import { Publication } from "@/types/publications";
 import Link from "next/link";
 import { GalleryModal } from "../common/gallery-modal";
@@ -36,8 +43,6 @@ export function PublicationCard({ publication }: Props) {
 
   const {
     data: allComments,
-    isLoading: commentsLoading,
-    isError: commentsError,
   } = useComments(publication.id);
 
   const totalComments = allComments?.length || 0;
@@ -77,6 +82,7 @@ export function PublicationCard({ publication }: Props) {
 
   const [isOpen, setIsOpen] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   const fieldReaction = data?.fields.find(
     (f) => f.field_name === "field_reaction"
@@ -245,8 +251,18 @@ export function PublicationCard({ publication }: Props) {
 
           {/* Comentarios */}
           <div className="flex items-center gap-1">
-            <MessageCircle size={16} />
-            <span>{totalComments}</span>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsCommentsOpen(true);
+              }}
+              className="flex items-center gap-1"
+              aria-label="Abrir comentarios"
+            >
+              <MessageCircle size={16} />
+              <span>{totalComments}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -259,6 +275,22 @@ export function PublicationCard({ publication }: Props) {
           onClose={() => setIsOpen(false)}
         />
       )}
+
+      {/* Modal de comentarios */}
+      <Dialog open={isCommentsOpen} onOpenChange={(open) => setIsCommentsOpen(open)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-normal">Comentarios</DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4">
+            <PublicationComments
+              publicationId={publication.id}
+              publication={publication}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Link>
   );
 }

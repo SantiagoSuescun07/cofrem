@@ -109,7 +109,7 @@ export function FloatingChat() {
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-primary bg-green-400" />
             </div>
             <div>
-              <p className="text-primary-foreground/80 font-medium">Soporte Cofrem</p>
+              <p className="text-primary-foreground/80 font-medium">Asistente Cofrem</p>
               <p className="text-xs text-primary-foreground/80">En línea</p>
             </div>
           </div>
@@ -237,7 +237,7 @@ export function FloatingChat() {
             </Avatar>
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-primary bg-green-400" />
           </div>
-          <span className="flex-1 text-left text-sm text-white">Soporte Cofrem</span>
+          <span className="flex-1 text-left text-sm text-white">Asistente Cofrem</span>
           <X
             className="h-4 w-4 opacity-70 hover:opacity-100"
             onClick={(e) => {

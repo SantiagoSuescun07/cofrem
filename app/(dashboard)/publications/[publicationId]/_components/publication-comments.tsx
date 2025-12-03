@@ -54,9 +54,7 @@ export function PublicationComments({
       <CardContent className="md:p-6 p-0 py-0">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl">Comentarios</h3>
-          <Badge variant="outline">
-            {totalComments} comentarios
-          </Badge>
+          <Badge variant="outline">{totalComments} comentarios</Badge>
         </div>
 
         <div className="text-center py-4">
@@ -117,19 +115,21 @@ export function PublicationComments({
 
         {/* Pagination and Limit Selector */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between items-start mt-12">
-          <Select
-            onValueChange={handleLimitChange}
-            defaultValue={limit.toString()}
-          >
-            <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="Comentarios por página" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5 por página</SelectItem>
-              <SelectItem value="10">10 por página</SelectItem>
-              <SelectItem value="15">15 por página</SelectItem>
-            </SelectContent>
-          </Select>
+          {allComments && allComments?.length > 0 && (
+            <Select
+              onValueChange={handleLimitChange}
+              defaultValue={limit.toString()}
+            >
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Comentarios por página" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 por página</SelectItem>
+                <SelectItem value="10">10 por página</SelectItem>
+                <SelectItem value="15">15 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           {totalPages > 1 && (
             <Pagination
               currentPage={page}

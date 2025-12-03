@@ -2,6 +2,14 @@
 
 import { News } from "@/types/news/news";
 import { MessageCircle } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { ArticleComments } from "@/app/(dashboard)/noticias/[newsId]/_components/article-comments";
 import { ProgressBar } from "../common/progress-bar";
 import Image from "next/image";
 import Link from "next/link";
@@ -41,6 +49,7 @@ export function HomeNewsCard({ news }: HomeNewsCardProps) {
   const fieldReaction = data?.fields.find(
     (f) => f.field_name === "field_reaction"
   );
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 
   return (
     <div className="bg-white rounded-2xl shadow-md mb-5 overflow-hidden transition-shadow hover:shadow-lg">
@@ -126,10 +135,32 @@ export function HomeNewsCard({ news }: HomeNewsCardProps) {
 
             {/* Comentarios */}
             <div className="flex items-center gap-1 text-gray-600">
-              <MessageCircle className="w-5 h-5 text-[#8fd0e2]" />
-              <span className="text-sm font-medium">{commentsCount}</span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsCommentsOpen(true);
+                }}
+                className="flex items-center gap-1"
+                aria-label="Abrir comentarios"
+              >
+                <MessageCircle className="w-5 h-5 text-[#8fd0e2]" />
+                <span className="text-sm font-medium">{commentsCount}</span>
+              </button>
             </div>
           </div>
+          {/* Modal de comentarios */}
+          <Dialog open={isCommentsOpen} onOpenChange={(open) => setIsCommentsOpen(open)}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+              <DialogHeader>
+                <DialogTitle className="font-normal">Comentarios</DialogTitle>
+              </DialogHeader>
+
+              <div className="mt-4 max-w-full">
+                <ArticleComments newsId={news.id} news={news} commentsClassName="md:flex-col md:items-center md:justify-center" />
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>

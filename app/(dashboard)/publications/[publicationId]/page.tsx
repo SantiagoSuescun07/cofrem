@@ -361,9 +361,9 @@ interface SymmetricImageGridProps {
 }
 
 // Componente para el mosaico simétrico de imágenes
-const SymmetricImageGrid: React.FC<SymmetricImageGridProps> = ({ 
-  images, 
-  onImageClick 
+const SymmetricImageGrid: React.FC<SymmetricImageGridProps> = ({
+  images,
+  onImageClick,
 }) => {
   const imageCount: number = images.length;
 
@@ -371,54 +371,54 @@ const SymmetricImageGrid: React.FC<SymmetricImageGridProps> = ({
     switch (imageCount) {
       case 1:
         return {
-          gridClass: 'grid-cols-1',
-          items: [{ span: 'col-span-1', height: 'h-[500px]' }]
+          gridClass: "grid-cols-1",
+          items: [{ span: "col-span-1", height: "h-[500px]" }],
         };
       case 2:
         return {
-          gridClass: 'grid-cols-2',
+          gridClass: "grid-cols-2",
           items: [
-            { span: 'col-span-1', height: 'h-[400px]' },
-            { span: 'col-span-1', height: 'h-[400px]' }
-          ]
+            { span: "col-span-1", height: "h-[400px]" },
+            { span: "col-span-1", height: "h-[400px]" },
+          ],
         };
       case 3:
         return {
-          gridClass: 'grid-cols-2',
+          gridClass: "grid-cols-2",
           items: [
-            { span: 'col-span-2', height: 'h-[300px]' },
-            { span: 'col-span-1', height: 'h-[250px]' },
-            { span: 'col-span-1', height: 'h-[250px]' }
-          ]
+            { span: "col-span-2", height: "h-[300px]" },
+            { span: "col-span-1", height: "h-[250px]" },
+            { span: "col-span-1", height: "h-[250px]" },
+          ],
         };
       case 4:
         return {
-          gridClass: 'grid-cols-2',
+          gridClass: "grid-cols-2",
           items: [
-            { span: 'col-span-1', height: 'h-[300px]' },
-            { span: 'col-span-1', height: 'h-[300px]' },
-            { span: 'col-span-1', height: 'h-[300px]' },
-            { span: 'col-span-1', height: 'h-[300px]' }
-          ]
+            { span: "col-span-1", height: "h-[300px]" },
+            { span: "col-span-1", height: "h-[300px]" },
+            { span: "col-span-1", height: "h-[300px]" },
+            { span: "col-span-1", height: "h-[300px]" },
+          ],
         };
       case 5:
         return {
-          gridClass: 'grid-cols-3',
+          gridClass: "grid-cols-3",
           items: [
-            { span: 'col-span-2 row-span-2', height: 'h-full' },
-            { span: 'col-span-1', height: 'h-[200px]' },
-            { span: 'col-span-1', height: 'h-[200px]' },
-            { span: 'col-span-1', height: 'h-[200px]' },
-            { span: 'col-span-1', height: 'h-[200px]' }
-          ]
+            { span: "col-span-2 row-span-2", height: "h-full" },
+            { span: "col-span-1", height: "h-[200px]" },
+            { span: "col-span-1", height: "h-[200px]" },
+            { span: "col-span-1", height: "h-[200px]" },
+            { span: "col-span-1", height: "h-[200px]" },
+          ],
         };
       default: // 6 o más
         return {
-          gridClass: 'grid-cols-3',
-          items: Array(Math.min(6, imageCount)).fill({ 
-            span: 'col-span-1', 
-            height: 'h-[250px]' 
-          })
+          gridClass: "grid-cols-3",
+          items: Array(Math.min(6, imageCount)).fill({
+            span: "col-span-1",
+            height: "h-[250px]",
+          }),
         };
     }
   };
@@ -431,7 +431,8 @@ const SymmetricImageGrid: React.FC<SymmetricImageGridProps> = ({
     <div className="w-full overflow-hidden rounded-xl">
       <div className={`grid ${layout.gridClass} gap-1`}>
         {displayImages.map((img: ImageItem, index: number) => {
-          const itemLayout: GridLayoutItem = layout.items[index] || layout.items[0];
+          const itemLayout: GridLayoutItem =
+            layout.items[index] || layout.items[0];
           const isLast: boolean = index === 5 && remainingCount > 0;
 
           return (
@@ -479,7 +480,8 @@ export default function SinglePublicationPage({
     error,
   } = useSinglePublication(id);
 
-  const publicationNid: string | undefined = publication?.drupal_internal__nid.toString();
+  const publicationNid: string | undefined =
+    publication?.drupal_internal__nid.toString();
   const { data: reactionsData } = getPublicationsReactions(
     publicationNid || ""
   );
@@ -566,9 +568,7 @@ export default function SinglePublicationPage({
             )}
 
             {/* Descripción secundaria (description) - también antes de las imágenes */}
-            {publication.description && (
-              <p>{publication.description}</p>
-            )}
+            {publication.description && <p>{publication.description}</p>}
 
             {/* Mosaico simétrico de imágenes */}
             {allImages.length > 0 && (
@@ -653,30 +653,33 @@ export default function SinglePublicationPage({
             )}
 
             {/* Acciones sociales */}
-            <div className="flex items-center justify-around border-t pt-4 text-gray-600 text-sm">
-              {fieldReaction?.reactions.map((reaction) => {
-                const isActive: boolean = fieldReaction.user_reaction === reaction.id;
-                return (
-                  <button
-                    key={reaction.id}
-                    onClick={() => mutation.mutate(reaction.id)}
-                    className={`flex items-center gap-2 transition ${
-                      isActive
-                        ? "opacity-100 scale-105"
-                        : "opacity-70 hover:opacity-100"
-                    }`}
-                  >
-                    <Image
-                      src={reaction.icon_url}
-                      alt={reaction.label}
-                      width={20}
-                      height={20}
-                      className="rounded-full"
-                    />
-                    <span>{reaction.count}</span>
-                  </button>
-                );
-              })}
+            <div className="flex items-center justify-between border-t pt-4 text-gray-600 text-sm">
+              <div className="flex items-center justify-between gap-4">
+                {fieldReaction?.reactions.map((reaction) => {
+                  const isActive: boolean =
+                    fieldReaction.user_reaction === reaction.id;
+                  return (
+                    <button
+                      key={reaction.id}
+                      onClick={() => mutation.mutate(reaction.id)}
+                      className={`flex items-center gap-2 transition ${
+                        isActive
+                          ? "opacity-100 scale-105"
+                          : "opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <Image
+                        src={reaction.icon_url}
+                        alt={reaction.label}
+                        width={20}
+                        height={20}
+                        className="rounded-full"
+                      />
+                      <span>{reaction.count}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
               <button className="flex items-center gap-2 hover:text-blue-600 transition">
                 <MessageCircle className="h-5 w-5" /> {totalComments}

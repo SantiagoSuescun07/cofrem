@@ -16,13 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface ArticleCommentsProps {
   newsId: string;
   news: News;
+  commentsClassName?: string;
 }
 
-export function ArticleComments({ newsId, news }: ArticleCommentsProps) {
+export function ArticleComments({
+  newsId,
+  news,
+  commentsClassName,
+}: ArticleCommentsProps) {
   const [page, setPage] = useState(1); // State to track current page
   const [limit, setLimit] = useState(5); // State to track comments per page
 
@@ -113,20 +119,27 @@ export function ArticleComments({ newsId, news }: ArticleCommentsProps) {
         )}
 
         {/* Pagination and Limit Selector */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between items-start mt-12">
-          <Select
-            onValueChange={handleLimitChange}
-            defaultValue={limit.toString()}
-          >
-            <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="Comentarios por página" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="5">5 por página</SelectItem>
-              <SelectItem value="10">10 por página</SelectItem>
-              <SelectItem value="15">15 por página</SelectItem>
-            </SelectContent>
-          </Select>
+        <div
+          className={cn(
+            "flex flex-col md:flex-row md:items-center md:justify-between items-start mt-12",
+            commentsClassName
+          )}
+        >
+          {allComments && allComments.length > 0 && (
+            <Select
+              onValueChange={handleLimitChange}
+              defaultValue={limit.toString()}
+            >
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Comentarios por página" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 por página</SelectItem>
+                <SelectItem value="10">10 por página</SelectItem>
+                <SelectItem value="15">15 por página</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           {totalPages > 1 && (
             <Pagination
               currentPage={page}
