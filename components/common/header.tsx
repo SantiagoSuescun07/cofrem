@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Menu, Search, Bell, X, Check, Calendar, FileText, Clock } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Menu, Search, Bell, X, Check, Calendar, FileText, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,6 +18,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Image from "next/image";
 import { MapPin, ExternalLink } from "lucide-react";
+import { useSearch } from "@/queries/search/use-search";
+import { SearchResult } from "@/services/search/search-content";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -36,6 +38,12 @@ export const Header: React.FC<HeaderProps> = ({
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+  
+  // Búsqueda con debounce
+  const { data: searchResults, isLoading: isSearchLoading } = useSearch(searchQuery);
 
   // Usar React Query para obtener notificaciones
   const { data: notifications = [], isLoading, refetch } = useNotifications();
@@ -61,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
     return "";
   };
 
-  // Cerrar dropdown al hacer click fuera
+  // Cerrar dropdowns al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -70,16 +78,22 @@ export const Header: React.FC<HeaderProps> = ({
       ) {
         setIsNotificationOpen(false);
       }
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
+        setIsSearchOpen(false);
+      }
     };
 
-    if (isNotificationOpen) {
+    if (isNotificationOpen || isSearchOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isNotificationOpen]);
+  }, [isNotificationOpen, isSearchOpen]);
 
   // Refrescar notificaciones cuando se abre el dropdown
   useEffect(() => {
@@ -89,8 +103,44 @@ export const Header: React.FC<HeaderProps> = ({
   }, [isNotificationOpen, refetch]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setIsSearchOpen(value.length >= 2);
+    
     if (onSearch) {
-      onSearch(e.target.value);
+      onSearch(value);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim().length >= 2) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    router.push(result.url);
+    setIsSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  const getTypeLabel = (type: SearchResult["type"]) => {
+    switch (type) {
+      case "news":
+        return "Noticia";
+      case "publication":
+        return "Publicación";
+      case "newsletter":
+        return "Boletín";
+      case "directory":
+        return "Directorio";
+      case "magazine":
+        return "Revista Enlace";
+      default:
+        return "Contenido";
     }
   };
 
@@ -163,65 +213,164 @@ export const Header: React.FC<HeaderProps> = ({
   }, [notifications, unreadCount, isLoading]);
 
   return (
-    <header className="bg-white border-b border-gray-200">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onMenuClick}
-            className={`p-2 rounded-lg hover:bg-gray-100 ${
-              pathname.startsWith("/nosotros") ? "" : "lg:hidden"
-            }`}
-            aria-label="Abrir menú"
-          >
-            <Menu size={20} />
-          </button>
-          <div className="relative">
-            <Search
-              size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder="Buscar en COFREM..."
-              onChange={handleSearchChange}
-              className="pl-10 pr-4 py-2 w-96 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-6">
-          <nav className="hidden md:flex items-center space-x-6">
-            <Link
-              href="/newsletters"
-              className={cn(
-                "text-sm text-gray-600 hover:text-primary transition-colors",
-                pathname === "/newsletters" ||
-                  pathname.startsWith("/newsletters" + "/")
-                  ? "text-primary"
-                  : ""
-              )}
-            >
-              Boletín Interno
-            </Link>
-            <a
-              href="/revista"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Revista Enlace
-            </a>
-          </nav>
-
-          <div className="relative" ref={notificationRef}>
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+      <div className="px-3 md:px-6 py-3 md:py-4">
+        {/* Fila principal: Todo en una sola línea */}
+        <div className="flex items-center justify-between gap-3">
+          {/* Izquierda: Menú y búsqueda */}
+          <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
+            {/* Menú hamburguesa - solo visible en móvil/tablet */}
             <button
+              onClick={onMenuClick}
+              className={cn(
+                "p-2 rounded-lg hover:bg-gray-100 flex-shrink-0 transition-colors",
+                pathname.startsWith("/nosotros") ? "lg:hidden" : "lg:hidden"
+              )}
+              aria-label="Abrir menú"
+            >
+              <Menu size={20} className="text-gray-700" />
+            </button>
+            
+            {/* Búsqueda */}
+            <div className="relative flex-1 min-w-0 max-w-full md:max-w-md" ref={searchRef}>
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <Search
+                  size={20}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+                />
+                <input
+                  type="text"
+                  placeholder="Buscar en COFREM..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onFocus={() => {
+                    if (searchQuery.length >= 2) {
+                      setIsSearchOpen(true);
+                    }
+                  }}
+                  className="w-full pl-10 pr-4 py-2 text-sm md:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white placeholder:text-gray-400"
+                />
+              </form>
+
+              {/* Dropdown de resultados de búsqueda */}
+              {isSearchOpen && searchQuery.length >= 2 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 z-50 max-h-[500px] overflow-hidden flex flex-col">
+                  <div className="flex items-center justify-between p-3 border-b border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      Resultados de búsqueda
+                    </h3>
+                    <button
+                      onClick={() => setIsSearchOpen(false)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      aria-label="Cerrar búsqueda"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div className="overflow-y-auto flex-1">
+                    {isSearchLoading ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <Loader2 className="h-6 w-6 mx-auto mb-2 animate-spin" />
+                        <p className="text-sm">Buscando...</p>
+                      </div>
+                    ) : searchResults?.results && searchResults.results.length > 0 ? (
+                      <div className="divide-y divide-gray-100">
+                        {searchResults.results.map((result) => (
+                          <button
+                            key={`${result.type}-${result.id}`}
+                            onClick={() => handleSearchResultClick(result)}
+                            className="w-full p-3 hover:bg-gray-50 cursor-pointer transition-colors text-left"
+                          >
+                            <div className="flex items-start gap-3">
+                              {result.image && (
+                                <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-gray-100">
+                                  <Image
+                                    src={result.image.url}
+                                    alt={result.image.alt}
+                                    width={48}
+                                    height={48}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
+                                    {getTypeLabel(result.type)}
+                                  </span>
+                                </div>
+                                <h4 className="text-sm font-medium text-gray-900 truncate">
+                                  {result.title}
+                                </h4>
+                                {result.description && (
+                                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                                    {result.description}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                        {searchResults.total > searchResults.results.length && (
+                          <div className="p-3 border-t border-gray-200">
+                            <button
+                              onClick={handleSearchSubmit}
+                              className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                              Ver todos los resultados ({searchResults.total})
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : searchQuery.length >= 2 ? (
+                      <div className="p-8 text-center text-gray-500">
+                        <Search className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                        <p className="text-sm">No se encontraron resultados</p>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Derecha: Navegación y notificaciones */}
+          <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+            {/* Navegación - oculta en móvil, visible en desktop */}
+            <nav className="hidden md:flex items-center gap-4 lg:gap-6">
+              <Link
+                href="/newsletters"
+                className={cn(
+                  "text-sm font-medium text-gray-700 hover:text-primary transition-colors whitespace-nowrap",
+                  pathname === "/newsletters" ||
+                    pathname.startsWith("/newsletters" + "/")
+                    ? "text-primary"
+                    : ""
+                )}
+              >
+                Boletín Interno
+              </Link>
+              <a
+                href="/revista"
+                className="text-sm font-medium text-gray-700 hover:text-primary transition-colors whitespace-nowrap"
+              >
+                Revista Enlace
+              </a>
+            </nav>
+
+            {/* Notificaciones */}
+            <div className="relative" ref={notificationRef}>
+              <button
               onClick={handleNotificationClick}
-              className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="relative p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
               aria-label={`Notificaciones${
                 displayCount > 0 ? ` (${displayCount})` : ""
               }`}
             >
               <Bell size={20} />
               {displayCount > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs  rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-semibold rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
                   {displayCount > 9 ? "9+" : displayCount}
                 </span>
               )}
@@ -229,7 +378,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Dropdown de notificaciones */}
             {isNotificationOpen && (
-              <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col">
+              <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] md:w-96 max-w-md bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[600px] overflow-hidden flex flex-col">
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
                   <h3 className="text-lg font-normal text-gray-900">
                     Notificaciones
@@ -337,6 +486,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>

@@ -441,7 +441,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }) {
       // Validar dominios permitidos para todos los proveedores
       const allowedDomains = [
-        "gmail.com",
         "factoryai.io",
         "factoryim.co",
         "cofrem.com.co",

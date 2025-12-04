@@ -82,7 +82,12 @@ export default async function RootLayout({
           antialiased
         `}
       >
-        <SessionProvider session={session}>
+        <SessionProvider 
+          session={session}
+          refetchInterval={5 * 60} // Refrescar cada 5 minutos
+          refetchOnWindowFocus={false} // No refrescar al cambiar de pestaña
+          refetchWhenOffline={false} // No refrescar cuando está offline
+        >
           <SessionGuard />
           <Toaster richColors />
           <QueryProvider>{children}
