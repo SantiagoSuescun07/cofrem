@@ -5,6 +5,7 @@ import Image from "next/image";
 import { UserProfile } from "@/components/common/user-profile";
 import { Document } from "@/types/documents";
 import { useModules } from "@/queries/management";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ManagementSidebarProps {
   openCollapse: string | null;
@@ -283,8 +284,19 @@ export const ManagementSidebar = ({
         </button>
 
         {isLoading || isLoadingModules ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#2f8cbd]"></div>
+          <div className="flex flex-col space-y-1">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="w-full">
+                <Skeleton className="w-full h-10 rounded-md mb-1" />
+                {i === 0 && (
+                  <div className="w-full mt-1 space-y-1 pl-3 border-l border-gray-100">
+                    {Array.from({ length: 3 }).map((_, j) => (
+                      <Skeleton key={j} className="w-full h-8 rounded-md mb-1" />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         ) : modulesGrouped.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm">

@@ -2,6 +2,7 @@
 import React, { useMemo, useEffect } from "react";
 import { FileText, Download } from "lucide-react";
 import { useDocuments, useModules } from "@/queries/management";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ManagementContentProps {
   activeModule: string | null;
@@ -182,26 +183,83 @@ export const ManagementContent = ({
   // Si no hay módulo seleccionado
   if (!activeModule) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400">
-        <p>Selecciona un módulo del sistema de gestión.</p>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 w-[50%] gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col p-2.5 border border-gray-200 rounded-lg"
+            >
+              <div className="flex items-start gap-2 mb-2">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3.5 w-3.5 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  // Si el módulo no existe
-  if (!moduleData) {
+  // Si el módulo no existe o está cargando, mostrar skeleton
+  if (!moduleData || isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400">
-        <p>Módulo no encontrado.</p>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 w-[50%] gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col p-2.5 border border-gray-200 rounded-lg"
+            >
+              <div className="flex items-start gap-2 mb-2">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3.5 w-3.5 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  // Si no hay categoría, mostrar loading mientras se auto-selecciona la primera categoría
+  // Si no hay categoría, mostrar skeleton mientras se auto-selecciona la primera categoría
   if (!activeCategory) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2f8cbd]"></div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 w-[50%] gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col p-2.5 border border-gray-200 rounded-lg"
+            >
+              <div className="flex items-start gap-2 mb-2">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3.5 w-3.5 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -210,8 +268,25 @@ export const ManagementContent = ({
   return (
     <div className="space-y-6">
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#2f8cbd]"></div>
+        <div className="grid grid-cols-1 w-[50%] gap-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex flex-col p-2.5 border border-gray-200 rounded-lg"
+            >
+              <div className="flex items-start gap-2 mb-2">
+                <Skeleton className="w-8 h-8 rounded-lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-3.5 w-3.5 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : filteredDocuments.length === 0 ? (
         <div className="text-center py-12 text-gray-400">

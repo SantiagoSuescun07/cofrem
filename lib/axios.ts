@@ -7,11 +7,31 @@ const api = axios.create({
   baseURL: apiBaseUrl,
 });
 
+// Variable para controlar el refresh token en curso
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+// Función para procesar la cola de peticiones fallidas
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  failedQueue = [];
+};
+
 // Interceptor de request
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const accessToken = localStorage.getItem(ACCESS_TOKEN); // o "access_token" directamente
+      const accessToken = localStorage.getItem(ACCESS_TOKEN);
 
       config.headers = config.headers ?? {};
 
@@ -28,21 +48,6 @@ api.interceptors.request.use(
   }
 );
 
-
-// api.interceptors.request.use(
-//   (config) => {
-//     if (typeof window !== "undefined") {
-//       const token = getAccessToken();
-//       if (token && !isExpired()) {
-//         config.headers = config.headers ?? {};
-//         config.headers["Authorization"] = `Bearer ${token}`;
-//       }
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
-
 // Interceptor de respuesta
 api.interceptors.response.use(
   (response) => response,
@@ -51,8 +56,6 @@ api.interceptors.response.use(
 
     // Si es un error 401 o 403 y aún no hemos intentado refrescar el token
     if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
-      originalRequest._retry = true;
-
       // Verificar si ya estamos en proceso de logout para evitar bucles
       if (typeof window !== "undefined") {
         const isLoggingOut = sessionStorage.getItem("cofrem.logging_out");
@@ -60,6 +63,23 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
       }
+
+      // Si ya hay un refresh en curso, agregar esta petición a la cola
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
         // Obtener el refresh_token del localStorage
@@ -102,12 +122,22 @@ api.interceptors.response.use(
           // Actualizar el header de autorización para la petición original
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           
+          // Procesar la cola de peticiones pendientes
+          processQueue(null, newAccessToken);
+          isRefreshing = false;
+          
           // Reintentar la petición original
           return api(originalRequest);
+        } else {
+          throw new Error("No se recibió access_token en la respuesta");
         }
       } catch (refreshError: any) {
         // Si el refresh falla, limpiar el token y redirigir al login
         console.error("❌ Error al refrescar token:", refreshError);
+        
+        // Procesar la cola con el error
+        processQueue(refreshError, null);
+        isRefreshing = false;
         
         if (typeof window !== "undefined") {
           // Marcar que estamos en proceso de logout para evitar bucles
@@ -117,6 +147,16 @@ api.interceptors.response.use(
           clearToken();
           localStorage.removeItem(REFRESH_TOKEN);
           localStorage.removeItem("cofrem.user");
+          
+          // Limpiar todas las queries de React Query si está disponible
+          try {
+            // Intentar limpiar el cache de React Query
+            if (window.dispatchEvent) {
+              window.dispatchEvent(new CustomEvent("cofrem:clear-queries"));
+            }
+          } catch (e) {
+            console.warn("No se pudo limpiar queries de React Query:", e);
+          }
           
           // Limpiar el flag después de un tiempo
           setTimeout(() => {

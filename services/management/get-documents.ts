@@ -4,66 +4,115 @@ import { Document, DocumentFile } from "@/types/documents";
 
 export const fetchDocuments = async (): Promise<Document[]> => {
   try {
-    // Intentar primero con todos los parámetros
-    let response;
-    try {
-      response = await api.get("/jsonapi/node/documents", {
-        params: {
-          include: "field_file,field_icon,field_module_category,field_modulo",
-          "page[limit]": 800,
-        },
-      });
-    } catch (firstError: any) {
-      // Si falla con page[limit], intentar sin él
-      if (firstError.response?.status === 400) {
-        console.warn("Primera petición falló con 400, intentando sin page[limit]...");
-        try {
-          response = await api.get("/jsonapi/node/documents", {
-            params: {
-              include: "field_file,field_icon,field_module_category,field_modulo",
-            },
-          });
-        } catch (secondError: any) {
-          // Si también falla sin page[limit], intentar con include más simple
-          if (secondError.response?.status === 400) {
-            console.warn("Segunda petición falló con 400, intentando con include simplificado...");
-            response = await api.get("/jsonapi/node/documents", {
-              params: {
-                include: "field_file,field_module_category,field_modulo",
-              },
-            });
-          } else {
-            throw secondError;
+    const allDocuments: Document[] = [];
+    const allIncluded = new Map<string, any>();
+    let page = 0;
+    const pageSize = 50; // Drupal JSON:API límite por defecto
+
+    // Función auxiliar para hacer una petición
+    const makeRequest = async (params: any) => {
+      try {
+        return await api.get("/jsonapi/node/documents", { params });
+      } catch (error: any) {
+        if (error.response?.status === 400) {
+          // Si falla con include completo, intentar con include simplificado
+          const simplifiedParams = { ...params };
+          if (simplifiedParams.include) {
+            simplifiedParams.include = "field_file,field_module_category,field_modulo";
           }
+          return await api.get("/jsonapi/node/documents", { params: simplifiedParams });
         }
-      } else {
-        throw firstError;
+        throw error;
+      }
+    };
+
+    // Primera petición
+    let response = await makeRequest({
+      include: "field_file,field_icon,field_module_category,field_modulo",
+      "page[limit]": pageSize,
+      "page[offset]": 0,
+    });
+
+    // Procesar primera página
+    let data = response.data;
+    allDocuments.push(...data.data || []);
+    
+    // Agregar included a nuestro mapa
+    if (data.included && Array.isArray(data.included)) {
+      data.included.forEach((included: any) => {
+        if (included.id) {
+          allIncluded.set(included.id, included);
+        }
+      });
+    }
+
+    // Obtener el total de documentos del meta count
+    const totalCount = data.meta?.count || allDocuments.length;
+
+    // Continuar obteniendo páginas mientras haya más datos
+    while (allDocuments.length < totalCount) {
+      page++;
+      const offset = page * pageSize;
+
+      // Si ya tenemos todos los documentos, salir
+      if (allDocuments.length >= totalCount) {
+        break;
+      }
+
+      try {
+        response = await makeRequest({
+          include: "field_file,field_icon,field_module_category,field_modulo",
+          "page[limit]": pageSize,
+          "page[offset]": offset,
+        });
+
+        data = response.data;
+        
+        if (data.data && data.data.length > 0) {
+          allDocuments.push(...data.data);
+          
+          // Agregar nuevos included al mapa
+          if (data.included && Array.isArray(data.included)) {
+            data.included.forEach((included: any) => {
+              if (included.id) {
+                allIncluded.set(included.id, included);
+              }
+            });
+          }
+
+          // Actualizar el total count si está disponible
+          const currentTotal = data.meta?.count || totalCount;
+          if (currentTotal > totalCount) {
+            // Si el total count cambió, actualizarlo
+            // (esto no debería pasar, pero por si acaso)
+          }
+
+          // Si la respuesta trajo menos documentos que el pageSize, ya no hay más páginas
+          if (data.data.length < pageSize) {
+            break; // Ya obtuvimos todos los documentos disponibles
+          }
+        } else {
+          break; // No hay más datos
+        }
+      } catch (pageError: any) {
+        console.warn(`Error obteniendo página ${page}:`, pageError);
+        break; // Detener si hay error en una página
       }
     }
 
-    console.log("Response completa:", response.data);
-    console.log("Total included items:", response.data?.included?.length || 0);
-    console.log("Included types:", [...new Set(response.data?.included?.map((i: any) => i.type) || [])]);
+    console.log(`Total documentos obtenidos: ${allDocuments.length}`);
+    console.log(`Total included items: ${allIncluded.size}`);
 
-    const data = response.data;
+    // Usar el mapa consolidado de included para procesar todos los documentos
+    const includedById = allIncluded;
 
     // Validar que tenemos datos
-    if (!data || !data.data || !Array.isArray(data.data)) {
+    if (!allDocuments || allDocuments.length === 0) {
       console.warn("No hay datos en la respuesta de documentos");
       return [];
     }
 
-    // Crear un mapa de recursos incluidos para acceso rápido
-    const includedById = new Map<string, any>();
-    if (data.included && Array.isArray(data.included)) {
-      data.included.forEach((included: any) => {
-        if (included.id) {
-          includedById.set(included.id, included);
-        }
-      });
-    }
-
-  const documents: Document[] = data.data.map((item: any) => {
+  const documents: Document[] = allDocuments.map((item: any) => {
     // Resolver field_file (puede ser un array)
     const fileData = item.relationships.field_file?.data;
     const fieldFile: DocumentFile[] = [];
