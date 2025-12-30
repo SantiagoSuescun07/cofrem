@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { getPublicationsReactions } from "@/queries/publications";
 import { useComments } from "@/queries/news";
 import { ProgressBar } from "../common/progress-bar";
+import { useRouter } from "next/navigation";
 
 interface Props {
   publication: Publication;
@@ -35,16 +36,14 @@ const getDriveEmbedUrl = (uri: string) => {
 export function PublicationCard({ publication }: Props) {
   const {
     title,
-    field_description,
+
     field_gallery = [],
     field_image,
     field_options_in_publication,
   } = publication;
   const queryClient = useQueryClient();
-
-  const {
-    data: allComments,
-  } = useComments(publication.id);
+  const router = useRouter();
+  const { data: allComments } = useComments(publication.id);
 
   const totalComments = allComments?.length || 0;
 
@@ -96,11 +95,37 @@ export function PublicationCard({ publication }: Props) {
     setIsOpen(true);
   };
 
+  // Obtener el link de la publicación (puede estar en field_options_in_publication o field_any_link)
+  const getPublicationLink = (): string | null => {
+    // Primero verificar si hay un link en field_options_in_publication
+    if (
+      field_options_in_publication?.type === "paragraph--link" &&
+      field_options_in_publication?.field_link?.uri
+    ) {
+      return field_options_in_publication.field_link.uri;
+    }
+    // Si no, verificar field_any_link
+    if (publication.field_any_link) {
+      return publication.field_any_link;
+    }
+    return null;
+  };
+
+  const handleImageClick = (e: React.MouseEvent, index: number) => {
+    const link = getPublicationLink();
+    // Si hay un link, abrir el link en nueva pestaña
+    if (link) {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(link, "_blank");
+    } else {
+      // Si no hay link, abrir la galería
+      openGallery(e, index);
+    }
+  };
+
   return (
-    <Link
-      href={`/publications/${publication.id}`}
-      className="block bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition mt-14 cursor-pointer"
-    >
+    <div className="block bg-white rounded-2xl shadow-md p-5 hover:shadow-lg transition mt-14 cursor-pointer">
       <div className="flex items-center gap-2 mb-3">
         <div className="flex items-center gap-2">
           <Image
@@ -115,13 +140,17 @@ export function PublicationCard({ publication }: Props) {
         </div>
         <ProgressBar />
       </div>
-      <h3 className="text-lg font-normal text-gray-900 hover:text-primary">
+      <h3
+        className="text-lg font-normal text-gray-900 hover:text-primary cursor-pointer"
+        onClick={() => router.push(`/publications/${publication.id}`)}
+      >
         {title}
       </h3>
 
       {publication.field_description && (
         <div
-          className="prose prose-sm md:prose-base max-w-none text-gray-700 mb-6 leading-relaxed"
+          onClick={() => router.push(`/publications/${publication.id}`)}
+          className="prose prose-sm md:prose-base max-w-none text-gray-700 mb-6 leading-relaxed cursor-pointer"
           dangerouslySetInnerHTML={{
             __html: publication.field_description,
           }}
@@ -162,7 +191,7 @@ export function PublicationCard({ publication }: Props) {
               className={`relative overflow-hidden rounded-lg cursor-pointer ${
                 visibleImages.length > 1 ? "row-span-2" : "h-120"
               }`}
-              onClick={(e) => openGallery(e, 0)}
+              onClick={(e) => handleImageClick(e, 0)}
             >
               <Image
                 src={visibleImages[0].url}
@@ -180,7 +209,7 @@ export function PublicationCard({ publication }: Props) {
               <div
                 key={img.id || globalIndex}
                 className="relative h-40 overflow-hidden rounded-lg cursor-pointer"
-                onClick={(e) => openGallery(e, globalIndex)}
+                onClick={(e) => handleImageClick(e, globalIndex)}
               >
                 {index === 1 && extraCount > 0 ? (
                   <div>
@@ -217,7 +246,7 @@ export function PublicationCard({ publication }: Props) {
               <div
                 key={img.id || index}
                 className="relative h-24 overflow-hidden rounded-lg cursor-pointer"
-                onClick={(e) => openGallery(e, index)}
+                onClick={(e) => handleImageClick(e, index)}
               >
                 <Image
                   src={img.url}
@@ -294,7 +323,10 @@ export function PublicationCard({ publication }: Props) {
       )}
 
       {/* Modal de comentarios */}
-      <Dialog open={isCommentsOpen} onOpenChange={(open) => setIsCommentsOpen(open)}>
+      <Dialog
+        open={isCommentsOpen}
+        onOpenChange={(open) => setIsCommentsOpen(open)}
+      >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-normal">Comentarios</DialogTitle>
@@ -308,6 +340,6 @@ export function PublicationCard({ publication }: Props) {
           </div>
         </DialogContent>
       </Dialog>
-    </Link>
+    </div>
   );
 }

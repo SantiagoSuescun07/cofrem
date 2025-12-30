@@ -8,12 +8,20 @@ export interface UserProfileResponse {
   mail: { value: string }[];
   field_full_name?: { value: string }[];
   field_charge?: { value: string }[];
-  field_area_subarea?: { target_id: string }[];
-  field_gender?: { target_id: string }[];
-  field_headquarters?: { target_id: string }[];
+  field_area_subarea?: { target_id: string | number }[];
+  field_gender?: { target_id: string | number }[];
+  field_headquarters?: { target_id: string | number }[];
   field_phone?: { value: string }[];
   field_cell_phone?: { value: string }[];
-  user_picture?: { url: string }[];
+  field_birthdate?: { value: string }[];
+  user_picture?: Array<{
+    target_id?: number;
+    url?: string;
+    alt?: string | null;
+    title?: string | null;
+    width?: number;
+    height?: number;
+  }>;
   field_badges?: { target_uuid: string }[];
 }
 
@@ -45,6 +53,7 @@ async function fetchBadgeById(badgeId: string) {
 }
 
 export async function getUserProfile(userId: string) {
+  console.log(userId)
   const url = `/user/${userId}?_format=json`;
   const { data } = await api.get<UserProfileResponse>(url);
 
@@ -57,7 +66,7 @@ export async function getUserProfile(userId: string) {
       ? fetchTaxonomyTermById("/jsonapi/taxonomy_term/gender", genderTargetId, "tid")
       : null,
     areaTargetId
-      ? fetchTaxonomyTermById("/jsonapi/taxonomy_term/area_subarea", areaTargetId, "tid")
+      ? fetchTaxonomyTermById("/jsonapi/taxonomy_term/directory_area", areaTargetId, "tid")
       : null,
     headquartersTargetId
       ? fetchTaxonomyTermById("/jsonapi/taxonomy_term/headquarters", headquartersTargetId, "tid")
@@ -81,6 +90,7 @@ export async function getUserProfile(userId: string) {
     locationId: headquarters?.id ?? null,
     phone: data.field_phone?.[0]?.value ?? "",
     mobile: data.field_cell_phone?.[0]?.value ?? "",
+    birthdate: data.field_birthdate?.[0]?.value ?? "",
     picture: data.user_picture?.[0]?.url ?? "",
     genderId: String(gender?.tid) ?? null,
     genderName: gender?.name ?? "Sin especificar",

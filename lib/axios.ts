@@ -165,12 +165,26 @@ api.interceptors.response.use(
           
           // Solo redirigir si no estamos ya en la página de login
           if (!window.location.pathname.startsWith("/auth/login")) {
-            toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
+            // Verificar si el cierre fue por inactividad
+            const logoutReason = sessionStorage.getItem("cofrem.logout_reason");
+            
+            if (logoutReason === "inactivity") {
+              toast.error("Tu sesión se ha cerrado por inactividad. Por favor, inicia sesión nuevamente.");
+            } else {
+              toast.info("Tu sesión ha expirado. Inicia sesión nuevamente.");
+            }
             
             // Guardar la URL actual para redirigir después del login
             const currentUrl = window.location.pathname + window.location.search;
             const callbackUrl = encodeURIComponent(currentUrl);
-            window.location.href = `/auth/login?callbackUrl=${callbackUrl}`;
+            const reasonParam = logoutReason === "inactivity" ? "&reason=inactivity" : "";
+            
+            // Limpiar el flag después de usarlo
+            if (logoutReason) {
+              sessionStorage.removeItem("cofrem.logout_reason");
+            }
+            
+            window.location.href = `/auth/login?callbackUrl=${callbackUrl}${reasonParam}`;
           }
         }
         

@@ -28,9 +28,9 @@ import { Camera, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const editProfileSchema = z.object({
+  fullName: z.string().min(1, "El nombre es requerido").optional(),
+  birthdate: z.string().optional(),
   gender: z.string().optional(),
-  phone: z.string().nullable().optional(),
-  mobile: z.string().nullable().optional(),
   profileImage: z.any().optional(),
 });
 
@@ -40,9 +40,9 @@ export interface EditProfileDialogProps {
   trigger: React.ReactNode;
   userId: string;
   defaultValues?: {
+    fullName?: string;
+    birthdate?: string;
     gender?: string;
-    phone?: string | null;
-    mobile?: string | null;
     profileImageUrl?: string;
   };
   onClose?: () => void;
@@ -68,9 +68,9 @@ export function EditProfileDialog({
   const form = useForm<EditProfileFormValues>({
     resolver: zodResolver(editProfileSchema),
     defaultValues: {
+      fullName: defaultValues?.fullName ?? "",
+      birthdate: defaultValues?.birthdate ?? "",
       gender: defaultValues?.gender ?? "",
-      phone: defaultValues?.phone ?? "",
-      mobile: defaultValues?.mobile ?? "",
       profileImage: undefined,
     },
   });
@@ -101,9 +101,9 @@ export function EditProfileDialog({
   React.useEffect(() => {
     if (defaultValues) {
       form.reset({
+        fullName: defaultValues.fullName ?? "",
+        birthdate: defaultValues.birthdate ?? "",
         gender: defaultValues.gender ?? "",
-        phone: defaultValues.phone ?? "",
-        mobile: defaultValues.mobile ?? "",
         profileImage: undefined,
       });
 
@@ -116,49 +116,50 @@ export function EditProfileDialog({
     try {
       let payload: Record<string, any> = {};
 
+      if (values.fullName) {
+        payload.field_full_name = [{ value: values.fullName }];
+      }
+
+      if (values.birthdate) {
+        payload.field_birthdate = [{ value: values.birthdate }];
+      }
+
       if (values.gender) {
         payload.field_gender = [
           {
-            target_id: values.gender,
-            target_type: "taxonomy_term",
+            target_id: Number(values.gender),
           },
         ];
       }
 
-      if (values.phone) {
-        payload.field_phone = [{ value: values.phone }];
-      }
-
-      if (values.mobile) {
-        payload.field_cell_phone = [{ value: values.mobile }];
-      }
-
       if (values.profileImage instanceof File) {
         const file = values.profileImage;
-        // Cargar la imagen a Drupal para obtener fid y uuid. Utilizamos el endpoint
-        // estándar de archivos de Drupal para subir la foto de usuario.
+        // Convertir el archivo a binary data
+        const arrayBuffer = await file.arrayBuffer();
+        const binaryData = new Uint8Array(arrayBuffer);
+
+        // Subir la imagen a Drupal para obtener el fid
         const uploadResponse = await api.post(
           `/file/upload/media/image/field_media_image`,
-          file,
+          binaryData,
           {
             headers: {
               "Content-Type": "application/octet-stream",
+              "Content-Disposition": `file; filename="${file.name}"`,
               Accept: "application/json",
-              "Content-Disposition": `form-data; filename="${file.name}"`,
             },
           }
         );
 
         console.log("UPLOAD RESPONSE: ", uploadResponse)
 
-        if (uploadResponse.status === 201) {
-          const imageData = uploadResponse.data;
+        // Drupal devuelve el ID dentro de fid[0].value
+        const fileId = uploadResponse.data?.fid?.[0]?.value;
+
+        if (fileId) {
           payload.user_picture = [
             {
-              target_id: imageData.fid[0],
-              target_type: "file",
-              target_uuid: imageData.uuid[0].value,
-              url: imageData.uri[0].url,
+              target_id: fileId,
             },
           ];
         }
@@ -197,7 +198,7 @@ export function EditProfileDialog({
         <DialogHeader>
           <DialogTitle className="font-normal">Editar perfil</DialogTitle>
           <DialogDescription>
-            Modifica tu género, teléfonos de contacto y tu foto de perfil.
+            Modifica tu nombre, cumpleaños, género y foto de perfil.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -243,6 +244,48 @@ export function EditProfileDialog({
 
 
             <div className="bg-neutral-100 rounded-2xl py-4 border px-4 space-y-6">
+              {/* Campo de nombre completo */}
+              <Controller
+                name="fullName"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>Nombre completo</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        value={field.value ?? ""}
+                        placeholder="Tu nombre completo"
+                        aria-invalid={fieldState.invalid}
+                        className="bg-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Campo de cumpleaños */}
+              <Controller
+                name="birthdate"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <FormItem>
+                    <FormLabel>Fecha de nacimiento</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="date"
+                        value={field.value ?? ""}
+                        aria-invalid={fieldState.invalid}
+                        className="bg-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {/* Selector de género */}
               <Controller
                 name="gender"
@@ -263,49 +306,6 @@ export function EditProfileDialog({
                           ))}
                         </SelectContent>
                       </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Campo de teléfono fijo */}
-              <Controller
-                name="phone"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="Número de teléfono fijo"
-                        aria-invalid={fieldState.invalid}
-                        className="bg-white"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Campo de celular */}
-              <Controller
-                name="mobile"
-                control={form.control}
-                render={({ field, fieldState }) => (
-                  <FormItem>
-                    <FormLabel>Celular</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="Número de celular"
-                        aria-invalid={fieldState.invalid}
-                        className="bg-white"
-                      />
-
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -21,6 +21,7 @@ declare module "next-auth" {
         email: string;
       };
       expiresAt?: number;
+      authData?: any; // Data completa de la respuesta de Drupal
     };
   }
 
@@ -35,6 +36,7 @@ declare module "next-auth" {
       email: string;
     };
     drupalTokenExpires?: number;
+    drupalAuthData?: any; // Data completa de la respuesta de Drupal
     googleAccessToken?: string;
     googleRefreshToken?: string;
     googleTokenExpires?: number;

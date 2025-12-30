@@ -26,6 +26,18 @@ export default function LoginPage() {
   useEffect(() => {
     const rawCallbackUrl = searchParams?.get("callbackUrl");
     const errorParam = searchParams?.get("error");
+    const reasonParam = searchParams?.get("reason");
+
+    // Manejar cierre de sesión por inactividad
+    if (reasonParam === "inactivity") {
+      toast.error("Tu sesión se ha cerrado por inactividad. Por favor, inicia sesión nuevamente.", {
+        duration: 6000,
+      });
+      // Limpiar el flag de sessionStorage
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("cofrem.logout_reason");
+      }
+    }
 
     // Manejo de errores de OAuth
     if (errorParam) {

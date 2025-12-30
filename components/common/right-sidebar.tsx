@@ -47,50 +47,41 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
   const progressPercentage = Math.min((userPoints / 2000) * 100, 100);
 
-  // Ordenar eventos por fecha y tomar los próximos 4, o los más recientes si no hay próximos
+  // Filtrar y ordenar eventos: solo mostrar eventos de hoy y futuros
   const upcomingEvents = React.useMemo(() => {
     if (!events || events.length === 0) {
-      console.log("No hay eventos disponibles");
       return [];
     }
-
-    console.log("Eventos recibidos:", events.length, events);
-
-    // Ordenar todos los eventos por fecha (más recientes primero)
-    const sortedEvents = [...events].sort((a, b) => {
-      if (!a.date || !b.date) return 0;
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
-      return dateA - dateB; // Orden ascendente (más antiguos primero)
-    });
 
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
 
-    // Filtrar eventos próximos (hoy o futuros)
-    const futureEvents = sortedEvents.filter((event) => {
+    // Filtrar eventos de hoy o futuros (excluir eventos pasados)
+    const futureEvents = events.filter((event) => {
       if (!event.date) {
-        console.log("Evento sin fecha:", event);
         return false;
       }
       try {
         const eventDate = new Date(event.date);
         eventDate.setHours(0, 0, 0, 0);
-        const isUpcoming = eventDate >= now;
-        console.log("Evento:", event.title, "Fecha:", event.date, "Fecha parseada:", eventDate, "Es próximo:", isUpcoming);
-        return isUpcoming;
+        // Solo incluir eventos de hoy (eventDate >= now) o futuros
+        return eventDate >= now;
       } catch (error) {
         console.error("Error parseando fecha:", event.date, error);
         return false;
       }
     });
 
-    // Si hay eventos próximos, usar esos. Si no, usar los más recientes disponibles
-    const eventsToShow = futureEvents.length > 0 ? futureEvents : sortedEvents;
+    // Ordenar eventos por fecha (más próximos primero)
+    const sortedEvents = futureEvents.sort((a, b) => {
+      if (!a.date || !b.date) return 0;
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateA - dateB; // Orden ascendente (más próximos primero)
+    });
     
-    const result = eventsToShow.slice(0, 4);
-    console.log("Eventos próximos filtrados:", result.length, result);
-    return result;
+    // Tomar solo los primeros 4 eventos
+    return sortedEvents.slice(0, 4);
   }, [events]);
 
   const onSelect = useCallback(() => {
@@ -232,11 +223,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
         {!isLoading && upcomingEvents.length === 0 && !isError && (
           <div className="text-sm text-gray-500 text-center py-4">
             <p>No hay eventos próximos.</p>
-            {events && events.length > 0 && (
-              <p className="text-xs mt-2">
-                Total de eventos disponibles: {events.length}
-              </p>
-            )}
+          
           </div>
         )}
       </div>

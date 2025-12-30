@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Mail, Phone, Smartphone, MapPin, Briefcase, Users, User, Edit } from "lucide-react"
+import { Mail, Smartphone, Briefcase, Users, User, Edit } from "lucide-react"
 import { useCurrentUser } from "@/hooks/user-current-user"
 import { useUserProfile } from "@/queries/profile"
 import { useEffect, useState } from "react"
@@ -149,9 +149,9 @@ export function ProfileInfo() {
                     }
                     userId={userId}
                     defaultValues={{
+                      fullName: profile?.name || "",
+                      birthdate: profile?.birthdate || "",
                       gender: profile?.genderId || "",
-                      phone: profile?.phone || "",
-                      mobile: profile?.mobile || "",
                       profileImageUrl: profile?.picture || "",
                     }}
                     onSuccess={() => {
@@ -198,9 +198,9 @@ export function ProfileInfo() {
                     }
                     userId={userId}
                     defaultValues={{
+                      fullName: profile?.name || "",
+                      birthdate: profile?.birthdate || "",
                       gender: profile?.genderId || "",
-                      phone: profile?.phone || "",
-                      mobile: profile?.mobile || "",
                       profileImageUrl: profile?.picture || "",
                     }}
                     onSuccess={() => {
@@ -229,10 +229,6 @@ export function ProfileInfo() {
                 label="Género"
                 value={profile?.genderName || "Sin especificar"}
               />
-
-              <InfoItem icon={<MapPin className="h-5 w-5" />} label="Sede" value={profile?.location || "Sin sede"} />
-
-              <InfoItem icon={<Phone className="h-5 w-5" />} label="Teléfono" value={profile?.phone || "Sin teléfono"} />
 
               <InfoItem
                 icon={<Smartphone className="h-5 w-5" />}

@@ -499,6 +499,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       const drupalTokenExpires = (token as any).drupalTokenExpires as
         | number
         | undefined;
+      const drupalAuthData = (token as any).drupalAuthData as any | undefined;
 
       // Validar que el token de Drupal no esté expirado
       if (drupalTokenExpires && Date.now() >= drupalTokenExpires) {
@@ -517,7 +518,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         refreshToken: drupalRefreshToken,
         user: drupalUser,
         expiresAt: drupalTokenExpires,
+        authData: drupalAuthData, // Data completa de la respuesta de Drupal
       };
+
+      // Log para debug: verificar que authData esté en la sesión
+      if (drupalAuthData) {
+        console.log("✅ authData agregada a la sesión:", {
+          hasAccessToken: !!drupalAuthData.access_token,
+          hasUser: !!drupalAuthData.user,
+          hasRefreshToken: !!drupalAuthData.refresh_token,
+        });
+      } else {
+        console.log("⚠️ No hay authData en el token");
+      }
 
       return session;
     },
@@ -649,8 +662,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               { id_token: account.id_token },
               { headers: { "Content-Type": "application/json" } }
             );
-
             console.log("✅ Access token obtenido de Drupal:", data);
+            console.log("📦 Guardando authData completa en token:", JSON.stringify(data));
+           
+            // Guardar toda la data en el token para que esté disponible en el cliente
+            // Nota: localStorage no está disponible en el servidor, pero esta data
+            // estará disponible en el cliente a través de la sesión y puede guardarse en localStorage
+            (token as any).drupalAuthData = data;
 
             token.drupalAccessToken = data.access_token;
             // Guardar refresh_token de Drupal - es requerido para refrescar el token

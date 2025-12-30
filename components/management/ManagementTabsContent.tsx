@@ -1,8 +1,9 @@
 "use client";
-import React, { useMemo, useEffect } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { FileText, Download } from "lucide-react";
 import { useDocuments, useModules } from "@/queries/management";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SecurePdfViewer } from "@/components/common/secure-pdf-viewer";
 
 interface ManagementContentProps {
   activeModule: string | null;
@@ -17,6 +18,7 @@ export const ManagementContent = ({
 }: ManagementContentProps) => {
   const { data: documents, isLoading, error } = useDocuments();
   const { data: modules } = useModules();
+  const [viewingDocumentId, setViewingDocumentId] = useState<number | null>(null);
 
   // Debug: mostrar información de los documentos
   useEffect(() => {
@@ -180,6 +182,8 @@ export const ManagementContent = ({
 
   // AHORA SÍ PODEMOS HACER RETURNS CONDICIONALES
 
+  // Función para obtener el ID numérico del documento de Drupal
+
   // Si no hay módulo seleccionado
   if (!activeModule) {
     return (
@@ -302,6 +306,17 @@ export const ManagementContent = ({
             if (!file || !file.url) return null;
 
             const isPDF = file.filemime === "application/pdf";
+            // Usar drupal_internal__nid que es el ID numérico del nodo en Drupal
+            const documentNumericId = doc.drupal_internal__nid;
+            const canView = isPDF && documentNumericId !== undefined && documentNumericId !== null;
+
+            const handleClick = (e: React.MouseEvent) => {
+              if (canView) {
+                e.preventDefault();
+                setViewingDocumentId(documentNumericId);
+              }
+              // Si no es PDF o no tiene ID válido, el link se comporta normalmente
+            };
 
             return (
               <a
@@ -309,7 +324,8 @@ export const ManagementContent = ({
                 href={file.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex flex-col p-2.5 border border-gray-200 rounded-lg hover:bg-[#e4fef1] hover:border-[#11c99d] transition-all group"
+                onClick={handleClick}
+                className="flex flex-col p-2.5 border border-gray-200 rounded-lg hover:bg-[#e4fef1] hover:border-[#11c99d] transition-all group cursor-pointer"
               >
                 <div className="flex items-start gap-2 mb-2">
                   <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-[#11c99d]/10 flex items-center justify-center">
@@ -345,6 +361,14 @@ export const ManagementContent = ({
             );
           })}
         </div>
+      )}
+      
+      {/* Visor de PDF */}
+      {viewingDocumentId && (
+        <SecurePdfViewer
+          documentId={viewingDocumentId}
+          onClose={() => setViewingDocumentId(null)}
+        />
       )}
     </div>
   );

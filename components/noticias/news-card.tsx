@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MessageCircle } from "lucide-react";
@@ -10,6 +11,7 @@ import {  useMutation, useQueryClient } from "@tanstack/react-query";
 import { createReaction } from "@/services/news/reactions";
 import { toast } from "sonner";
 import { getNewsReactions } from "@/queries/news";
+import { GalleryModal } from "@/components/common/gallery-modal";
 
 interface NewsCardProps {
   news: News;
@@ -18,6 +20,9 @@ interface NewsCardProps {
 export function NewsCard({ news }: NewsCardProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [startIndex, setStartIndex] = useState(0);
 
   const { data } = getNewsReactions(news.drupal_internal__nid.toString())
 
@@ -36,6 +41,19 @@ export function NewsCard({ news }: NewsCardProps) {
   const fieldReaction = data?.fields.find(
     (f) => f.field_name === "field_reaction"
   );
+
+  // Combinar imagen principal + galería
+  const allImages = [
+    ...(news.field_main_image ? [news.field_main_image] : []),
+    ...(news.field_gallery || []),
+  ];
+
+  const openGallery = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setStartIndex(0);
+    setIsGalleryOpen(true);
+  };
 
   return (
     <div
@@ -56,7 +74,10 @@ export function NewsCard({ news }: NewsCardProps) {
 
       {/* Main */}
       <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative w-full sm:w-40 h-40 shrink-0 rounded-xl overflow-hidden">
+        <div 
+          className="relative w-full sm:w-40 h-40 shrink-0 rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+          onClick={allImages.length > 0 ? openGallery : undefined}
+        >
           {news.field_main_image && (
             <Image
               src={news.field_main_image.url || "/placeholder.svg"}
@@ -112,12 +133,22 @@ export function NewsCard({ news }: NewsCardProps) {
         </div>
 
         <Link
-          href={`/news/${news.id}`}
+          href={`/noticias/${news.id}`}
           className="text-[#24b0d6] font-semibold hover:underline"
+          onClick={(e) => e.stopPropagation()}
         >
           Leer más...
         </Link>
       </div>
+
+      {/* Modal de galería */}
+      {isGalleryOpen && allImages.length > 0 && (
+        <GalleryModal
+          images={allImages}
+          initialIndex={startIndex}
+          onClose={() => setIsGalleryOpen(false)}
+        />
+      )}
     </div>
   );
 }

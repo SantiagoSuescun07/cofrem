@@ -9,7 +9,7 @@ export function useDirectoryByArea(areaId: number) {
     queryFn: async () => {
       // 1️⃣ Consultar el directorio filtrado por área/subárea
       const { data } = await api.get(
-        `/jsonapi/node/directory?filter[field_area_subarea.meta.drupal_internal__target_id]=${areaId}&include=field_picture`
+        `/jsonapi/node/directory?filter[field_directory_area.meta.drupal_internal__target_id]=${areaId}&include=field_picture`
       );
 
       // 2️⃣ Mapa de imágenes incluidas
@@ -21,7 +21,7 @@ export function useDirectoryByArea(areaId: number) {
           return acc;
         }, {}) || {};
 
-      // 3️⃣ Para cada persona, obtener la taxonomía del área_subárea
+      // 3️⃣ Para cada persona, obtener la taxonomía del directory_area
       const people = await Promise.all(
         data.data.map(async (item: any) => {
           const imageId = item.relationships?.field_picture?.data?.id;
@@ -29,9 +29,9 @@ export function useDirectoryByArea(areaId: number) {
             ? `https://backoffice.cofrem.com.co${includedFiles[imageId]}`
             : "/default.png";
 
-          // Relación con área_subárea
+          // Relación con directory_area
           const areaRelation =
-            item.relationships?.field_area_subarea?.data ?? null;
+            item.relationships?.field_directory_area?.data ?? null;
           let areaName = null;
           let parentArea = null;
 
@@ -39,7 +39,7 @@ export function useDirectoryByArea(areaId: number) {
             try {
               // Llamar al endpoint de taxonomía
               const { data: areaData } = await api.get(
-                `/jsonapi/taxonomy_term/area_subarea/${areaRelation.id}`
+                `/jsonapi/taxonomy_term/directory_area/${areaRelation.id}`
               );
 
               areaName = areaData.data?.attributes?.name ?? null;
@@ -47,7 +47,7 @@ export function useDirectoryByArea(areaId: number) {
               if (parentRel?.id) {
                 // Si tiene padre, obtener también su nombre
                 const { data: parentData } = await api.get(
-                  `/jsonapi/taxonomy_term/area_subarea/${parentRel.id}`
+                  `/jsonapi/taxonomy_term/directory_area/${parentRel.id}`
                 );
                 parentArea = parentData.data?.attributes?.name ?? null;
               }

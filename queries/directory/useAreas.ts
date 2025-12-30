@@ -12,7 +12,7 @@ export function useAreas() {
   return useQuery({
     queryKey: ["areas"],
     queryFn: async () => {
-      const { data } = await api.get("/jsonapi/taxonomy_term/area_subarea");
+      const { data } = await api.get("/jsonapi/taxonomy_term/directory_area");
 
       const terms: Term[] = data.data.map((item: any) => ({
         id: String(item.attributes.drupal_internal__tid),
