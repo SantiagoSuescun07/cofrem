@@ -4,6 +4,7 @@ import { AboutUsNode } from "@/services/about/get-menu";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { ZoomableImage } from "./zoomable-image";
+import { GalleryModal } from "./gallery-modal";
 
 interface AboutContentProps {
   section: AboutUsNode | null;
@@ -11,6 +12,8 @@ interface AboutContentProps {
 
 export function AboutContent({ section }: AboutContentProps) {
   const [loading, setLoading] = useState(true);
+  const [galleryModalOpen, setGalleryModalOpen] = useState(false);
+  const [galleryInitialIndex, setGalleryInitialIndex] = useState(0);
 
   useEffect(() => {
     if (section) {
@@ -78,17 +81,36 @@ export function AboutContent({ section }: AboutContentProps) {
         <section className="mt-8 clear-both">
           <h3 className="text-xl text-sky-600 mb-3">Galería</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {field_gallery.map((img) => (
-              <Image
+            {field_gallery.map((img, index) => (
+              <div
                 key={img.target_id}
-                src={img.url}
-                alt={img.alt}
-                width={300}
-                height={200}
-                className="rounded-xl shadow-sm object-cover"
-              />
+                className="cursor-pointer transition-transform hover:scale-[1.02] rounded-xl overflow-hidden shadow-sm"
+                onClick={() => {
+                  setGalleryInitialIndex(index);
+                  setGalleryModalOpen(true);
+                }}
+              >
+                <Image
+                  src={img.url}
+                  alt={img.alt}
+                  width={300}
+                  height={200}
+                  className="rounded-xl object-cover w-full h-full"
+                />
+              </div>
             ))}
           </div>
+          {galleryModalOpen && (
+            <GalleryModal
+              images={field_gallery.map((img) => ({
+                id: String(img.target_id),
+                url: img.url,
+                alt: img.alt,
+              }))}
+              initialIndex={galleryInitialIndex}
+              onClose={() => setGalleryModalOpen(false)}
+            />
+          )}
         </section>
       )}
 
