@@ -230,11 +230,6 @@ export function ProfileInfo() {
                 value={profile?.genderName || "Sin especificar"}
               />
 
-              <InfoItem
-                icon={<Smartphone className="h-5 w-5" />}
-                label="Celular"
-                value={profile?.mobile || "Sin celular"}
-              />
 
               <InfoItem
                 icon={<Mail className="h-5 w-5" />}

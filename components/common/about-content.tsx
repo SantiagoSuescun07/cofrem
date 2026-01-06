@@ -91,12 +91,12 @@ export function AboutContent({ section }: AboutContentProps) {
                 }}
               >
                 <Image
-                  src={img.url}
-                  alt={img.alt}
-                  width={300}
-                  height={200}
+                src={img.url}
+                alt={img.alt}
+                width={300}
+                height={200}
                   className="rounded-xl object-cover w-full h-full"
-                />
+              />
               </div>
             ))}
           </div>

@@ -36,9 +36,9 @@ export function UserProfile() {
 
       <div className="flex-1 text-start min-w-0">
         <p className="text-sm font-medium text-gray-900 truncate">
-          {user?.name}
+         {profile?.name || user?.name}
         </p>
-        <p className="text-xs text-gray-500 truncate">{user?.position}</p>
+        <p className="text-xs text-gray-500 truncate">{profile?.position || user?.position}</p>
       </div>
     </div>
   );
