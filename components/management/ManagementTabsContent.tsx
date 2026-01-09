@@ -1,9 +1,19 @@
 "use client";
 import React, { useMemo, useEffect, useState } from "react";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, Lock } from "lucide-react";
 import { useDocuments, useModules } from "@/queries/management";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SecurePdfViewer } from "@/components/common/secure-pdf-viewer";
+import { CustomPdfViewer } from "@/components/common/custom-pdf-viewer";
+import { DocumentFile } from "@/types/documents";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface ManagementContentProps {
   activeModule: string | null;
@@ -18,7 +28,20 @@ export const ManagementContent = ({
 }: ManagementContentProps) => {
   const { data: documents, isLoading, error } = useDocuments();
   const { data: modules } = useModules();
-  const [viewingDocumentId, setViewingDocumentId] = useState<number | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<{
+    id: number;
+    fileUrl: string;
+    fileName: string;
+    isPrivate: boolean;
+    allowDownload?: boolean;
+  } | null>(null);
+  const [showPrivateDialog, setShowPrivateDialog] = useState(false);
+
+  // Función para verificar si un archivo es privado usando los campos de Drupal
+  const checkFilePrivacy = (file: DocumentFile): boolean => {
+    // Usar el campo field_is_confidential de Drupal para determinar si es privado
+    return file.field_is_confidential === true;
+  };
 
   // Debug: mostrar información de los documentos
   useEffect(() => {
@@ -310,29 +333,131 @@ export const ManagementContent = ({
             const documentNumericId = doc.drupal_internal__nid;
             const canView = isPDF && documentNumericId !== undefined && documentNumericId !== null;
 
-            const handleClick = (e: React.MouseEvent) => {
+            const handleClick = async (e: React.MouseEvent) => {
               if (canView) {
                 e.preventDefault();
-                setViewingDocumentId(documentNumericId);
+                
+                // Obtener la URL correcta del archivo
+                let fileUrlToUse = file.url;
+                
+                // Si la URL es un endpoint de visualización (/document/view/{id}), 
+                // necesitamos obtener la URL del stream del PDF desde el HTML usando nuestro endpoint API
+                if (file.url.includes("/document/view/")) {
+                  try {
+                    const authData = localStorage.getItem("drupalAuthData");
+                    const accessToken = authData
+                      ? JSON.parse(authData).access_token
+                      : localStorage.getItem("drupalAccessToken");
+
+                    if (accessToken) {
+                      // Usar nuestro endpoint API que obtiene el HTML y las cookies desde el servidor
+                      const streamUrlResponse = await fetch(
+                        `/api/document/get-stream-url?url=${encodeURIComponent(file.url)}&token=${encodeURIComponent(accessToken)}`
+                      );
+
+                      if (streamUrlResponse.ok) {
+                        const data = await streamUrlResponse.json();
+                        if (data.streamUrl) {
+                          fileUrlToUse = data.streamUrl;
+                          console.log("URL del stream obtenida desde el servidor:", fileUrlToUse);
+                        } else {
+                          // Si no se pudo obtener el stream URL, usar JSON:API como fallback
+                          console.warn("No se pudo obtener la URL del stream, usando JSON:API");
+                          if (file.id) {
+                            const fileIdParts = file.id.split("--");
+                            if (fileIdParts.length >= 3) {
+                              const fileUuid = fileIdParts.slice(2).join("--");
+                              fileUrlToUse = `https://backoffice.cofrem.com.co/jsonapi/file/file/${fileUuid}`;
+                            }
+                          }
+                        }
+                      } else {
+                        // Si el endpoint devuelve Forbidden u otro error, intentar usar JSON:API directamente
+                        const errorData = await streamUrlResponse.json().catch(() => ({}));
+                        console.warn("Error al obtener URL del stream (puede ser archivo privado), usando JSON:API", errorData);
+                        if (file.id) {
+                          const fileIdParts = file.id.split("--");
+                          if (fileIdParts.length >= 3) {
+                            const fileUuid = fileIdParts.slice(2).join("--");
+                            fileUrlToUse = `https://backoffice.cofrem.com.co/jsonapi/file/file/${fileUuid}`;
+                          }
+                        }
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Error al obtener URL del stream:", error);
+                    // Fallback: intentar usar JSON:API
+                    if (file.id) {
+                      const fileIdParts = file.id.split("--");
+                      if (fileIdParts.length >= 3) {
+                        const fileUuid = fileIdParts.slice(2).join("--");
+                        fileUrlToUse = `https://backoffice.cofrem.com.co/jsonapi/file/file/${fileUuid}`;
+                      }
+                    }
+                  }
+                } else if (file.url.includes("/jsonapi/file/file/") && file.id) {
+                  // Si ya es una URL JSON:API, usarla directamente
+                  fileUrlToUse = file.url;
+                }
+                
+                // Log para depuración
+                console.log("Archivo seleccionado:", {
+                  urlOriginal: file.url,
+                  urlUsada: fileUrlToUse,
+                  filename: file.filename,
+                  filemime: file.filemime,
+                  fileId: file.id,
+                });
+                
+                // Verificar si el archivo es privado usando los campos de Drupal
+                const isPrivate = checkFilePrivacy(file);
+                
+                // Permitir abrir el visor incluso si es privado (pero sin permitir descarga)
+                // Solo abrir el visor si es PDF
+                if (isPDF) {
+                  setViewingDocument({
+                    id: documentNumericId,
+                    fileUrl: fileUrlToUse,
+                    fileName: doc.title || file.filename || "documento.pdf",
+                    isPrivate: isPrivate, // Marcar como privado para bloquear descarga
+                    allowDownload: !isPrivate && file.field_allow_download !== false, // Solo permitir descarga si no es privado y field_allow_download no es false
+                  });
+                }
               }
-              // Si no es PDF o no tiene ID válido, el link se comporta normalmente
+              // Si no es PDF o no tiene ID válido, el link se comporta normalmente (descarga directa)
             };
 
+            const isPrivateFile = checkFilePrivacy(file);
+            const canDownloadFile = !isPrivateFile && file.field_allow_download !== false;
+
             return (
-              <a
+              <div
                 key={doc.id}
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={handleClick}
-                className="flex flex-col p-2.5 border border-gray-200 rounded-lg hover:bg-[#e4fef1] hover:border-[#11c99d] transition-all group cursor-pointer"
+                className={`flex flex-col p-2.5 border rounded-lg transition-all group ${
+                  isPrivateFile 
+                    ? "border-gray-200 hover:bg-gray-50 cursor-not-allowed opacity-75" 
+                    : "border-gray-200 hover:bg-[#e4fef1] hover:border-[#11c99d] cursor-pointer"
+                }`}
               >
                 <div className="flex items-start gap-2 mb-2">
-                  <div className="w-8 h-8 flex-shrink-0 rounded-lg bg-[#11c99d]/10 flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-[#11c99d]" />
+                  <div className={`w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center ${
+                    isPrivateFile 
+                      ? "bg-gray-100" 
+                      : "bg-[#11c99d]/10"
+                  }`}>
+                    {isPrivateFile ? (
+                      <Lock className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <FileText className="h-4 w-4 text-[#11c99d]" />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-normal text-gray-900 group-hover:text-[#2f8cbd] transition-colors line-clamp-2">
+                    <h4 className={`text-sm font-normal transition-colors line-clamp-2 ${
+                      isPrivateFile 
+                        ? "text-gray-500" 
+                        : "text-gray-900 group-hover:text-[#2f8cbd]"
+                    }`}>
                       {doc.title}
                     </h4>
                     {file.description && (
@@ -354,22 +479,56 @@ export const ManagementContent = ({
                         • {(file.filesize / 1024).toFixed(1)} KB
                       </span>
                     )}
+                    {isPrivateFile && (
+                      <span className="text-xs text-red-500 flex items-center gap-1">
+                        <Lock className="h-3 w-3" />
+                        Privado
+                      </span>
+                    )}
                   </div>
-                  <Download className="h-3.5 w-3.5 text-[#2f8cbd] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {canDownloadFile && (
+                    <Download className="h-3.5 w-3.5 text-[#2f8cbd] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  )}
                 </div>
-              </a>
+              </div>
             );
           })}
         </div>
       )}
       
-      {/* Visor de PDF */}
-      {viewingDocumentId && (
-        <SecurePdfViewer
-          documentId={viewingDocumentId}
-          onClose={() => setViewingDocumentId(null)}
+      {/* Visor de PDF personalizado */}
+      {viewingDocument && (
+        <CustomPdfViewer
+          documentId={viewingDocument.id}
+          fileUrl={viewingDocument.fileUrl}
+          fileName={viewingDocument.fileName}
+          isPrivate={viewingDocument.isPrivate}
+          allowDownload={viewingDocument.allowDownload}
+          onClose={() => setViewingDocument(null)}
         />
       )}
+
+      {/* Diálogo para archivos privados */}
+      <Dialog open={showPrivateDialog} onOpenChange={setShowPrivateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <Lock className="h-5 w-5 text-red-600" />
+              </div>
+              <DialogTitle>Documento Privado</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2">
+              Este documento es privado y no está disponible para visualización o descarga.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowPrivateDialog(false)}>
+              Entendido
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

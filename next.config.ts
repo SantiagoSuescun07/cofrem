@@ -20,6 +20,18 @@ const nextConfig: NextConfig = {
   //    Ahora va a nivel raíz como serverExternalPackages
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
 
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+      };
+    }
+    return config;
+  },
+
   experimental: {
     // deja aquí solo otras flags experimentales válidas si las usas
   },

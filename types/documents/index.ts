@@ -5,6 +5,8 @@ export interface DocumentFile {
   filemime: string;
   filesize: number;
   description?: string;
+  field_is_confidential?: boolean; // Si es true, el archivo es privado
+  field_allow_download?: boolean; // Si es false, no se permite descarga
 }
 
 export interface DocumentIcon {
