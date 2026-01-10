@@ -518,7 +518,9 @@ export function CustomPdfViewer({
           onContextMenu={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            e.stopImmediatePropagation();
+            if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+              (e.nativeEvent as any).stopImmediatePropagation();
+            }
             return false;
           }}
           onMouseDown={(e) => {
@@ -526,7 +528,9 @@ export function CustomPdfViewer({
             if (e.button === 2) {
               e.preventDefault();
               e.stopPropagation();
-              e.stopImmediatePropagation();
+              if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                (e.nativeEvent as any).stopImmediatePropagation();
+              }
               return false;
             }
           }}
@@ -546,8 +550,8 @@ export function CustomPdfViewer({
             onContextMenu={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (typeof e.stopImmediatePropagation === "function") {
-                e.stopImmediatePropagation();
+              if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                (e.nativeEvent as any).stopImmediatePropagation();
               }
               return false;
             }}
@@ -556,8 +560,8 @@ export function CustomPdfViewer({
               if (e.button === 2) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (typeof e.stopImmediatePropagation === "function") {
-                  e.stopImmediatePropagation();
+                if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                  (e.nativeEvent as any).stopImmediatePropagation();
                 }
                 return false;
               }
@@ -568,8 +572,8 @@ export function CustomPdfViewer({
               if (e.button === 2) {
                 e.preventDefault();
                 e.stopPropagation();
-                if (typeof e.stopImmediatePropagation === "function") {
-                  e.stopImmediatePropagation();
+                if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                  (e.nativeEvent as any).stopImmediatePropagation();
                 }
                 return false;
               }
@@ -578,8 +582,8 @@ export function CustomPdfViewer({
               // Prevenir clic con botón del medio u otros botones del mouse
               e.preventDefault();
               e.stopPropagation();
-              if (typeof e.stopImmediatePropagation === "function") {
-                e.stopImmediatePropagation();
+              if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                (e.nativeEvent as any).stopImmediatePropagation();
               }
               return false;
             }}
@@ -598,8 +602,8 @@ export function CustomPdfViewer({
                 target.style.pointerEvents = "auto";
                 e.preventDefault();
                 e.stopPropagation();
-                if (typeof e.stopImmediatePropagation === "function") {
-                  e.stopImmediatePropagation();
+                if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                  (e.nativeEvent as any).stopImmediatePropagation();
                 }
                 setTimeout(() => {
                   target.style.pointerEvents = "none";
@@ -625,7 +629,9 @@ export function CustomPdfViewer({
             onContextMenu={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              e.stopImmediatePropagation();
+              if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                (e.nativeEvent as any).stopImmediatePropagation();
+              }
               return false;
             }}
             onMouseDown={(e) => {
@@ -633,7 +639,9 @@ export function CustomPdfViewer({
               if (e.button !== 0) {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
+                if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                  (e.nativeEvent as any).stopImmediatePropagation();
+                }
                 return false;
               }
             }}
@@ -642,7 +650,9 @@ export function CustomPdfViewer({
               if (e.button !== 0) {
                 e.preventDefault();
                 e.stopPropagation();
-                e.stopImmediatePropagation();
+                if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                  (e.nativeEvent as any).stopImmediatePropagation();
+                }
                 return false;
               }
             }}
@@ -650,7 +660,9 @@ export function CustomPdfViewer({
               // Prevenir clic con botón del medio u otros botones del mouse
               e.preventDefault();
               e.stopPropagation();
-              e.stopImmediatePropagation();
+              if (typeof (e.nativeEvent as any).stopImmediatePropagation === "function") {
+                (e.nativeEvent as any).stopImmediatePropagation();
+              }
               return false;
             }}
             title={fileName}
