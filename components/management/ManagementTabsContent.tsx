@@ -449,7 +449,7 @@ export const ManagementContent = ({
                     {isPrivateFile ? (
                       <Lock className="h-4 w-4 text-gray-400" />
                     ) : (
-                      <FileText className="h-4 w-4 text-[#11c99d]" />
+                    <FileText className="h-4 w-4 text-[#11c99d]" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -487,7 +487,7 @@ export const ManagementContent = ({
                     )}
                   </div>
                   {canDownloadFile && (
-                    <Download className="h-3.5 w-3.5 text-[#2f8cbd] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Download className="h-3.5 w-3.5 text-[#2f8cbd] opacity-0 group-hover:opacity-100 transition-opacity" />
                   )}
                 </div>
               </div>

@@ -554,18 +554,18 @@ export const fetchDocuments = async (): Promise<Document[]> => {
                     const uri = fileIncluded.attributes.uri?.url;
                     if (uri) {
                       const meta = fileIncluded._meta || fileRef.meta;
-                  fieldFile.push({
-                    id: fileIncluded.id,
-                    filename: fileIncluded.attributes.filename || "",
-                    url: apiBaseUrl + uri,
-                    filemime: fileIncluded.attributes.filemime || "",
-                    filesize: fileIncluded.attributes.filesize || 0,
-                    description: meta?.description || undefined,
+                      fieldFile.push({
+                        id: fileIncluded.id,
+                        filename: fileIncluded.attributes.filename || "",
+                        url: apiBaseUrl + uri,
+                        filemime: fileIncluded.attributes.filemime || "",
+                        filesize: fileIncluded.attributes.filesize || 0,
+                        description: meta?.description || undefined,
                     field_is_confidential: fileIncluded.attributes.field_is_confidential || false,
                     field_allow_download: fileIncluded.attributes.field_allow_download !== undefined 
                       ? fileIncluded.attributes.field_allow_download 
                       : true,
-                  });
+                      });
                     }
                   }
                 });
