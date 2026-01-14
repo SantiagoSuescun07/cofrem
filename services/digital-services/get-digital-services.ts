@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import { apiBaseUrl } from "@/constants";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export interface DigitalServiceIcon {
   id: string;
@@ -58,9 +59,11 @@ export const fetchDigitalServices = async (): Promise<DigitalServiceData[] | nul
         const includedIcon = includedById.get(iconRel.id);
         if (includedIcon) {
           const attrs = includedIcon.attributes;
+          const iconUrl = normalizeImageUrl(apiBaseUrl, attrs.uri.url || "");
+          
           icon = {
             id: includedIcon.id,
-            url: apiBaseUrl + attrs.uri.url,
+            url: iconUrl,
             alt: iconRel.meta?.alt || "",
             title: iconRel.meta?.title || "",
             width: iconRel.meta?.width || 0,

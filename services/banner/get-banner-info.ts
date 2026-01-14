@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import { apiBaseUrl } from "@/constants";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export interface BannerImage {
   id: string;
@@ -52,9 +53,11 @@ export const fetchBanner = async (): Promise<BannerData[] | null> => {
         const includedImage = includedById.get(imageRel.id);
         if (includedImage) {
           const attrs = includedImage.attributes;
+          const imageUrl = normalizeImageUrl(apiBaseUrl, attrs.uri.url || "");
+          
           image = {
             id: includedImage.id,
-            url: apiBaseUrl + attrs.uri.url,
+            url: imageUrl,
             alt: imageRel.meta?.alt || "",
             title: imageRel.meta?.title || "",
             width: imageRel.meta?.width || 0,
