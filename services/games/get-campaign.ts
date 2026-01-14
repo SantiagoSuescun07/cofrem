@@ -1,6 +1,7 @@
 import { apiBaseUrl } from "@/constants";
 import api from "@/lib/axios";
 import { EntertainmentCampaign } from "@/types/games";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export const fetchCampaign = async (
   campaignId: string
@@ -31,7 +32,7 @@ export const fetchCampaign = async (
     const fieldMainImage = mainImageIncluded
       ? {
           id: mainImageIncluded.id,
-          url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
+          url: normalizeImageUrl(apiBaseUrl, mainImageIncluded.attributes.uri.url),
           alt: mainImageData.meta.alt || "",
           title: mainImageData.meta.title || "",
           width: mainImageData.meta.width || 0,

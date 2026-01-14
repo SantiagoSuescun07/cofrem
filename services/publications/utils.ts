@@ -1,5 +1,6 @@
 import { apiBaseUrl } from "@/constants";
 import { PublicationContent } from "@/types/publications";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 type IncludedMap = Map<string, any>;
 
@@ -15,7 +16,7 @@ const mapFileRelationshipArray = (
 
       return {
         id: relItem.id,
-        url: apiBaseUrl + uri,
+        url: normalizeImageUrl(apiBaseUrl, uri),
         alt: relItem.meta?.alt || "",
         title: relItem.meta?.title || "",
         width: relItem.meta?.width || included.attributes?.width || 0,

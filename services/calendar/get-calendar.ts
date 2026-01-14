@@ -1,7 +1,8 @@
 import api from "@/lib/axios";
 import { CalendarEvent } from "@/types";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
-const API_BASE_URL = "https://backoffice.cofrem.com.co"
+const API_BASE_URL = "https://backoffice.cofrem.com.co/"
 
 export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
   try {
@@ -62,7 +63,7 @@ export async function fetchCalendarEvents(): Promise<CalendarEvent[]> {
         },
         image: {
           url: image?.attributes?.uri?.url
-            ? `${API_BASE_URL}${image.attributes.uri.url}`
+            ? normalizeImageUrl(API_BASE_URL, image.attributes.uri.url)
             : "/corporate-event.png",
           alt:
             item.relationships.field_image?.data?.meta?.alt ||

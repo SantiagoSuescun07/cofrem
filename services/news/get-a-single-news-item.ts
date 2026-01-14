@@ -1,6 +1,7 @@
 import { apiBaseUrl } from "@/constants";
 import api from "@/lib/axios";
 import { News } from "@/types/news/news";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export const fetchSingleNews = async (id: string): Promise<News> => {
   const response = await api.get(`/jsonapi/node/news/${id}`, {
@@ -24,7 +25,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
   const fieldFileNew = fileNewIncluded
     ? {
         id: fileNewIncluded.id,
-        url: apiBaseUrl + fileNewIncluded.attributes.uri.url,
+        url: normalizeImageUrl(apiBaseUrl, fileNewIncluded.attributes.uri.url),
         display: item.relationships.field_file_new.data.meta.display,
         description: item.relationships.field_file_new.data.meta.description,
         filename: fileNewIncluded.attributes.filename || "",
@@ -37,7 +38,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
     const galIncluded = includedById.get(galItem.id);
     return {
       id: galIncluded.id,
-      url: apiBaseUrl + galIncluded.attributes.uri.url,
+      url: normalizeImageUrl(apiBaseUrl, galIncluded.attributes.uri.url),
       alt: galItem.meta.alt,
       title: galItem.meta.title,
       width: galItem.meta.width,
@@ -51,7 +52,7 @@ export const fetchSingleNews = async (id: string): Promise<News> => {
   const fieldMainImage = mainImageIncluded
     ? {
         id: mainImageIncluded.id,
-        url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
+        url: normalizeImageUrl(apiBaseUrl, mainImageIncluded.attributes.uri.url),
         alt: mainImageData.meta.alt,
         title: mainImageData.meta.title,
         width: mainImageData.meta.width,

@@ -1,6 +1,7 @@
 import { apiBaseUrl } from "@/constants";
 import api from "@/lib/axios";
 import { Newsletter } from "@/types/newsletters";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export const fetchNewsletters = async (): Promise<Newsletter[]> => {
   const response = await api.get("/jsonapi/node/report", {
@@ -25,7 +26,7 @@ export const fetchNewsletters = async (): Promise<Newsletter[]> => {
         if (!attIncluded?.attributes?.uri?.url) return null;
         return {
           id: attIncluded.id,
-          url: apiBaseUrl + attIncluded.attributes.uri.url,
+          url: normalizeImageUrl(apiBaseUrl, attIncluded.attributes.uri.url),
         };
       })
       .filter((att: any) => att !== null);
@@ -52,7 +53,7 @@ export const fetchNewsletters = async (): Promise<Newsletter[]> => {
       mainImageIncluded?.attributes?.uri?.url && mainImageData?.meta
         ? {
             id: mainImageIncluded.id,
-            url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
+            url: normalizeImageUrl(apiBaseUrl, mainImageIncluded.attributes.uri.url),
             alt: mainImageData.meta.alt || "",
             title: mainImageData.meta.title || "",
             width: mainImageData.meta.width || 0,
@@ -66,7 +67,7 @@ export const fetchNewsletters = async (): Promise<Newsletter[]> => {
     const fieldReportPdf = pdfIncluded?.attributes?.uri?.url
       ? {
           id: pdfIncluded.id,
-          url: apiBaseUrl + pdfIncluded.attributes.uri.url,
+          url: normalizeImageUrl(apiBaseUrl, pdfIncluded.attributes.uri.url),
         }
       : null;
 

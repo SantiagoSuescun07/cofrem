@@ -5,6 +5,7 @@ import {
   extractGalleryFromContent,
   mapParagraphContent,
 } from "./utils";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export const fetchPublications = async (): Promise<Publication[]> => {
   try {
@@ -57,7 +58,7 @@ export const fetchPublications = async (): Promise<Publication[]> => {
     const fieldImage = mainImageIncluded?.attributes?.uri?.url
       ? {
           id: mainImageIncluded.id,
-          url: apiBaseUrl + mainImageIncluded.attributes.uri.url,
+          url: normalizeImageUrl(apiBaseUrl, mainImageIncluded.attributes.uri.url),
           alt: mainImageData.meta?.alt || "",
           title: mainImageData.meta?.title || "",
           width: mainImageData.meta?.width || 0,

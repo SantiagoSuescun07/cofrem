@@ -1,6 +1,7 @@
 import { apiBaseUrl } from "@/constants";
 import api from "@/lib/axios";
 import { GameDetails } from "@/types/games";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export const fetchGameDetails = async (
   gameUrl: string
@@ -63,7 +64,7 @@ export const fetchGameDetails = async (
     const fieldIcon = iconIncluded
       ? {
           id: iconIncluded.id,
-          url: apiBaseUrl + iconIncluded.attributes.uri.url,
+          url: normalizeImageUrl(apiBaseUrl, iconIncluded.attributes.uri.url),
           alt: iconData.meta.alt || "",
           title: iconData.meta.title || "",
           width: iconData.meta.width || 0,
@@ -238,7 +239,7 @@ export const fetchGameDetails = async (
           if (imgIncluded && imgIncluded.attributes?.uri?.url) {
             return {
               id: imgIncluded.id,
-              url: apiBaseUrl + imgIncluded.attributes.uri.url,
+              url: normalizeImageUrl(apiBaseUrl, imgIncluded.attributes.uri.url),
               alt: imgData.meta?.alt || "",
               title: imgData.meta?.title || "",
               width: imgData.meta?.width || imgIncluded.attributes?.width || 0,
@@ -263,7 +264,7 @@ export const fetchGameDetails = async (
                 const originalMeta = puzzleImageData[index]?.meta || {};
                 return {
                   id: fileItem.id,
-                  url: apiBaseUrl + fileItem.attributes.uri.url,
+                  url: normalizeImageUrl(apiBaseUrl, fileItem.attributes.uri.url),
                   alt: originalMeta.alt || "",
                   title: originalMeta.title || "",
                   width: originalMeta.width || 0,
@@ -282,7 +283,7 @@ export const fetchGameDetails = async (
                 // Esto es un fallback, pero debería funcionar en la mayoría de casos
                 return {
                   id: imgData.id,
-                  url: `${apiBaseUrl}/sites/default/files/${fid}`,
+                  url: normalizeImageUrl(apiBaseUrl, `/sites/default/files/${fid}`),
                   alt: imgData.meta?.alt || "",
                   title: imgData.meta?.title || "",
                   width: imgData.meta?.width || 0,
@@ -514,7 +515,7 @@ export const fetchGameDetails = async (
               if (imgIncluded && imgIncluded.attributes?.uri?.url) {
                 return {
                   id: imgIncluded.id,
-                  url: apiBaseUrl + imgIncluded.attributes.uri.url,
+                  url: normalizeImageUrl(apiBaseUrl, imgIncluded.attributes.uri.url),
                   alt: imgData.meta?.alt || "",
                   title: imgData.meta?.title || "",
                   width: imgData.meta?.width || 0,
@@ -571,7 +572,7 @@ export const fetchGameDetails = async (
                     if (imgIncluded && imgIncluded.attributes?.uri?.url) {
                       return {
                         id: imgIncluded.id,
-                        url: apiBaseUrl + imgIncluded.attributes.uri.url,
+                        url: normalizeImageUrl(apiBaseUrl, imgIncluded.attributes.uri.url),
                         alt: imgData.meta?.alt || "",
                         title: imgData.meta?.title || "",
                         width: imgData.meta?.width || 0,
@@ -595,7 +596,7 @@ export const fetchGameDetails = async (
                           const originalMeta = puzzleImageData.find((imgData: any) => imgData.id === fileItem.id)?.meta || {};
                           return {
                             id: fileItem.id,
-                            url: apiBaseUrl + fileItem.attributes.uri.url,
+                            url: normalizeImageUrl(apiBaseUrl, fileItem.attributes.uri.url),
                             alt: originalMeta.alt || "",
                             title: originalMeta.title || "",
                             width: originalMeta.width || 0,
@@ -649,7 +650,7 @@ export const fetchGameDetails = async (
             if (imgIncluded && imgIncluded.attributes?.uri?.url) {
               return {
                 id: imgIncluded.id,
-                url: apiBaseUrl + imgIncluded.attributes.uri.url,
+                url: normalizeImageUrl(apiBaseUrl, imgIncluded.attributes.uri.url),
                 alt: imgData.meta?.alt || "",
                 title: imgData.meta?.title || "",
                 width: imgData.meta?.width || 0,

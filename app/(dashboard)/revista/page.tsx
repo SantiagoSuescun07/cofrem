@@ -8,6 +8,7 @@ import { ArrowRight, Loader2, ExternalLink } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/axios";
 import { ProgressBar } from "@/components/common/progress-bar";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 import { MagazinesSkeleton } from "@/components/common/magazines-skeleton";
 import {
   Dialog,
@@ -90,7 +91,7 @@ async function fetchMagazines(): Promise<MagazineWithImage[]> {
           const fileData = imgResponse.data?.data as FileData;
           filename = fileData?.attributes?.filename || "";
           imageUrl = fileData?.attributes?.uri?.url
-            ? `https://backoffice.cofrem.com.co${fileData.attributes.uri.url}`
+            ? normalizeImageUrl("https://backoffice.cofrem.com.co/", fileData.attributes.uri.url)
             : "";
         } catch (err) {
           console.error("Error cargando imagen:", err);
