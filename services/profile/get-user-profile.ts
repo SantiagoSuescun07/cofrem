@@ -1,6 +1,7 @@
 import api from "@/lib/axios";
 import { apiBaseUrl } from "@/constants";
 import { fetchTaxonomyTermById } from "@/services/taxonomies";
+import { normalizeImageUrl } from "@/lib/image-url-normalizer";
 
 export interface UserProfileResponse {
   uid: { value: number }[];
@@ -34,13 +35,48 @@ async function fetchBadgeById(badgeId: string) {
   const item = response.data.data;
   const included = response.data.included;
 
-  // Buscar la imagen
-  let imageUrl = null;
+  // Crear mapa de included para búsqueda rápida
+  const includedById = new Map<string, any>();
   if (included?.length > 0) {
-    const img = included.find((i: any) => i.type === "file--file");
-    if (img) {
-      imageUrl = apiBaseUrl + img.attributes.uri.url;
+    included.forEach((inc: any) => {
+      includedById.set(inc.id, inc);
+    });
+  }
+
+  // Buscar la imagen - primero en relationships, luego en included directo
+  let imageUrl = null;
+  
+  // Intentar obtener de relationships primero
+  const imageRel = item.relationships?.field_image?.data;
+  if (imageRel) {
+    const img = includedById.get(imageRel.id);
+    if (img && img.attributes?.uri?.url) {
+      const uriUrl = img.attributes.uri.url;
+      if (uriUrl) {
+        imageUrl = normalizeImageUrl(apiBaseUrl, uriUrl);
+        console.log(`[Badge] URL normalizada para badge ${item.attributes.name}:`, imageUrl);
+      }
     }
+  }
+  
+  // Si no se encontró en relationships, buscar directamente en included
+  if (!imageUrl && included?.length > 0) {
+    const img = included.find((i: any) => i.type === "file--file");
+    if (img && img.attributes?.uri?.url) {
+      const uriUrl = img.attributes.uri.url;
+      if (uriUrl) {
+        imageUrl = normalizeImageUrl(apiBaseUrl, uriUrl);
+        console.log(`[Badge] URL normalizada (desde included directo) para badge ${item.attributes.name}:`, imageUrl);
+      }
+    }
+  }
+  
+  if (!imageUrl) {
+    console.warn(`[Badge] No se encontró imagen para badge ${item.attributes.name}`, {
+      hasRelationships: !!item.relationships,
+      hasFieldImage: !!item.relationships?.field_image,
+      includedCount: included?.length || 0
+    });
   }
 
   return {
@@ -91,7 +127,26 @@ export async function getUserProfile(userId: string) {
     phone: data.field_phone?.[0]?.value ?? "",
     mobile: data.field_cell_phone?.[0]?.value ?? "",
     birthdate: data.field_birthdate?.[0]?.value ?? "",
-    picture: data.user_picture?.[0]?.url ?? "",
+    picture: data.user_picture?.[0]?.url 
+      ? (() => {
+          const pictureUrl = data.user_picture[0].url;
+          // Si ya es una URL absoluta de backoffice, normalizarla
+          if (pictureUrl.startsWith("http://") || pictureUrl.startsWith("https://")) {
+            if (pictureUrl.includes("backoffice.cofrem.com.co")) {
+              // Extraer el path de la URL absoluta
+              try {
+                const urlObj = new URL(pictureUrl);
+                return normalizeImageUrl(apiBaseUrl, urlObj.pathname);
+              } catch {
+                return pictureUrl;
+              }
+            }
+            return pictureUrl;
+          }
+          // Si es relativa, normalizarla
+          return normalizeImageUrl(apiBaseUrl, pictureUrl);
+        })()
+      : "",
     genderId: String(gender?.tid) ?? null,
     genderName: gender?.name ?? "Sin especificar",
     badges: badges,

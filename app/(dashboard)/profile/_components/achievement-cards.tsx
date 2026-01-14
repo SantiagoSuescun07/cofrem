@@ -53,6 +53,8 @@ export function AchievementCards() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {profile?.badges.map((badge, index) => {
+          const hasImage = badge.image && badge.image.trim() !== "";
+          
           return (
             <Card
               key={index}
@@ -62,14 +64,23 @@ export function AchievementCards() {
                 <div
                   className={`inline-flex p-4 rounded-xl mb-4`}
                 >
-                  <Image
-                    src={badge.image ?? ""}
-                    alt="Icon"
-                    width={40}
-                    height={40}
-                    priority
-                    className="size-[40px] object-cover"
-                  />
+                  {hasImage ? (
+                    <Image
+                      src={badge.image!}
+                      alt={badge.name || "Insignia"}
+                      width={40}
+                      height={40}
+                      priority
+                      className="size-[40px] object-cover"
+                      onError={(e) => {
+                        console.error(`[Badge] Error cargando imagen para ${badge.name}:`, badge.image);
+                      }}
+                    />
+                  ) : (
+                    <div className="size-[40px] bg-gray-200 rounded flex items-center justify-center">
+                      <span className="text-gray-400 text-xs">?</span>
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-2xl mb-2">{badge.name}</h3>
               </CardContent>

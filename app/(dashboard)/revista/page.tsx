@@ -90,13 +90,22 @@ async function fetchMagazines(): Promise<MagazineWithImage[]> {
           const imgResponse = await api.get(imageHref);
           const fileData = imgResponse.data?.data as FileData;
           filename = fileData?.attributes?.filename || "";
-          imageUrl = fileData?.attributes?.uri?.url
-            ? normalizeImageUrl("https://backoffice.cofrem.com.co/", fileData.attributes.uri.url)
-            : "";
+          
+          // Verificar que tenemos la URL del archivo
+          const uriUrl = fileData?.attributes?.uri?.url;
+          if (uriUrl) {
+            // Normalizar la URL
+            imageUrl = normalizeImageUrl("https://backoffice.cofrem.com.co/", uriUrl);
+          } else {
+            console.warn(`[Revista] No se encontró URI para la imagen de la revista ${mag.attributes.title}`);
+            filename = "Sin imagen";
+          }
         } catch (err) {
-          console.error("Error cargando imagen:", err);
+          console.error(`[Revista] Error cargando imagen para ${mag.attributes.title}:`, err);
           filename = "Sin imagen";
         }
+      } else {
+        console.warn(`[Revista] No hay imageHref para la revista ${mag.attributes.title}`);
       }
 
       return {
