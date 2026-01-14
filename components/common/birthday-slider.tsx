@@ -9,17 +9,46 @@ import Image from "next/image";
 import { BirthdayModal } from "./birthday-modal";
 import { Birthday } from "@/services/birthday/get-birthdays";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "../ui/card";
 
 export function BirthdaySlider() {
-  const { data: birthdays = [], isLoading } = useBirthdayQuery();
+  const { data: birthdays = [], isLoading, error } = useBirthdayQuery();
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay()]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedBirthday, setSelectedBirthday] = useState<Birthday | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const today = new Date().toISOString().slice(5, 10); // MM-DD
-  const todayBirthdays = birthdays.filter(b => b.field_birthdate?.slice(5, 10) === today);
+  // Obtener fecha de hoy en formato MM-DD
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${month}-${day}`;
+
+  // Filtrar cumpleaños de hoy
+  const todayBirthdays = birthdays.filter(b => {
+    if (!b.field_birthdate) return false;
+    
+    // Manejar diferentes formatos de fecha
+    let birthDateStr = '';
+    try {
+      // Si es formato ISO (YYYY-MM-DD o YYYY-MM-DDTHH:mm:ss)
+      if (b.field_birthdate.includes('-')) {
+        birthDateStr = b.field_birthdate.slice(5, 10); // MM-DD
+      } else {
+        // Si es otro formato, intentar parsearlo
+        const date = new Date(b.field_birthdate);
+        if (!isNaN(date.getTime())) {
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          birthDateStr = `${month}-${day}`;
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing birthdate:', b.field_birthdate, e);
+      return false;
+    }
+    
+    return birthDateStr === todayStr;
+  });
 
   // dividir en grupos de 2
   const grouped = [];
@@ -37,7 +66,34 @@ export function BirthdaySlider() {
     emblaApi.on("select", onSelect);
   }, [emblaApi, onSelect]);
 
+  // Debug: verificar datos
+  useEffect(() => {
+    if (!isLoading && birthdays.length > 0) {
+      console.log('Total cumpleaños recibidos:', birthdays.length);
+      console.log('Fecha de hoy:', todayStr);
+      console.log('Cumpleaños de hoy encontrados:', todayBirthdays.length);
+      if (todayBirthdays.length === 0) {
+        console.log('Ejemplos de fechas recibidas:', birthdays.slice(0, 3).map(b => ({
+          name: b.name,
+          field_birthdate: b.field_birthdate
+        })));
+      }
+    }
+  }, [birthdays, isLoading, todayStr, todayBirthdays.length]);
+
   if (isLoading) return <BirthdaySliderSkeleton />;
+
+  if (error) {
+    console.error('Error al cargar cumpleaños:', error);
+    return (
+      <div className="bg-white p-3 border rounded-xl">
+        <h3 className="text-lg mb-2">Cumpleaños de Hoy</h3>
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Error al cargar los cumpleaños
+        </p>
+      </div>
+    );
+  }
 
   if (todayBirthdays.length === 0)
     return (

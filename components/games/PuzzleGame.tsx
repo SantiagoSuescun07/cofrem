@@ -237,17 +237,52 @@ export default function PuzzleGame({
   };
 
   const getPieceStyle = (piece: PuzzlePiece) => {
-    const pieceWidth = 100 / cols;
-    const pieceHeight = 100 / rows;
     const row = Math.floor(piece.correctPosition / cols);
     const col = piece.correctPosition % cols;
-    const bgX = col * pieceWidth;
-    const bgY = row * pieceHeight;
+    
+    // Calcular la posición del fondo de forma precisa
+    // Cuando backgroundSize es cols*100% x rows*100%, la imagen se escala
+    // Para que cada pieza muestre solo su porción, necesitamos calcular backgroundPosition correctamente
+    
+    // Con backgroundSize: cols*100% x rows*100%
+    // La imagen se escala para que sea cols veces más ancha y rows veces más alta
+    // Cada pieza ocupa 1/cols del ancho y 1/rows del alto del contenedor
+    
+    // Para backgroundPosition con porcentajes cuando la imagen es más grande que el contenedor:
+    // El comportamiento es: backgroundPosition: X% significa que el punto X% de la imagen
+    // se alinea con el punto X% del contenedor.
+    // 
+    // Para mostrar la columna 'col' (0-indexed):
+    // - La columna col comienza en el (col/cols)*100% de la imagen escalada
+    // - Queremos que ese punto se alinee con el 0% del contenedor (borde izquierdo)
+    // - Pero backgroundPosition: X% alinea X% de imagen con X% de contenedor
+    // 
+    // La solución: cuando la imagen es cols*100% de ancho, para que el punto P de la imagen
+    // se alinee con el 0% del contenedor, necesitamos usar una fórmula de compensación.
+    // 
+    // Fórmula correcta considerando el comportamiento de backgroundPosition:
+    // Si la imagen es W veces más ancha (W = cols), y queremos mostrar la columna col:
+    // bgX = (col / cols) * 100%
+    // Pero esto alinea (col/cols)*100% de la imagen con (col/cols)*100% del contenedor
+    // 
+    // Necesitamos ajustar: cuando la imagen es W veces más ancha, para que el punto P% de la imagen
+    // se alinee con el 0% del contenedor, necesitamos usar:
+    // bgX = (P / (W - 1)) * 100% cuando W > 1, o 0% cuando W = 1
+    // Pero esto tampoco es correcto...
+    // 
+    // La fórmula que realmente funciona:
+    // Para mostrar la columna col de cols columnas, cuando la imagen es cols*100% de ancho:
+    // bgX debe ser tal que el inicio de la columna col esté en el borde izquierdo del contenedor
+    // Esto se logra con: bgX = (col / cols) * 100%
+    // Pero debido a cómo funciona backgroundPosition, necesitamos ajustar:
+    const bgX = cols > 1 ? (col / (cols - 1)) * 100 : 0;
+    const bgY = rows > 1 ? (row / (rows - 1)) * 100 : 0;
 
     return {
       backgroundImage: `url(${piece.imageUrl})`,
       backgroundSize: `${cols * 100}% ${rows * 100}%`,
       backgroundPosition: `${bgX}% ${bgY}%`,
+      backgroundRepeat: "no-repeat",
     };
   };
 
@@ -426,8 +461,9 @@ export default function PuzzleGame({
                 style={{
                   display: "grid",
                   gridTemplateColumns: `repeat(${cols}, 1fr)`,
-                  gap: "2px",
+                  gap: "0px",
                   maxWidth: "600px",
+                  width: "100%",
                   aspectRatio: `${cols}/${rows}`,
                 }}
               >
@@ -440,7 +476,11 @@ export default function PuzzleGame({
                       <div
                         key={`empty-${position}`}
                         className="bg-gray-200 border-2 border-dashed border-gray-400 rounded"
-                        style={{ aspectRatio: "1" }}
+                        style={{ 
+                          aspectRatio: "1",
+                          width: "100%",
+                          height: "100%",
+                        }}
                       />
                     );
                   }
@@ -459,7 +499,7 @@ export default function PuzzleGame({
                     <div
                       key={piece.id}
                       onClick={() => handlePieceClick(piece.id)}
-                      className={`border-2 rounded transition-all duration-200 ${
+                      className={`border-2 rounded transition-all duration-200 overflow-hidden ${
                         isAdjacentToEmpty && isGameActive && !isGameWon
                           ? "cursor-pointer hover:scale-105 hover:shadow-lg border-[#2da2eb]"
                           : piece.currentPosition === piece.correctPosition
@@ -469,7 +509,11 @@ export default function PuzzleGame({
                       style={{
                         ...getPieceStyle(piece),
                         aspectRatio: "1",
+                        width: "100%",
+                        height: "100%",
                         backgroundClip: "padding-box",
+                        backgroundOrigin: "padding-box",
+                        imageRendering: "crisp-edges",
                       }}
                     />
                   );

@@ -50,6 +50,13 @@ export default function MemoryGame({
   const [rankingUpdated, setRankingUpdated] = useState<boolean>(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const flipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const processingPairRef = useRef<string | null>(null);
+  const gameDetailsRef = useRef(gameDetails);
+  
+  // Mantener la referencia actualizada
+  useEffect(() => {
+    gameDetailsRef.current = gameDetails;
+  }, [gameDetails]);
 
   // Parsear la dificultad (ejemplo: "6x6" -> { rows: 6, cols: 6 })
   const parseDifficulty = (difficulty: string): { rows: number; cols: number } => {
@@ -66,6 +73,13 @@ export default function MemoryGame({
 
   // Inicializar las tarjetas con iconos
   useEffect(() => {
+    // Limpiar estado previo y timeouts
+    setFlippedCards([]);
+    if (flipTimeoutRef.current) {
+      clearTimeout(flipTimeoutRef.current);
+      flipTimeoutRef.current = null;
+    }
+    
     const pairsNeeded = Math.floor(totalCards / 2);
     const pairs: Card[] = [];
     
@@ -74,12 +88,12 @@ export default function MemoryGame({
     
     for (let i = 0; i < pairsNeeded; i++) {
       const icon = iconsToUse[i];
-      const pairId = `icon-pair-${i}`;
+      const imageId = `icon-${i}`; // Mismo imageId para ambas tarjetas del par
       
-      // Agregar dos tarjetas con el mismo icono
+      // Agregar dos tarjetas con el mismo icono e imageId
       pairs.push({
-        id: `${pairId}-0`,
-        imageId: `icon-${i}`,
+        id: `pair-${i}-card-0`,
+        imageId: imageId,
         icon: icon,
         alt: `Icon ${i + 1}`,
         isFlipped: false,
@@ -87,8 +101,8 @@ export default function MemoryGame({
       });
       
       pairs.push({
-        id: `${pairId}-1`,
-        imageId: `icon-${i}`,
+        id: `pair-${i}-card-1`,
+        imageId: imageId,
         icon: icon,
         alt: `Icon ${i + 1}`,
         isFlipped: false,
@@ -96,62 +110,122 @@ export default function MemoryGame({
       });
     }
 
-    // Mezclar las tarjetas
-    const shuffled = pairs.sort(() => Math.random() - 0.5);
+    // Mezclar las tarjetas usando Fisher-Yates shuffle para mejor aleatoriedad
+    for (let i = pairs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+    }
     
-    setCards(shuffled);
+    setCards(pairs);
   }, [totalCards]);
 
   // Manejar el click en una tarjeta
   const handleCardClick = (index: number) => {
-    if (!isGameActive || cards[index].isFlipped || cards[index].isMatched || flippedCards.length >= 2) {
+    // Prevenir clicks si el juego no está activo
+    if (!isGameActive || isGameWon || isGameLost) {
       return;
     }
 
-    const newCards = [...cards];
-    newCards[index].isFlipped = true;
-    setCards(newCards);
+    // Si ya hay 2 tarjetas volteadas, no permitir más clicks hasta que se reseteen
+    if (flippedCards.length >= 2) {
+      return;
+    }
 
-    const newFlippedCards = [...flippedCards, index];
-    setFlippedCards(newFlippedCards);
+    const card = cards[index];
+    if (!card || card.isFlipped || card.isMatched) {
+      return;
+    }
 
-    // Si se han volteado 2 tarjetas, verificar si coinciden
-    if (newFlippedCards.length === 2) {
-      setMoves((prev) => prev + 1);
+    // Voltear la tarjeta
+    setCards((prevCards) => {
+      const updatedCards = [...prevCards];
+      updatedCards[index].isFlipped = true;
+      return updatedCards;
+    });
 
-      const [firstIndex, secondIndex] = newFlippedCards;
-      const firstCard = newCards[firstIndex];
-      const secondCard = newCards[secondIndex];
+    setFlippedCards((prev) => [...prev, index]);
+  };
+
+  // Efecto para manejar la lógica cuando hay 2 tarjetas volteadas
+  useEffect(() => {
+    if (flippedCards.length !== 2 || !isGameActive || isGameWon || isGameLost) {
+      if (flippedCards.length === 0) {
+        processingPairRef.current = null;
+      }
+      return;
+    }
+
+    const [firstIndex, secondIndex] = flippedCards;
+    const pairKey = `${firstIndex}-${secondIndex}`;
+    
+    // Evitar procesar el mismo par múltiples veces
+    if (processingPairRef.current === pairKey) {
+      return;
+    }
+    
+    processingPairRef.current = pairKey;
+    
+    // Incrementar movimientos
+    setMoves((prev) => prev + 1);
+
+    // Usar setCards con función para acceder al estado más reciente
+    setCards((prevCards) => {
+      const firstCard = prevCards[firstIndex];
+      const secondCard = prevCards[secondIndex];
+
+      // Verificar que ambas tarjetas existan
+      if (!firstCard || !secondCard) {
+        console.error("Error: tarjetas no encontradas", { firstIndex, secondIndex });
+        // Resetear inmediatamente
+        const resetCards = [...prevCards];
+        if (resetCards[firstIndex]) resetCards[firstIndex].isFlipped = false;
+        if (resetCards[secondIndex]) resetCards[secondIndex].isFlipped = false;
+        setFlippedCards([]);
+        processingPairRef.current = null;
+        return resetCards;
+      }
 
       if (firstCard.imageId === secondCard.imageId) {
         // Coinciden: marcar como matched
-        newCards[firstIndex].isMatched = true;
-        newCards[secondIndex].isMatched = true;
-        setCards(newCards);
+        const updatedCards = [...prevCards];
+        updatedCards[firstIndex].isMatched = true;
+        updatedCards[secondIndex].isMatched = true;
         setFlippedCards([]);
+        processingPairRef.current = null;
         
-        const newMatches = matches + 1;
-        setMatches(newMatches);
+        setMatches((prevMatches) => {
+          const newMatches = prevMatches + 1;
+          
+          // Verificar si el juego ha terminado
+          if (newMatches === totalCards / 2) {
+            const currentGameDetails = gameDetailsRef.current;
+            setIsGameWon(true);
+            setIsGameActive(false);
+            setPoints(currentGameDetails.field_points || 0);
 
-        // Verificar si el juego ha terminado
-        if (newMatches === totalCards / 2) {
-          setIsGameWon(true);
-          setIsGameActive(false);
-          setPoints(gameDetails.field_points || 0);
+            // Actualizar ranking si el juego se completa correctamente
+            if (currentGameDetails.drupal_internal__id) {
+              setRankingUpdated((prev) => {
+                if (!prev) {
+                  const finalPoints = currentGameDetails.field_points || 0;
+                  updateRanking(currentGameDetails.drupal_internal__id, finalPoints).catch((error) => {
+                    console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
+                  });
+                  return true;
+                }
+                return prev;
+              });
+            }
 
-          // Actualizar ranking si el juego se completa correctamente
-          if (gameDetails.drupal_internal__id && !rankingUpdated) {
-            setRankingUpdated(true);
-            const finalPoints = gameDetails.field_points || 0;
-            updateRanking(gameDetails.drupal_internal__id, finalPoints).catch((error) => {
-              console.warn("No se pudo actualizar el ranking (esto no afecta tu puntuación):", error);
-            });
+            if (intervalRef.current) {
+              clearInterval(intervalRef.current);
+            }
           }
-
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-          }
-        }
+          
+          return newMatches;
+        });
+        
+        return updatedCards;
       } else {
         // No coinciden: voltear de nuevo después de un breve delay
         if (flipTimeoutRef.current) {
@@ -159,15 +233,26 @@ export default function MemoryGame({
         }
         
         flipTimeoutRef.current = setTimeout(() => {
-          const resetCards = [...cards];
-          resetCards[firstIndex].isFlipped = false;
-          resetCards[secondIndex].isFlipped = false;
-          setCards(resetCards);
+          setCards((prevCards) => {
+            const resetCards = [...prevCards];
+            // Usar los índices guardados en el closure
+            if (resetCards[firstIndex] && !resetCards[firstIndex].isMatched) {
+              resetCards[firstIndex].isFlipped = false;
+            }
+            if (resetCards[secondIndex] && !resetCards[secondIndex].isMatched) {
+              resetCards[secondIndex].isFlipped = false;
+            }
+            return resetCards;
+          });
           setFlippedCards([]);
+          processingPairRef.current = null;
+          flipTimeoutRef.current = null;
         }, 1000);
+        
+        return prevCards;
       }
-    }
-  };
+    });
+  }, [flippedCards.length, isGameActive, isGameWon, isGameLost, totalCards]);
 
   // Temporizador
   useEffect(() => {
@@ -186,10 +271,46 @@ export default function MemoryGame({
     }
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (flipTimeoutRef.current) clearTimeout(flipTimeoutRef.current);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      if (flipTimeoutRef.current) {
+        clearTimeout(flipTimeoutRef.current);
+        flipTimeoutRef.current = null;
+      }
     };
   }, [gameDetails.field_time_limit, timeLeft, isGameActive, isGameWon, isGameLost]);
+
+  // Efecto de seguridad: si hay 2 tarjetas volteadas sin timeout, resetear después de 2 segundos
+  useEffect(() => {
+    if (flippedCards.length === 2 && !flipTimeoutRef.current && isGameActive && !isGameWon && !isGameLost) {
+      const [firstIndex, secondIndex] = flippedCards;
+      const firstCard = cards[firstIndex];
+      const secondCard = cards[secondIndex];
+      
+      // Solo activar fallback si las tarjetas no están matched
+      if (firstCard && secondCard && !firstCard.isMatched && !secondCard.isMatched) {
+        const fallbackTimeout = setTimeout(() => {
+          setCards((prevCards) => {
+            const resetCards = [...prevCards];
+            if (resetCards[firstIndex] && !resetCards[firstIndex].isMatched) {
+              resetCards[firstIndex].isFlipped = false;
+            }
+            if (resetCards[secondIndex] && !resetCards[secondIndex].isMatched) {
+              resetCards[secondIndex].isFlipped = false;
+            }
+            return resetCards;
+          });
+          setFlippedCards([]);
+        }, 2000);
+        
+        return () => {
+          clearTimeout(fallbackTimeout);
+        };
+      }
+    }
+  }, [flippedCards.length, isGameActive, isGameWon, isGameLost]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -199,6 +320,16 @@ export default function MemoryGame({
 
   // Función para reiniciar el juego
   const handleRetry = () => {
+    // Limpiar todos los timeouts e intervalos primero
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    if (flipTimeoutRef.current) {
+      clearTimeout(flipTimeoutRef.current);
+      flipTimeoutRef.current = null;
+    }
+    
     // Reiniciar todas las tarjetas mezclando de nuevo
     setCards([]);
     setFlippedCards([]);
@@ -210,12 +341,7 @@ export default function MemoryGame({
     setPoints(0);
     setTimeLeft(gameDetails.field_time_limit || 0);
     setRankingUpdated(false);
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    if (flipTimeoutRef.current) {
-      clearTimeout(flipTimeoutRef.current);
-    }
+    
     // Las tarjetas se reinicializarán automáticamente con el useEffect
   };
 
@@ -362,7 +488,7 @@ export default function MemoryGame({
               <button
                 key={card.id}
                 onClick={() => handleCardClick(index)}
-                disabled={!isGameActive || card.isFlipped || card.isMatched || isGameLost}
+                disabled={!isGameActive || isGameWon || isGameLost || card.isFlipped || card.isMatched || flippedCards.length >= 2}
                 className={`
                   aspect-square relative rounded-md overflow-hidden transition-all duration-300 transform
                   ${card.isMatched 
